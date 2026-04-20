@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YCK授業ログ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg:#f5f4f0;--surface:#fff;--border:#e2e0d8;--border-s:#c8c5b8;
+  --text:#1a1916;--muted:#6b6860;--hint:#9e9b92;
+  --accent:#1a3a5c;--accent-l:#e8eef5;
+  --green:#2d6a4f;--green-l:#e8f4ee;
+  --amber:#92570a;--amber-l:#fdf3e3;
+  --red:#8b2020;--red-l:#fceaea;
+  --blue:#1a5276;--blue-l:#e8f0f8;
+  --r:8px;--rl:12px;--mono:'DM Mono',monospace;--sans:'Noto Sans JP',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh;}
+
+/* SETUP SCREEN */
+#setup-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+.setup-box{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--rl);padding:2.5rem 2rem;width:100%;max-width:420px;}
+.setup-logo{font-size:11px;letter-spacing:.15em;color:var(--muted);margin-bottom:.25rem;font-family:var(--mono);}
+.setup-title{font-size:20px;font-weight:600;color:var(--text);margin-bottom:.5rem;}
+.setup-sub{font-size:12px;color:var(--muted);margin-bottom:1.5rem;line-height:1.7;}
+.step{margin-bottom:1.5rem;}
+.step-num{font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:500;margin-bottom:6px;}
+.step p{font-size:13px;color:var(--text);margin-bottom:8px;line-height:1.7;}
+.step code{font-family:var(--mono);font-size:12px;background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--accent);}
+.url-input-wrap{display:flex;gap:8px;}
+.url-input-wrap input{flex:1;padding:9px 10px;border:0.5px solid var(--border-s);border-radius:var(--r);font-size:13px;font-family:var(--mono);background:var(--bg);color:var(--text);}
+.url-input-wrap input:focus{outline:2px solid var(--accent);outline-offset:1px;}
+.save-url-btn{padding:9px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:13px;cursor:pointer;white-space:nowrap;}
+.saved-url{font-size:11px;color:var(--green);margin-top:6px;font-family:var(--mono);}
+
+/* LOGIN */
+#login-screen{min-height:100vh;display:none;align-items:center;justify-content:center;background:var(--bg);}
+.login-box{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--rl);padding:2.5rem 2rem;width:100%;max-width:360px;}
+.login-logo{font-size:11px;letter-spacing:.15em;color:var(--muted);margin-bottom:.25rem;font-family:var(--mono);}
+.login-title{font-size:22px;font-weight:600;color:var(--text);margin-bottom:2rem;}
+.login-box label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;}
+.login-box input{width:100%;padding:10px 12px;border:0.5px solid var(--border-s);border-radius:var(--r);font-size:14px;font-family:var(--mono);background:var(--bg);color:var(--text);margin-bottom:1rem;}
+.login-box input:focus{outline:2px solid var(--accent);outline-offset:1px;}
+.login-btn{width:100%;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--sans);}
+.login-btn:hover{background:#122b44;}
+.login-err{font-size:12px;color:var(--red);margin-top:8px;display:none;}
+.change-url{font-size:11px;color:var(--hint);margin-top:1rem;cursor:pointer;text-decoration:underline;text-align:center;display:block;}
+
+/* APP */
+#app{display:none;}
+.header{background:var(--surface);border-bottom:0.5px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;gap:1rem;height:52px;position:sticky;top:0;z-index:100;}
+.header-brand{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--accent);letter-spacing:.05em;white-space:nowrap;}
+.tab-bar{display:flex;gap:0;flex:1;}
+.tab{padding:0 16px;height:52px;font-size:13px;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;font-family:var(--sans);white-space:nowrap;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500;}
+.logout-btn{margin-left:auto;font-size:12px;color:var(--hint);cursor:pointer;background:none;border:none;font-family:var(--sans);white-space:nowrap;}
+
+.main{max-width:820px;margin:0 auto;padding:1.5rem 1rem 3rem;}
+.section{display:none;}.section.active{display:block;}
+
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem;}
+.card-head{font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:1rem;font-family:var(--mono);}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.field label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;}
+select,input[type=text],input[type=date],input[type=password],textarea{width:100%;padding:8px 10px;border:0.5px solid var(--border-s);border-radius:var(--r);font-size:13px;font-family:var(--sans);background:var(--surface);color:var(--text);}
+select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px;}
+textarea{resize:vertical;min-height:60px;}
+
+.score-section{margin-bottom:18px;}
+.score-head{display:flex;align-items:baseline;gap:8px;margin-bottom:6px;}
+.score-head .lbl{font-size:13px;font-weight:500;color:var(--text);}
+.score-head .hint{font-size:11px;color:var(--hint);font-family:var(--mono);}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;}
+.sb{padding:6px 14px;font-size:12px;border:0.5px solid var(--border-s);background:var(--bg);border-radius:var(--r);cursor:pointer;color:var(--muted);font-family:var(--mono);transition:all .1s;}
+.sb:hover{border-color:var(--accent);color:var(--accent);}
+.sb.sel-u{background:var(--blue-l);border-color:var(--blue);color:var(--blue);font-weight:500;}
+.sb.sel-o{background:var(--green-l);border-color:var(--green);color:var(--green);font-weight:500;}
+.sb.sel-s{background:var(--amber-l);border-color:var(--amber);color:var(--amber);font-weight:500;}
+
+.total-row{display:flex;align-items:center;gap:16px;background:var(--bg);border-radius:var(--r);padding:12px 16px;margin-top:12px;}
+.total-num{font-size:32px;font-weight:600;color:var(--text);font-family:var(--mono);}
+.type-tag{font-size:12px;padding:4px 12px;border-radius:20px;font-weight:500;}
+.t-加速{background:var(--blue-l);color:var(--blue);}
+.t-育成{background:var(--green-l);color:var(--green);}
+.t-分解{background:var(--amber-l);color:var(--amber);}
+.t-危険{background:var(--red-l);color:var(--red);}
+.hint-box{font-size:12px;color:var(--muted);border-left:2px solid var(--border-s);padding-left:12px;margin-top:10px;line-height:1.8;}
+
+.submit-btn{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--sans);margin-top:6px;}
+.submit-btn:hover{background:#122b44;}
+.submit-btn:disabled{background:var(--muted);cursor:not-allowed;}
+
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.5rem;}
+.metric{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--r);padding:14px 16px;}
+.metric-lbl{font-size:11px;color:var(--hint);font-family:var(--mono);margin-bottom:4px;}
+.metric-val{font-size:24px;font-weight:600;color:var(--text);font-family:var(--mono);}
+
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1rem;}
+.filter-row select{width:auto;min-width:130px;}
+.filter-label{font-size:12px;color:var(--muted);}
+.chart-wrap{position:relative;width:100%;}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px;font-size:12px;color:var(--muted);}
+.legend-item{display:flex;align-items:center;gap:5px;}
+.legend-dot{width:10px;height:10px;border-radius:2px;}
+
+.log-table{width:100%;border-collapse:collapse;font-size:12px;}
+.log-table th{font-size:11px;font-weight:500;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:0.5px solid var(--border);font-family:var(--mono);white-space:nowrap;}
+.log-table td{padding:9px 10px;border-bottom:0.5px solid var(--border);color:var(--text);vertical-align:middle;}
+.log-table tr:hover td{background:var(--bg);}
+.score-num{font-family:var(--mono);font-weight:500;}
+.empty-state{text-align:center;padding:3rem;color:var(--hint);font-size:13px;}
+.export-btn{padding:8px 16px;border:0.5px solid var(--border-s);background:var(--surface);border-radius:var(--r);font-size:12px;cursor:pointer;color:var(--muted);font-family:var(--sans);}
+.export-btn:hover{background:var(--bg);color:var(--text);}
+
+.master-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.master-list{list-style:none;margin-bottom:12px;}
+.master-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:0.5px solid var(--border);border-radius:var(--r);margin-bottom:6px;background:var(--bg);font-size:13px;}
+.del-btn{background:none;border:none;color:var(--hint);cursor:pointer;font-size:16px;line-height:1;padding:0 4px;}
+.del-btn:hover{color:var(--red);}
+.add-row{display:flex;gap:8px;}
+.add-row input{flex:1;}
+.add-btn{padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;white-space:nowrap;}
+.pw-msg{font-size:12px;margin-top:6px;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:13px;padding:10px 20px;border-radius:var(--r);opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;font-family:var(--sans);}
+.toast.show{opacity:1;}
+.loading{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="setup-box">
+    <div class="setup-logo">YCK YAMAGUCHICHU KOBETSU</div>
+    <div class="setup-title">初回セットアップ</div>
+    <div class="setup-sub">Google Apps ScriptのURLを設定してください。<br>一度設定すれば次回からはパスワード画面が表示されます。</div>
+
+    <div class="step">
+      <div class="step-num">STEP 1</div>
+      <p>Googleスプレッドシートを新規作成し、<br>「拡張機能」→「Apps Script」を開く</p>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 2</div>
+      <p><code>コード.gs</code> に同梱の <code>gas_code.js</code> の内容を貼り付けて保存</p>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 3</div>
+      <p>「デプロイ」→「新しいデプロイ」→<br>種類：<code>ウェブアプリ</code>、アクセス：<code>全員</code> でデプロイ</p>
+    </div>
+    <div class="step">
+      <div class="step-num">STEP 4</div>
+      <p>発行されたURLをここに貼り付けて保存</p>
+      <div class="url-input-wrap">
+        <input type="text" id="gas-url-input" placeholder="https://script.google.com/macros/s/...">
+        <button class="save-url-btn" onclick="saveGasUrl()">保存</button>
+      </div>
+      <div class="saved-url" id="url-saved" style="display:none;">✓ 保存しました。ページを再読み込みします...</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">YCK YAMAGUCHICHU KOBETSU</div>
+    <div class="login-title">授業ログシステム</div>
+    <div class="field">
+      <label>パスワード</label>
+      <input type="password" id="pw-input" placeholder="パスワードを入力">
+    </div>
+    <button class="login-btn" onclick="doLogin()">ログイン</button>
+    <div class="login-err" id="login-err">パスワードが違います</div>
+    <a class="change-url" onclick="resetSetup()">GAS URLを変更する</a>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="header">
+    <div class="header-brand">YCK授業ログ</div>
+    <div class="tab-bar">
+      <button class="tab active" onclick="showTab('input',this)">授業入力</button>
+      <button class="tab" onclick="showTab('dashboard',this)">ダッシュボード</button>
+      <button class="tab" onclick="showTab('logs',this)">ログ一覧</button>
+      <button class="tab" onclick="showTab('master',this)">マスタ管理</button>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">ログアウト</button>
+  </div>
+  <div class="main">
+
+    <!-- INPUT -->
+    <div id="tab-input" class="section active">
+      <div class="card">
+        <div class="card-head">基本情報</div>
+        <div class="grid-2">
+          <div class="field"><label>生徒名</label><select id="i-student"></select></div>
+          <div class="field"><label>講師名</label><select id="i-teacher"></select></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>科目</label><select id="i-subject"></select></div>
+          <div class="field"><label>授業日</label><input type="date" id="i-date"></div>
+        </div>
+        <div class="field"><label>授業内容</label><textarea id="i-content" placeholder="例：二次方程式の因数分解"></textarea></div>
+      </div>
+      <div class="card">
+        <div class="card-head">授業前スコア</div>
+        <div id="pre-scores"></div>
+        <div class="total-row">
+          <div><div style="font-size:11px;color:var(--hint);margin-bottom:2px;font-family:var(--mono);">PRE TOTAL</div><div class="total-num" id="pre-total">—</div></div>
+          <div id="pre-badge"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">授業後スコア</div>
+        <div id="post-scores"></div>
+        <div class="total-row">
+          <div><div style="font-size:11px;color:var(--hint);margin-bottom:2px;font-family:var(--mono);">POST TOTAL</div><div class="total-num" id="post-total">—</div></div>
+          <div id="post-badge"></div>
+        </div>
+        <div id="hint-area"></div>
+      </div>
+      <div class="card">
+        <div class="card-head">メモ・引き継ぎ</div>
+        <textarea id="i-memo" placeholder="気になった点、次回への引き継ぎなど"></textarea>
+        <button class="submit-btn" id="save-btn" onclick="submitLog()">授業ログを保存</button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard" class="section">
+      <div class="filter-row">
+        <span class="filter-label">生徒：</span><select id="d-student" onchange="renderDash()"></select>
+        <span class="filter-label" style="margin-left:8px;">講師：</span><select id="d-teacher" onchange="renderDash()"></select>
+      </div>
+      <div class="metrics" id="d-metrics"></div>
+      <div class="card">
+        <div class="card-head">生徒別 スコア推移</div>
+        <div id="trend-legend" class="legend"></div>
+        <div class="chart-wrap" style="height:260px;"><canvas id="c-trend" role="img" aria-label="生徒別スコア推移"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head">講師別 平均スコアアップ</div>
+        <div class="chart-wrap" style="height:180px;"><canvas id="c-teacher" role="img" aria-label="講師別平均スコアアップ"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head">授業タイプ分布（授業後）</div>
+        <div style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap;">
+          <div class="chart-wrap" style="height:180px;width:180px;flex-shrink:0;"><canvas id="c-type" role="img" aria-label="タイプ分布"></canvas></div>
+          <div id="type-legend" style="font-size:13px;line-height:2.2;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGS -->
+    <div id="tab-logs" class="section">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1rem;">
+        <select id="l-student" onchange="renderLogs()" style="width:auto;min-width:130px;"></select>
+        <select id="l-teacher" onchange="renderLogs()" style="width:auto;min-width:130px;"></select>
+        <button class="export-btn" onclick="exportCSV()">CSVダウンロード</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="log-table">
+          <thead><tr>
+            <th>日付</th><th>生徒</th><th>講師</th><th>科目</th>
+            <th>前計</th><th></th><th>後計</th><th>タイプ</th><th>メモ</th>
+          </tr></thead>
+          <tbody id="log-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MASTER -->
+    <div id="tab-master" class="section">
+      <div class="master-grid">
+        <div class="card">
+          <div class="card-head">生徒マスタ</div>
+          <ul class="master-list" id="student-list"></ul>
+          <div class="add-row"><input type="text" id="new-student" placeholder="生徒名"><button class="add-btn" onclick="addMaster('student')">追加</button></div>
+        </div>
+        <div class="card">
+          <div class="card-head">講師マスタ</div>
+          <ul class="master-list" id="teacher-list"></ul>
+          <div class="add-row"><input type="text" id="new-teacher" placeholder="講師名"><button class="add-btn" onclick="addMaster('teacher')">追加</button></div>
+        </div>
+      </div>
+      <div class="card" style="max-width:400px;">
+        <div class="card-head">科目マスタ</div>
+        <ul class="master-list" id="subject-list"></ul>
+        <div class="add-row"><input type="text" id="new-subject" placeholder="科目名"><button class="add-btn" onclick="addMaster('subject')">追加</button></div>
+      </div>
+      <div class="card" style="max-width:400px;">
+        <div class="card-head">パスワード変更</div>
+        <div class="field" style="margin-bottom:10px;"><label>現在のパスワード</label><input type="password" id="pw-old"></div>
+        <div class="field" style="margin-bottom:10px;"><label>新しいパスワード</label><input type="password" id="pw-new"></div>
+        <div class="field" style="margin-bottom:10px;"><label>確認</label><input type="password" id="pw-conf"></div>
+        <button class="add-btn" style="width:100%;padding:10px;" onclick="changePw()">変更する</button>
+        <div class="pw-msg" id="pw-msg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const HINTS = {
+  '加速型':'応用問題を混ぜる・制限時間設定・自己解説させる',
+  '育成型':'同形式反復・途中式徹底・成功承認多め',
+  '分解型':'1工程ずつ・超具体例・ヒント細分化',
+  '危険型':'まず会話・成功体験を超小さく・承認を多く'
+};
+const TYPE_COLORS = ['#1a5276','#2d6a4f','#92570a','#8b2020'];
+const TYPES = ['加速型','育成型','分解型','危険型'];
+const scores = { pre:{u:null,o:null,s:null}, post:{u:null,o:null,s:null} };
+let master = { students:[], teachers:[], subjects:[] };
+let logs = [];
+let charts = {};
+let GAS_URL = localStorage.getItem('yck_gas_url') || '';
+
+// ---- TOAST ----
+function toast(msg, dur=2000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ---- GAS API ----
+async function api(action, body={}) {
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action, ...body })
+  });
+  return res.json();
+}
+
+// ---- SETUP ----
+function saveGasUrl() {
+  const url = document.getElementById('gas-url-input').value.trim();
+  if (!url.startsWith('https://script.google.com')) {
+    alert('正しいGoogle Apps ScriptのURLを入力してください');
+    return;
+  }
+  localStorage.setItem('yck_gas_url', url);
+  GAS_URL = url;
+  document.getElementById('url-saved').style.display = 'block';
+  setTimeout(() => location.reload(), 1500);
+}
+function resetSetup() {
+  localStorage.removeItem('yck_gas_url');
+  location.reload();
+}
+
+// ---- INIT ----
+function initScreens() {
+  if (!GAS_URL) {
+    document.getElementById('setup-screen').style.display = 'flex';
+  } else {
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+}
+
+// ---- AUTH ----
+async function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  const btn = document.querySelector('.login-btn');
+  btn.innerHTML = '<span class="loading"></span>確認中...';
+  btn.disabled = true;
+  try {
+    const res = await api('auth', { password: pw });
+    if (res.ok) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      await initApp();
+    } else {
+      document.getElementById('login-err').style.display = 'block';
+    }
+  } catch(e) {
+    alert('接続に失敗しました。GAS URLを確認してください。');
+  }
+  btn.innerHTML = 'ログイン'; btn.disabled = false;
+}
+function doLogout() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('pw-input').value = '';
+  document.getElementById('login-err').style.display = 'none';
+}
+
+// ---- APP INIT ----
+async function initApp() {
+  const [mRes, lRes] = await Promise.all([api('getMaster'), api('getLogs')]);
+  master = mRes.master;
+  logs = lRes.logs || [];
+  rebuildSelects();
+  buildScoreInputs();
+  document.getElementById('i-date').value = new Date().toISOString().slice(0,10);
+  renderMaster();
+  renderLogs();
+  renderDash();
+}
+
+// ---- HELPERS ----
+function getType(t) {
+  if (t>=9) return '加速型'; if (t>=7) return '育成型';
+  if (t>=4) return '分解型'; return '危険型';
+}
+function rebuildSelects() {
+  const pop = (id, arr, all) => {
+    const el = document.getElementById(id); if (!el) return;
+    const cur = el.value;
+    el.innerHTML = all ? `<option value="">${all}</option>` : '';
+    arr.forEach(v => { const o=document.createElement('option'); o.value=o.textContent=v; el.appendChild(o); });
+    el.value = cur;
+  };
+  pop('i-student', master.students, '生徒を選択');
+  pop('i-teacher', master.teachers, '講師を選択');
+  pop('i-subject', master.subjects, null);
+  pop('d-student', master.students, '全生徒');
+  pop('d-teacher', master.teachers, '全講師');
+  pop('l-student', master.students, '全生徒');
+  pop('l-teacher', master.teachers, '全講師');
+}
+
+// ---- SCORE UI ----
+function buildScoreInputs() {
+  const dims = [
+    {key:'u',label:'① 習熟度（Understanding）',hint:'4=高 3=やや高 2=中 1=やや低 0=低',vals:[0,1,2,3,4],cls:'sel-u',lbls:{0:'0 低',1:'1 やや低',2:'2 中',3:'3 やや高',4:'4 高'}},
+    {key:'o',label:'② 発話量（Output）',hint:'2=高 1=中 0=低',vals:[0,1,2],cls:'sel-o',lbls:{0:'0 低',1:'1 中',2:'2 高'}},
+    {key:'s',label:'③ 表情・集中度（State）',hint:'4=高 3=やや高 2=中 1=やや低 0=低',vals:[0,1,2,3,4],cls:'sel-s',lbls:{0:'0 低',1:'1 やや低',2:'2 中',3:'3 やや高',4:'4 高'}},
+  ];
+  ['pre','post'].forEach(phase => {
+    const c = document.getElementById(phase+'-scores'); c.innerHTML = '';
+    dims.forEach(d => {
+      const s = document.createElement('div'); s.className='score-section';
+      s.innerHTML = `<div class="score-head"><span class="lbl">${d.label}</span><span class="hint">${d.hint}</span></div>
+        <div class="btn-row">${d.vals.map(v=>`<button class="sb" data-phase="${phase}" data-dim="${d.key}" data-val="${v}" data-cls="${d.cls}" onclick="setScore(this)">${d.lbls[v]}</button>`).join('')}</div>`;
+      c.appendChild(s);
+    });
+  });
+}
+function setScore(btn) {
+  const {phase,dim,cls} = btn.dataset; const val = parseInt(btn.dataset.val);
+  scores[phase][dim] = val;
+  document.querySelectorAll(`.sb[data-phase="${phase}"][data-dim="${dim}"]`).forEach(b=>b.classList.remove('sel-u','sel-o','sel-s'));
+  btn.classList.add(cls); updateTotal(phase);
+}
+function updateTotal(phase) {
+  const s = scores[phase];
+  if (s.u===null||s.o===null||s.s===null) return;
+  const total = s.u+s.o+s.s; const type = getType(total);
+  document.getElementById(phase+'-total').textContent = total;
+  document.getElementById(phase+'-badge').innerHTML = `<span class="type-tag t-${type}">${type}</span>`;
+  if (phase==='post') document.getElementById('hint-area').innerHTML = `<div class="hint-box"><strong>${type}：</strong>${HINTS[type]}</div>`;
+}
+
+// ---- SUBMIT ----
+async function submitLog() {
+  const student = document.getElementById('i-student').value;
+  const teacher = document.getElementById('i-teacher').value;
+  if (!student||!teacher) { alert('生徒名と講師名を選択してください'); return; }
+  const s = scores;
+  if ([s.pre.u,s.pre.o,s.pre.s,s.post.u,s.post.o,s.post.s].some(v=>v===null)) {
+    alert('授業前後のスコアをすべて入力してください'); return;
+  }
+  const preT = s.pre.u+s.pre.o+s.pre.s;
+  const postT = s.post.u+s.post.o+s.post.s;
+  const log = {
+    id: Date.now(),
+    date: document.getElementById('i-date').value,
+    student, teacher,
+    subject: document.getElementById('i-subject').value,
+    content: document.getElementById('i-content').value,
+    memo: document.getElementById('i-memo').value,
+    preU:s.pre.u, preO:s.pre.o, preS:s.pre.s, preTotal:preT, preType:getType(preT),
+    postU:s.post.u, postO:s.post.o, postS:s.post.s, postTotal:postT, postType:getType(postT)
+  };
+  const btn = document.getElementById('save-btn');
+  btn.innerHTML = '<span class="loading"></span>保存中...'; btn.disabled = true;
+  try {
+    const res = await api('addLog', { log });
+    if (res.ok) {
+      logs.push(log); toast('保存しました！'); resetForm();
+    } else { alert('保存に失敗しました'); }
+  } catch(e) { alert('通信エラーが発生しました'); }
+  btn.innerHTML = '授業ログを保存'; btn.disabled = false;
+}
+function resetForm() {
+  ['pre','post'].forEach(p => {
+    Object.keys(scores[p]).forEach(k=>scores[p][k]=null);
+    document.querySelectorAll(`.sb[data-phase="${p}"]`).forEach(b=>b.classList.remove('sel-u','sel-o','sel-s'));
+    document.getElementById(p+'-total').textContent='—';
+    document.getElementById(p+'-badge').innerHTML='';
+  });
+  document.getElementById('i-content').value='';
+  document.getElementById('i-memo').value='';
+  document.getElementById('hint-area').innerHTML='';
+}
+
+// ---- DASHBOARD ----
+function getFiltered() {
+  const s=document.getElementById('d-student')?.value||'';
+  const t=document.getElementById('d-teacher')?.value||'';
+  return logs.filter(l=>(!s||l.student===s)&&(!t||l.teacher===t));
+}
+function renderDash() {
+  const fl=getFiltered(); const total=fl.length;
+  const avgUp=total?(fl.reduce((a,l)=>a+(Number(l.postTotal)-Number(l.preTotal)),0)/total).toFixed(1):'—';
+  const danger=fl.filter(l=>l.postType==='危険型').length;
+  const avgPost=total?(fl.reduce((a,l)=>a+Number(l.postTotal),0)/total).toFixed(1):'—';
+  document.getElementById('d-metrics').innerHTML=`
+    <div class="metric"><div class="metric-lbl">TOTAL LESSONS</div><div class="metric-val">${total}</div></div>
+    <div class="metric"><div class="metric-lbl">AVG SCORE UP</div><div class="metric-val" style="color:var(--green)">${total?'+'+avgUp:'—'}</div></div>
+    <div class="metric"><div class="metric-lbl">危険型件数</div><div class="metric-val" style="color:${danger>0?'var(--red)':'var(--text)'}">${danger}</div></div>
+    <div class="metric"><div class="metric-lbl">AVG POST SCORE</div><div class="metric-val">${avgPost}</div></div>`;
+  renderTrend(fl); renderTeacher(); renderTypeChart(fl);
+}
+function renderTrend(fl) {
+  const ctx=document.getElementById('c-trend').getContext('2d');
+  if(charts.trend) charts.trend.destroy();
+  if(!fl.length) return;
+  const sts=[...new Set(fl.map(l=>l.student))];
+  const pal=['#1a3a5c','#2d6a4f','#92570a','#6b2d8b','#7a3020'];
+  const datasets=[];
+  document.getElementById('trend-legend').innerHTML='';
+  sts.forEach((st,i)=>{
+    const sl=fl.filter(l=>l.student===st); const c=pal[i%pal.length];
+    datasets.push({label:st+' 前',data:sl.map(l=>Number(l.preTotal)),borderColor:c,borderDash:[5,3],backgroundColor:'transparent',tension:.3,pointRadius:3});
+    datasets.push({label:st+' 後',data:sl.map(l=>Number(l.postTotal)),borderColor:c,backgroundColor:'transparent',tension:.3,pointRadius:4});
+    document.getElementById('trend-legend').innerHTML+=`<span class="legend-item"><span class="legend-dot" style="background:${c}"></span>${st}</span>`;
+  });
+  charts.trend=new Chart(ctx,{type:'line',data:{labels:fl.map((_,i)=>`第${i+1}回`),datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:10,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}}}});
+}
+function renderTeacher() {
+  const ctx=document.getElementById('c-teacher').getContext('2d');
+  if(charts.teacher) charts.teacher.destroy();
+  const avgs=master.teachers.map(t=>{
+    const tl=logs.filter(l=>l.teacher===t);
+    return tl.length?parseFloat((tl.reduce((a,l)=>a+(Number(l.postTotal)-Number(l.preTotal)),0)/tl.length).toFixed(1)):0;
+  });
+  charts.teacher=new Chart(ctx,{type:'bar',data:{labels:master.teachers,datasets:[{label:'平均スコアアップ',data:avgs,backgroundColor:'#1a3a5c',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}}}});
+}
+function renderTypeChart(fl) {
+  const ctx=document.getElementById('c-type').getContext('2d');
+  if(charts.type) charts.type.destroy();
+  const counts=TYPES.map(t=>fl.filter(l=>l.postType===t).length);
+  charts.type=new Chart(ctx,{type:'doughnut',data:{labels:TYPES,datasets:[{data:counts,backgroundColor:TYPE_COLORS,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  const tot=fl.length||1;
+  document.getElementById('type-legend').innerHTML=TYPES.map((t,i)=>`<div style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="width:10px;height:10px;border-radius:2px;background:${TYPE_COLORS[i]};display:inline-block;"></span><span class="type-tag t-${t}" style="font-size:11px;padding:2px 8px;">${t}</span>${counts[i]}回（${Math.round(counts[i]/tot*100)}%）</div>`).join('');
+}
+
+// ---- LOGS ----
+function renderLogs() {
+  const s=document.getElementById('l-student')?.value||'';
+  const t=document.getElementById('l-teacher')?.value||'';
+  const fl=logs.filter(l=>(!s||l.student===s)&&(!t||l.teacher===t));
+  const tb=document.getElementById('log-body');
+  if(!fl.length){tb.innerHTML=`<tr><td colspan="9" class="empty-state">ログがありません</td></tr>`;return;}
+  tb.innerHTML=[...fl].reverse().map(l=>`<tr>
+    <td style="font-family:var(--mono);white-space:nowrap;">${l.date}</td>
+    <td>${l.student}</td><td>${l.teacher}</td><td>${l.subject}</td>
+    <td class="score-num">${l.preTotal}</td>
+    <td style="color:var(--hint);font-family:var(--mono);">→</td>
+    <td class="score-num">${l.postTotal}</td>
+    <td><span class="type-tag t-${l.postType}" style="font-size:11px;padding:2px 8px;">${l.postType}</span></td>
+    <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);">${l.memo||''}</td>
+  </tr>`).join('');
+}
+
+// ---- CSV ----
+function exportCSV() {
+  const s=document.getElementById('l-student')?.value||'';
+  const t=document.getElementById('l-teacher')?.value||'';
+  const fl=logs.filter(l=>(!s||l.student===s)&&(!t||l.teacher===t));
+  if(!fl.length){alert('データがありません');return;}
+  const hdr=['日付','生徒','講師','科目','授業内容','前U','前O','前S','前合計','前タイプ','後U','後O','後S','後合計','後タイプ','スコアアップ','メモ'];
+  const rows=fl.map(l=>[l.date,l.student,l.teacher,l.subject,`"${(l.content||'').replace(/"/g,'""')}"`,l.preU,l.preO,l.preS,l.preTotal,l.preType,l.postU,l.postO,l.postS,l.postTotal,l.postType,Number(l.postTotal)-Number(l.preTotal),`"${(l.memo||'').replace(/"/g,'""')}"`]);
+  const csv='\uFEFF'+[hdr,...rows].map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download=`YCK_授業ログ_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ---- MASTER ----
+function renderMaster() {
+  const render=(id,arr,type)=>{
+    const ul=document.getElementById(id);
+    ul.innerHTML=arr.map((v,i)=>`<li class="master-item"><span>${v}</span><button class="del-btn" onclick="delMaster('${type}',${i})">×</button></li>`).join('')||'<li style="font-size:12px;color:var(--hint);padding:6px;">（未登録）</li>';
+  };
+  render('student-list',master.students,'student');
+  render('teacher-list',master.teachers,'teacher');
+  render('subject-list',master.subjects,'subject');
+}
+async function addMaster(type) {
+  const id='new-'+type; const val=document.getElementById(id).value.trim(); if(!val)return;
+  if(type==='student') master.students.push(val);
+  if(type==='teacher') master.teachers.push(val);
+  if(type==='subject') master.subjects.push(val);
+  document.getElementById(id).value='';
+  await api('setMaster',{master}); renderMaster(); rebuildSelects(); toast('保存しました');
+}
+async function delMaster(type,idx) {
+  if(!confirm('削除してよいですか？'))return;
+  if(type==='student') master.students.splice(idx,1);
+  if(type==='teacher') master.teachers.splice(idx,1);
+  if(type==='subject') master.subjects.splice(idx,1);
+  await api('setMaster',{master}); renderMaster(); rebuildSelects(); toast('削除しました');
+}
+
+// ---- PASSWORD ----
+async function changePw() {
+  const old=document.getElementById('pw-old').value;
+  const nw=document.getElementById('pw-new').value;
+  const cf=document.getElementById('pw-conf').value;
+  const msg=document.getElementById('pw-msg');
+  if(!nw){msg.style.color='var(--red)';msg.textContent='新しいパスワードを入力してください';return;}
+  if(nw!==cf){msg.style.color='var(--red)';msg.textContent='パスワードが一致しません';return;}
+  const res=await api('changePass',{oldPw:old,newPw:nw});
+  if(res.ok){msg.style.color='var(--green)';msg.textContent='変更しました';['pw-old','pw-new','pw-conf'].forEach(id=>document.getElementById(id).value='');}
+  else{msg.style.color='var(--red)';msg.textContent=res.error||'エラーが発生しました';}
+}
+
+// ---- TABS ----
+function showTab(name,btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(name==='dashboard') renderDash();
+  if(name==='logs') renderLogs();
+  if(name==='master') renderMaster();
+}
+
+document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('gas-url-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')saveGasUrl();});
+initScreens();
+</script>
+</body>
+</html>
