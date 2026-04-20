@@ -484,7 +484,7 @@ const scores={pre:{u:null,o:null,s:null},post:{u:null,o:null,s:null}};
 let master={students:[],teachers:[],subjects:[]};
 let logs=[];
 let charts={};
-let GAS_URL=localStorage.getItem('yck_gas_url')||'';
+let GAS_URL='https://script.google.com/macros/s/AKfycbz8k41UXf6w3mkSQ3ARc4ReQ_v2xO2t2-xKizYtQ3Y_s2k1iAHEwVNSUlI52V5Go4NsZg/exec';
 
 // ── TOAST ──
 function toast(msg,dur=2200){
@@ -510,12 +510,8 @@ function saveGasUrl(){
 function resetSetup(){localStorage.removeItem('yck_gas_url');location.reload();}
 
 function initScreens(){
-  if(!GAS_URL){
-    document.getElementById('setup-screen').style.display='flex';
-  }else{
-    document.getElementById('setup-screen').style.display='none';
-    document.getElementById('login-screen').style.display='flex';
-  }
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
 }
 
 // ── AUTH ──
