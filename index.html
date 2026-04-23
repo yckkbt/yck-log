@@ -8,94 +8,53 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root{
-  --bg:#f0f2f8;
-  --surface:#fff;
-  --border:#dde2f0;
-  --border-s:#b8c0d8;
-  --text:#1a1c2e;
-  --muted:#5a6080;
-  --hint:#9098b8;
-  --mono:'DM Mono',monospace;
-  --sans:'Noto Sans JP',sans-serif;
+  --bg:#f0f2f8;--surface:#fff;--border:#dde2f0;--border-s:#b8c0d8;
+  --text:#1a1c2e;--muted:#5a6080;--hint:#9098b8;
+  --mono:'DM Mono',monospace;--sans:'Noto Sans JP',sans-serif;
   --r:8px;--rl:14px;
-  /* Brand colors */
-  --navy:#1a2a6c;
-  --blue:#2563eb;
-  --blue-l:#dbeafe;
-  --sky:#0ea5e9;
-  --sky-l:#e0f2fe;
-  --teal:#0d9488;
-  --teal-l:#ccfbf1;
-  --green:#16a34a;
-  --green-l:#dcfce7;
-  --amber:#d97706;
-  --amber-l:#fef3c7;
-  --orange:#ea580c;
-  --orange-l:#ffedd5;
-  --red:#dc2626;
-  --red-l:#fee2e2;
-  --purple:#7c3aed;
-  --purple-l:#ede9fe;
-  --pink:#db2777;
-  --pink-l:#fce7f3;
+  --navy:#1a2a6c;--blue:#2563eb;--blue-l:#dbeafe;
+  --sky:#0ea5e9;--sky-l:#e0f2fe;
+  --teal:#0d9488;--teal-l:#ccfbf1;
+  --green:#16a34a;--green-l:#dcfce7;
+  --amber:#d97706;--amber-l:#fef3c7;
+  --orange:#ea580c;--orange-l:#ffedd5;
+  --red:#dc2626;--red-l:#fee2e2;
+  --purple:#7c3aed;--purple-l:#ede9fe;
+  --pink:#db2777;--pink-l:#fce7f3;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh;}
-
-/* ── LOGO ── */
 .yck-logo{display:flex;align-items:center;gap:10px;}
 .logo-mark{width:36px;height:36px;flex-shrink:0;}
 .logo-text-wrap{display:flex;flex-direction:column;line-height:1.1;}
 .logo-yck{font-family:'Zen Kaku Gothic New',var(--sans);font-weight:900;font-size:18px;letter-spacing:.05em;color:#fff;}
 .logo-sub{font-size:9px;letter-spacing:.12em;color:rgba(255,255,255,.7);font-family:var(--mono);}
 
-/* ── SETUP ── */
-#setup-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--navy) 0%,#1e40af 50%,var(--purple) 100%);}
-.setup-box{background:#fff;border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
-.setup-logo-wrap{background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:var(--rl);padding:16px 20px;margin-bottom:1.5rem;display:flex;align-items:center;gap:12px;}
-.setup-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:.4rem;}
-.setup-sub{font-size:12px;color:var(--muted);margin-bottom:1.5rem;line-height:1.7;}
-.step-block{border-left:3px solid var(--blue-l);padding-left:14px;margin-bottom:16px;}
-.step-num{font-family:var(--mono);font-size:10px;color:var(--blue);font-weight:500;margin-bottom:3px;letter-spacing:.1em;}
-.step-block p{font-size:13px;color:var(--muted);line-height:1.7;}
-.step-block code{font-family:var(--mono);font-size:11px;background:var(--blue-l);color:var(--navy);padding:1px 6px;border-radius:4px;}
-.url-row{display:flex;gap:8px;margin-top:8px;}
-.url-row input{flex:1;padding:9px 10px;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:12px;font-family:var(--mono);background:#f8f9ff;color:var(--text);}
-.url-row input:focus{outline:none;border-color:var(--blue);}
-.primary-btn{padding:9px 18px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;border-radius:var(--r);font-size:13px;cursor:pointer;font-family:var(--sans);font-weight:500;white-space:nowrap;}
-.saved-msg{font-size:11px;color:var(--green);margin-top:6px;font-family:var(--mono);}
-
-/* ── LOGIN ── */
-#login-screen{min-height:100vh;display:none;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--navy) 0%,#1e40af 50%,var(--purple) 100%);}
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--navy) 0%,#1e40af 50%,var(--purple) 100%);}
 .login-card{background:#fff;border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
 .login-logo-wrap{background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:var(--rl);padding:16px 20px;margin-bottom:1.75rem;display:flex;align-items:center;gap:12px;}
 .login-card label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;}
 .login-card input{width:100%;padding:10px 12px;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:14px;font-family:var(--mono);background:#f8f9ff;color:var(--text);margin-bottom:1rem;}
 .login-card input:focus{outline:none;border-color:var(--blue);}
-.login-main-btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;font-family:var(--sans);}
+.login-main-btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;}
 .login-err{font-size:12px;color:var(--red);margin-top:8px;display:none;}
-.change-url-link{font-size:11px;color:var(--hint);margin-top:12px;cursor:pointer;text-decoration:underline;text-align:center;display:block;}
 
-/* ── APP ── */
 #app{display:none;}
 .header{background:linear-gradient(135deg,var(--navy) 0%,#1e40af 60%,var(--purple) 100%);padding:0 1.5rem;display:flex;align-items:center;gap:1.25rem;height:56px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(26,42,108,.25);}
-.tab-bar{display:flex;gap:0;flex:1;}
-.tab{padding:0 16px;height:56px;font-size:13px;cursor:pointer;border:none;background:none;color:rgba(255,255,255,.6);border-bottom:3px solid transparent;margin-bottom:-0px;font-family:var(--sans);white-space:nowrap;transition:color .15s;}
+.tab-bar{display:flex;flex:1;}
+.tab{padding:0 14px;height:56px;font-size:13px;cursor:pointer;border:none;background:none;color:rgba(255,255,255,.6);border-bottom:3px solid transparent;font-family:var(--sans);white-space:nowrap;transition:color .15s;}
 .tab:hover{color:rgba(255,255,255,.9);}
 .tab.active{color:#fff;border-bottom-color:#fff;font-weight:500;}
 .logout-btn{margin-left:auto;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;background:none;border:none;font-family:var(--sans);white-space:nowrap;}
-.logout-btn:hover{color:#fff;}
 
-.main{max-width:860px;margin:0 auto;padding:1.5rem 1rem 3rem;}
+.main{max-width:880px;margin:0 auto;padding:1.5rem 1rem 3rem;}
 .section{display:none;}.section.active{display:block;}
 
-/* ── CARDS ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(26,42,108,.06);}
 .card-head{display:flex;align-items:center;gap:8px;margin-bottom:1rem;}
 .card-head-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
 .card-head-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;font-family:var(--mono);}
 
-/* ── FORM ── */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
 .field label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;font-weight:500;}
 select,input[type=text],input[type=date],input[type=password],textarea{
@@ -105,7 +64,12 @@ select,input[type=text],input[type=date],input[type=password],textarea{
 select:focus,input:focus,textarea:focus{outline:none;border-color:var(--blue);}
 textarea{resize:vertical;min-height:60px;}
 
-/* ── SCORE BUTTONS ── */
+/* 代講チェック */
+.daiko-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--amber-l);border-radius:var(--r);margin-bottom:12px;border:1px solid #fcd34d;}
+.daiko-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--amber);cursor:pointer;}
+.daiko-label{font-size:13px;font-weight:600;color:var(--amber);cursor:pointer;}
+.daiko-note{font-size:11px;color:#92400e;margin-left:auto;}
+
 .score-section{margin-bottom:18px;}
 .score-head{display:flex;align-items:baseline;gap:8px;margin-bottom:6px;}
 .score-head .lbl{font-size:13px;font-weight:600;color:var(--text);}
@@ -124,17 +88,15 @@ textarea{resize:vertical;min-height:60px;}
 .t-育成{background:var(--green-l);color:#15803d;}
 .t-分解{background:var(--orange-l);color:#c2410c;}
 .t-危険{background:var(--red-l);color:#b91c1c;}
-
 .hint-box{font-size:12px;color:var(--muted);border-left:3px solid;padding:10px 14px;margin-top:10px;line-height:1.9;border-radius:0 var(--r) var(--r) 0;}
 .hint-加速{border-color:var(--blue);background:var(--blue-l);}
 .hint-育成{border-color:var(--green);background:var(--green-l);}
 .hint-分解{border-color:var(--orange);background:var(--orange-l);}
 .hint-危険{border-color:var(--red);background:var(--red-l);}
 
-.submit-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);margin-top:8px;transition:opacity .15s;}
+.submit-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;transition:opacity .15s;}
 .submit-btn:disabled{opacity:.5;cursor:not-allowed;}
 
-/* ── METRICS ── */
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:1.5rem;}
 .metric{border-radius:var(--rl);padding:16px 18px;}
 .metric-lbl{font-size:10px;letter-spacing:.1em;font-family:var(--mono);margin-bottom:6px;font-weight:500;}
@@ -144,7 +106,6 @@ textarea{resize:vertical;min-height:60px;}
 .m-red{background:linear-gradient(135deg,#fee2e2,#fce7f3);}.m-red .metric-lbl{color:#9f1239;}.m-red .metric-val{color:#b91c1c;}
 .m-amber{background:linear-gradient(135deg,#fef3c7,#ffedd5);}.m-amber .metric-lbl{color:#92400e;}.m-amber .metric-val{color:#b45309;}
 
-/* ── FILTERS ── */
 .filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1rem;}
 .filter-row select{width:auto;min-width:130px;}
 .filter-label{font-size:12px;color:var(--muted);font-weight:500;}
@@ -153,31 +114,59 @@ textarea{resize:vertical;min-height:60px;}
 .legend-item{display:flex;align-items:center;gap:5px;color:var(--muted);}
 .legend-dot{width:10px;height:10px;border-radius:3px;}
 
-/* ── LOG TABLE ── */
+/* 生徒別詳細ダッシュボード */
+.student-dash{background:linear-gradient(135deg,#f0f4ff,#f5f0ff);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem;border:1px solid var(--border);}
+.student-dash-name{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:1rem;}
+.type-timeline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem;}
+.type-step{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.type-step-date{font-size:9px;color:var(--hint);font-family:var(--mono);}
+.type-step-badge{font-size:11px;padding:3px 9px;border-radius:12px;font-weight:600;}
+.type-arrow{color:var(--hint);font-size:12px;align-self:center;margin-top:12px;}
+.advice-box{border-radius:var(--r);padding:12px 14px;font-size:13px;line-height:1.8;}
+.advice-加速{background:var(--blue-l);border-left:4px solid var(--blue);}
+.advice-育成{background:var(--green-l);border-left:4px solid var(--green);}
+.advice-分解{background:var(--orange-l);border-left:4px solid var(--orange);}
+.advice-危険{background:var(--red-l);border-left:4px solid var(--red);}
+.advice-title{font-weight:700;margin-bottom:4px;}
+
 .log-table{width:100%;border-collapse:collapse;font-size:12px;}
 .log-table th{font-size:10px;font-weight:700;color:var(--muted);text-align:left;padding:9px 10px;border-bottom:2px solid var(--border);font-family:var(--mono);letter-spacing:.08em;white-space:nowrap;background:#f8f9ff;}
 .log-table td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
 .log-table tr:hover td{background:#f0f4ff;}
 .score-num{font-family:var(--mono);font-weight:600;}
 .empty-state{text-align:center;padding:3rem;color:var(--hint);font-size:13px;}
-.export-btn{padding:8px 16px;border:1.5px solid var(--border-s);background:#fff;border-radius:var(--r);font-size:12px;cursor:pointer;color:var(--muted);font-family:var(--sans);font-weight:500;}
+.export-btn{padding:8px 16px;border:1.5px solid var(--border-s);background:#fff;border-radius:var(--r);font-size:12px;cursor:pointer;color:var(--muted);font-weight:500;}
 .export-btn:hover{border-color:var(--blue);color:var(--blue);}
 
-/* ── MASTER ── */
 .master-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
-.master-list{list-style:none;margin-bottom:12px;max-height:260px;overflow-y:auto;}
-.master-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;background:#f8f9ff;font-size:13px;}
+.master-list{list-style:none;margin-bottom:12px;max-height:300px;overflow-y:auto;}
+.master-item{padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;background:#f8f9ff;font-size:13px;}
+.master-item-top{display:flex;align-items:center;justify-content:space-between;}
 .master-item-info{flex:1;}
-.master-item-name{font-weight:500;color:var(--text);}
-.master-item-sub{font-size:11px;color:var(--hint);font-family:var(--mono);margin-top:1px;}
-.del-btn{background:none;border:none;color:var(--hint);cursor:pointer;font-size:18px;line-height:1;padding:0 4px;flex-shrink:0;}
+.master-item-name{font-weight:600;color:var(--text);}
+.master-item-sub{font-size:11px;color:var(--hint);font-family:var(--mono);margin-top:2px;}
+.del-btn{background:none;border:none;color:var(--hint);cursor:pointer;font-size:18px;line-height:1;padding:0 4px;}
 .del-btn:hover{color:var(--red);}
-.add-row{display:flex;gap:8px;flex-wrap:wrap;}
-.add-row input,
-.add-row select{flex:1;min-width:100px;}
+.edit-btn{background:none;border:1px solid var(--border-s);border-radius:4px;color:var(--muted);cursor:pointer;font-size:11px;padding:2px 8px;margin-right:4px;}
+.edit-btn:hover{border-color:var(--blue);color:var(--blue);}
+
+/* インライン編集パネル */
+.edit-panel{background:#fff;border:1.5px solid var(--blue);border-radius:var(--r);padding:12px;margin-top:8px;display:none;}
+.edit-panel.open{display:block;}
+.edit-panel-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.edit-panel-actions{display:flex;gap:8px;}
+.save-edit-btn{padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;}
+.cancel-edit-btn{padding:7px 16px;background:none;border:1px solid var(--border-s);border-radius:var(--r);font-size:12px;cursor:pointer;color:var(--muted);}
+
+.add-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
+.add-row input,.add-row select{flex:1;min-width:100px;}
 .add-btn{padding:9px 16px;background:linear-gradient(135deg,var(--blue),var(--teal));color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;white-space:nowrap;}
 
-/* ── BULK IMPORT ── */
+/* チェックボックスグループ */
+.check-group{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
+.check-item{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;}
+.check-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--blue);}
+
 .bulk-area{margin-top:1rem;border-top:1px dashed var(--border-s);padding-top:1rem;}
 .bulk-label{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
 .bulk-badge{font-size:10px;background:var(--sky-l);color:var(--sky);padding:2px 7px;border-radius:10px;font-family:var(--mono);font-weight:600;}
@@ -185,60 +174,20 @@ textarea{resize:vertical;min-height:60px;}
 .bulk-textarea:focus{outline:none;border-color:var(--blue);}
 .bulk-note{font-size:11px;color:var(--hint);margin-top:4px;line-height:1.6;}
 .bulk-btn{margin-top:8px;padding:9px 18px;background:linear-gradient(135deg,var(--sky),var(--teal));color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;}
+.dedup-btn{padding:8px 18px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;}
 
-/* ── TEACHER SELECT WITH CHECKBOXES ── */
-.teacher-check-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;}
-.teacher-check{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;}
-.teacher-check input[type=checkbox]{width:16px;height:16px;accent-color:var(--blue);}
-
-/* ── PW ── */
 .pw-section{max-width:380px;}
 .pw-msg{font-size:12px;margin-top:6px;}
+.section-sep{font-size:11px;font-weight:700;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;font-family:var(--mono);margin:1.25rem 0 .75rem;display:flex;align-items:center;gap:8px;}
+.section-sep::after{content:'';flex:1;height:1px;background:var(--border);}
 
-/* ── TOAST ── */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:13px;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;}
 .toast.show{opacity:1;}
 .loading{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle;}
 @keyframes spin{to{transform:rotate(360deg);}}
-
-/* ── SECTION TITLE ── */
-.section-title{font-size:11px;font-weight:700;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;font-family:var(--mono);margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
-.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
 </style>
 </head>
 <body>
-
-<!-- SETUP -->
-<div id="setup-screen">
-  <div class="setup-box">
-    <div class="setup-logo-wrap">
-      <svg class="logo-mark" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="36" height="36" rx="8" fill="rgba(255,255,255,0.15)"/>
-        <text x="18" y="25" text-anchor="middle" font-family="'Zen Kaku Gothic New',sans-serif" font-weight="900" font-size="18" fill="white">Y</text>
-        <circle cx="28" cy="10" r="5" fill="#f59e0b"/>
-        <circle cx="8" cy="10" r="3" fill="#34d399"/>
-      </svg>
-      <div class="logo-text-wrap">
-        <span class="logo-yck">YCK</span>
-        <span class="logo-sub">YAMAGUCHICHU KOBETSU</span>
-      </div>
-    </div>
-    <div class="setup-title">初回セットアップ</div>
-    <div class="setup-sub">Google Apps ScriptのURLを設定してください。<br>一度設定すれば次回からはパスワード画面になります。</div>
-    <div class="step-block"><div class="step-num">STEP 1</div><p>Googleスプレッドシートを新規作成し「拡張機能」→「Apps Script」を開く</p></div>
-    <div class="step-block"><div class="step-num">STEP 2</div><p><code>コード.gs</code> に <code>gas_code.js</code> の内容を貼り付けて保存</p></div>
-    <div class="step-block"><div class="step-num">STEP 3</div><p>「デプロイ」→「新しいデプロイ」→ 種類：<code>ウェブアプリ</code> / アクセス：<code>全員</code> でデプロイ</p></div>
-    <div class="step-block">
-      <div class="step-num">STEP 4</div>
-      <p>発行されたURLを貼り付けて保存</p>
-      <div class="url-row">
-        <input type="text" id="gas-url-input" placeholder="https://script.google.com/macros/s/...">
-        <button class="primary-btn" onclick="saveGasUrl()">保存</button>
-      </div>
-      <div class="saved-msg" id="url-saved" style="display:none;">✓ 保存しました。再読み込みします...</div>
-    </div>
-  </div>
-</div>
 
 <!-- LOGIN -->
 <div id="login-screen">
@@ -255,13 +204,9 @@ textarea{resize:vertical;min-height:60px;}
         <span class="logo-sub">YAMAGUCHICHU KOBETSU</span>
       </div>
     </div>
-    <div class="field">
-      <label>パスワード</label>
-      <input type="password" id="pw-input" placeholder="パスワードを入力">
-    </div>
+    <div class="field"><label>パスワード</label><input type="password" id="pw-input" placeholder="パスワードを入力"></div>
     <button class="login-main-btn" onclick="doLogin()">ログイン</button>
     <div class="login-err" id="login-err">パスワードが違います</div>
-    <a class="change-url-link" onclick="resetSetup()">GAS URLを変更する</a>
   </div>
 </div>
 
@@ -291,22 +236,21 @@ textarea{resize:vertical;min-height:60px;}
 
   <div class="main">
 
-    <!-- INPUT TAB -->
+    <!-- ── 授業入力 ── -->
     <div id="tab-input" class="section active">
       <div class="card">
-        <div class="card-head">
-          <div class="card-head-icon" style="background:var(--blue-l);">📋</div>
-          <span class="card-head-label">基本情報</span>
+        <div class="card-head"><div class="card-head-icon" style="background:var(--blue-l);">📋</div><span class="card-head-label">基本情報</span></div>
+
+        <!-- 代講チェック -->
+        <div class="daiko-row">
+          <input type="checkbox" id="daiko-check" onchange="onDaikoChange()">
+          <label class="daiko-label" for="daiko-check">代講</label>
+          <span class="daiko-note">チェックすると全生徒から選択できます</span>
         </div>
+
         <div class="grid-2">
-          <div class="field">
-            <label>講師名</label>
-            <select id="i-teacher" onchange="onTeacherChange()"></select>
-          </div>
-          <div class="field">
-            <label>生徒名</label>
-            <select id="i-student"></select>
-          </div>
+          <div class="field"><label>講師名</label><select id="i-teacher" onchange="onTeacherChange()"></select></div>
+          <div class="field"><label>生徒名</label><select id="i-student" onchange="onStudentChange()"></select></div>
         </div>
         <div class="grid-2">
           <div class="field"><label>科目</label><select id="i-subject"></select></div>
@@ -316,60 +260,39 @@ textarea{resize:vertical;min-height:60px;}
       </div>
 
       <div class="card">
-        <div class="card-head">
-          <div class="card-head-icon" style="background:var(--blue-l);">📊</div>
-          <span class="card-head-label">授業前スコア</span>
-        </div>
+        <div class="card-head"><div class="card-head-icon" style="background:var(--blue-l);">📊</div><span class="card-head-label">授業前スコア</span></div>
         <div id="pre-scores"></div>
-        <div class="total-row" id="pre-total-row" style="background:var(--blue-l);">
-          <div>
-            <div style="font-size:10px;color:#3730a3;margin-bottom:2px;font-family:var(--mono);font-weight:600;letter-spacing:.1em;">PRE TOTAL</div>
-            <div class="total-num" id="pre-total" style="color:#1e40af;">—</div>
-          </div>
+        <div class="total-row" style="background:var(--blue-l);">
+          <div><div style="font-size:10px;color:#3730a3;margin-bottom:2px;font-family:var(--mono);font-weight:600;letter-spacing:.1em;">PRE TOTAL</div><div class="total-num" id="pre-total" style="color:#1e40af;">—</div></div>
           <div id="pre-badge"></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-head">
-          <div class="card-head-icon" style="background:var(--green-l);">✅</div>
-          <span class="card-head-label">授業後スコア</span>
-        </div>
+        <div class="card-head"><div class="card-head-icon" style="background:var(--green-l);">✅</div><span class="card-head-label">授業後スコア</span></div>
         <div id="post-scores"></div>
-        <div class="total-row" id="post-total-row" style="background:var(--green-l);">
-          <div>
-            <div style="font-size:10px;color:#065f46;margin-bottom:2px;font-family:var(--mono);font-weight:600;letter-spacing:.1em;">POST TOTAL</div>
-            <div class="total-num" id="post-total" style="color:#15803d;">—</div>
-          </div>
+        <div class="total-row" style="background:var(--green-l);">
+          <div><div style="font-size:10px;color:#065f46;margin-bottom:2px;font-family:var(--mono);font-weight:600;letter-spacing:.1em;">POST TOTAL</div><div class="total-num" id="post-total" style="color:#15803d;">—</div></div>
           <div id="post-badge"></div>
         </div>
         <div id="hint-area"></div>
       </div>
 
       <div class="card">
-        <div class="card-head">
-          <div class="card-head-icon" style="background:var(--amber-l);">📝</div>
-          <span class="card-head-label">メモ・引き継ぎ</span>
-        </div>
+        <div class="card-head"><div class="card-head-icon" style="background:var(--amber-l);">📝</div><span class="card-head-label">メモ・引き継ぎ</span></div>
         <textarea id="i-memo" placeholder="気になった点、次回への引き継ぎなど"></textarea>
         <button class="submit-btn" id="save-btn" onclick="submitLog()">授業ログを保存</button>
       </div>
     </div>
 
-    <!-- DASHBOARD TAB -->
+    <!-- ── ダッシュボード ── -->
     <div id="tab-dashboard" class="section">
+      <!-- 全体サマリー -->
+      <div class="section-sep">全体サマリー</div>
       <div class="filter-row">
-        <span class="filter-label">生徒：</span>
-        <select id="d-student" onchange="renderDash()"></select>
-        <span class="filter-label" style="margin-left:8px;">講師：</span>
-        <select id="d-teacher" onchange="renderDash()"></select>
+        <span class="filter-label">講師：</span><select id="d-teacher" onchange="renderDash()"></select>
       </div>
       <div class="metrics" id="d-metrics"></div>
-      <div class="card">
-        <div class="card-head"><div class="card-head-icon" style="background:var(--blue-l);">📈</div><span class="card-head-label">生徒別 スコア推移</span></div>
-        <div id="trend-legend" class="legend-wrap"></div>
-        <div class="chart-wrap" style="height:260px;"><canvas id="c-trend" role="img" aria-label="スコア推移"></canvas></div>
-      </div>
       <div class="card">
         <div class="card-head"><div class="card-head-icon" style="background:var(--purple-l);">👨‍🏫</div><span class="card-head-label">講師別 平均スコアアップ</span></div>
         <div class="chart-wrap" style="height:180px;"><canvas id="c-teacher" role="img" aria-label="講師別スコアアップ"></canvas></div>
@@ -381,9 +304,19 @@ textarea{resize:vertical;min-height:60px;}
           <div id="type-legend" style="font-size:13px;line-height:2.4;"></div>
         </div>
       </div>
+
+      <!-- 生徒別スコア推移 -->
+      <div class="section-sep">生徒別スコア推移・アドバイス</div>
+      <div class="filter-row">
+        <span class="filter-label">生徒：</span>
+        <select id="d-student" onchange="renderStudentDash()">
+          <option value="">生徒を選択してください</option>
+        </select>
+      </div>
+      <div id="student-dash-area"></div>
     </div>
 
-    <!-- LOGS TAB -->
+    <!-- ── ログ一覧 ── -->
     <div id="tab-logs" class="section">
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1rem;">
         <select id="l-student" onchange="renderLogs()" style="width:auto;min-width:130px;"></select>
@@ -394,67 +327,63 @@ textarea{resize:vertical;min-height:60px;}
         <table class="log-table">
           <thead><tr>
             <th>日付</th><th>生徒</th><th>講師</th><th>科目</th>
-            <th>前計</th><th></th><th>後計</th><th>タイプ</th><th>メモ</th>
+            <th>前計</th><th></th><th>後計</th><th>タイプ</th><th>代講</th><th>メモ</th>
           </tr></thead>
           <tbody id="log-body"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- MASTER TAB -->
+    <!-- ── マスタ管理 ── -->
     <div id="tab-master" class="section">
-      <div class="master-grid">
 
-        <!-- 生徒マスタ -->
-        <div class="card" style="grid-column:1/-1;">
-          <div class="card-head"><div class="card-head-icon" style="background:var(--sky-l);">👤</div><span class="card-head-label">生徒マスタ（担当講師つき）</span></div>
-          <ul class="master-list" id="student-list"></ul>
+      <!-- 生徒マスタ -->
+      <div class="card">
+        <div class="card-head"><div class="card-head-icon" style="background:var(--sky-l);">👤</div><span class="card-head-label">生徒マスタ</span></div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+          <button class="dedup-btn" onclick="dedupMaster()">🧹 重複データを自動削除</button>
+        </div>
+        <ul class="master-list" id="student-list"></ul>
 
-          <div class="section-title">個別追加</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-            <div class="field"><label>生徒名</label><input type="text" id="new-student" placeholder="例：田中 花子"></div>
-            <div class="field">
-              <label>担当講師（最大2名）</label>
-              <div class="teacher-check-row" id="teacher-checks"></div>
-            </div>
+        <div class="section-sep">個別追加</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div class="field"><label>生徒名</label><input type="text" id="new-student" placeholder="例：田中 花子"></div>
+          <div class="field">
+            <label>担当講師（最大2名）</label>
+            <div class="check-group" id="teacher-checks"></div>
           </div>
-          <button class="add-btn" onclick="addStudent()">追加</button>
-
-          <div class="bulk-area">
-            <div class="bulk-label">一括登録 <span class="bulk-badge">BULK</span></div>
-            <textarea class="bulk-textarea" id="bulk-input" placeholder="1行に1名で入力してください。担当講師はカンマ区切りで続けて入力できます。
-例：
-田中 花子
-山本 太郎,中村 先生
-鈴木 一郎,中村 先生,渡辺 先生"></textarea>
-            <div class="bulk-note">・1行目に生徒名、カンマ区切りで講師名を続けられます<br>・講師名のみのデータは担当なしで登録されます</div>
-            <button class="bulk-btn" onclick="bulkImport()">📋 一括登録する</button>
+          <div class="field">
+            <label>指導科目（最大2科目）</label>
+            <div class="check-group" id="subject-checks"></div>
           </div>
         </div>
+        <button class="add-btn" onclick="addStudent()">追加</button>
 
-        <!-- 講師マスタ -->
+        <div class="bulk-area">
+          <div class="bulk-label">一括登録 <span class="bulk-badge">BULK</span></div>
+          <textarea class="bulk-textarea" id="bulk-input" placeholder="1行に1名。カンマ区切りで講師名・科目名を続けられます。
+例：
+田中 花子
+山本 太郎,中村 先生,数学
+鈴木 一郎,中村 先生,渡辺 先生,英語"></textarea>
+          <div class="bulk-note">・講師名は最大2名、科目名は最大2科目まで認識します<br>・すでに登録済みの名前はスキップされます</div>
+          <button class="bulk-btn" onclick="bulkImport()">📋 一括登録する</button>
+        </div>
+      </div>
+
+      <div class="master-grid">
         <div class="card">
           <div class="card-head"><div class="card-head-icon" style="background:var(--purple-l);">👨‍🏫</div><span class="card-head-label">講師マスタ</span></div>
           <ul class="master-list" id="teacher-list"></ul>
-          <div class="add-row">
-            <input type="text" id="new-teacher" placeholder="講師名">
-            <button class="add-btn" onclick="addMaster('teacher')">追加</button>
-          </div>
+          <div class="add-row"><input type="text" id="new-teacher" placeholder="講師名"><button class="add-btn" onclick="addMaster('teacher')">追加</button></div>
         </div>
-
-        <!-- 科目マスタ -->
         <div class="card">
           <div class="card-head"><div class="card-head-icon" style="background:var(--teal-l);">📚</div><span class="card-head-label">科目マスタ</span></div>
           <ul class="master-list" id="subject-list"></ul>
-          <div class="add-row">
-            <input type="text" id="new-subject" placeholder="科目名">
-            <button class="add-btn" onclick="addMaster('subject')">追加</button>
-          </div>
+          <div class="add-row"><input type="text" id="new-subject" placeholder="科目名"><button class="add-btn" onclick="addMaster('subject')">追加</button></div>
         </div>
-
       </div>
 
-      <!-- パスワード変更 -->
       <div class="card pw-section">
         <div class="card-head"><div class="card-head-icon" style="background:var(--amber-l);">🔑</div><span class="card-head-label">パスワード変更</span></div>
         <div class="field" style="margin-bottom:10px;"><label>現在のパスワード</label><input type="password" id="pw-old"></div>
@@ -464,27 +393,43 @@ textarea{resize:vertical;min-height:60px;}
         <div class="pw-msg" id="pw-msg"></div>
       </div>
     </div>
-
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
+const GAS_URL='https://script.google.com/macros/s/AKfycbz8k41UXf6w3mkSQ3ARc4ReQ_v2xO2t2-xKizYtQ3Y_s2k1iAHEwVNSUlI52V5Go4NsZg/exec';
 const HINTS={
   '加速型':'応用問題を混ぜる・制限時間設定・自己解説させる',
   '育成型':'同形式反復・途中式徹底・成功承認多め',
   '分解型':'1工程ずつ・超具体例・ヒント細分化',
   '危険型':'まず会話・成功体験を超小さく・承認を多く'
 };
+const ADVICE={
+  '加速型':{
+    title:'🔵 加速型 — 自走できる状態です',
+    body:'理解が定着し、スピードも出ています。応用問題を積極的に取り入れ、制限時間を設けて思考スピードを鍛えましょう。自己解説（生徒に説明させる）を使うと定着がさらに深まります。'
+  },
+  '育成型':{
+    title:'🟡 育成型 — 伸び代がある状態です',
+    body:'部分的に理解できています。同じ形式の問題を繰り返し、途中式を丁寧に書く習慣をつけましょう。小さな成功をしっかり承認して自信をつけることが次のステップへの鍵です。'
+  },
+  '分解型':{
+    title:'🟠 分解型 — 丁寧なサポートが必要です',
+    body:'理解が弱い状態です。1工程ずつ確認しながら進め、超具体的な例え（身近なものに置き換えるなど）を使いましょう。ヒントを細かく出して、小さな成功体験を積み重ねることが重要です。'
+  },
+  '危険型':{
+    title:'🔴 危険型 — まず状態の改善を優先してください',
+    body:'学習以前に心理的・身体的な状態が整っていない可能性があります。まず会話から始め、安心できる雰囲気を作りましょう。超小さな成功体験（1問だけ解けた、など）と承認を繰り返し、塾に来ること自体をポジティブな体験にすることが最優先です。'
+  }
+};
 const TYPE_COLORS=['#2563eb','#16a34a','#ea580c','#dc2626'];
 const TYPES=['加速型','育成型','分解型','危険型'];
 const scores={pre:{u:null,o:null,s:null},post:{u:null,o:null,s:null}};
-// master.students = [{name, teachers:[]}]
 let master={students:[],teachers:[],subjects:[]};
 let logs=[];
 let charts={};
-let GAS_URL='https://script.google.com/macros/s/AKfycbz8k41UXf6w3mkSQ3ARc4ReQ_v2xO2t2-xKizYtQ3Y_s2k1iAHEwVNSUlI52V5Go4NsZg/exec';
 
 // ── TOAST ──
 function toast(msg,dur=2200){
@@ -497,21 +442,6 @@ function toast(msg,dur=2200){
 async function api(action,body={}){
   const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,...body})});
   return res.json();
-}
-
-// ── SETUP ──
-function saveGasUrl(){
-  const url=document.getElementById('gas-url-input').value.trim();
-  if(!url.startsWith('https://script.google.com')){alert('正しいGAS URLを入力してください');return;}
-  localStorage.setItem('yck_gas_url',url);GAS_URL=url;
-  document.getElementById('url-saved').style.display='block';
-  setTimeout(()=>location.reload(),1500);
-}
-function resetSetup(){localStorage.removeItem('yck_gas_url');location.reload();}
-
-function initScreens(){
-  document.getElementById('setup-screen').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
 }
 
 // ── AUTH ──
@@ -528,7 +458,7 @@ async function doLogin(){
     }else{
       document.getElementById('login-err').style.display='block';
     }
-  }catch(e){alert('接続に失敗しました。GAS URLを確認してください。');}
+  }catch(e){alert('接続に失敗しました。');}
   btn.innerHTML='ログイン';btn.disabled=false;
 }
 function doLogout(){
@@ -545,7 +475,6 @@ async function initApp(){
   logs=lRes.logs||[];
   rebuildSelects();
   buildScoreInputs();
-  buildTeacherChecks();
   document.getElementById('i-date').value=new Date().toISOString().slice(0,10);
   renderMaster();renderLogs();renderDash();
 }
@@ -556,13 +485,11 @@ function getType(t){
 }
 
 // ── SELECTS ──
-function getStudentsForTeacher(teacherName){
+function getStudentsForTeacher(teacherName, ignoreDaiko=false){
+  if(ignoreDaiko) return master.students.map(s=>s.name||s);
   if(!teacherName) return master.students.map(s=>s.name||s);
   return master.students
-    .filter(s=>{
-      const ts=s.teachers||[];
-      return ts.length===0||ts.includes(teacherName);
-    })
+    .filter(s=>{const ts=s.teachers||[];return ts.length===0||ts.includes(teacherName);})
     .map(s=>s.name||s);
 }
 
@@ -574,41 +501,62 @@ function rebuildSelects(){
     arr.forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;el.appendChild(o);});
     el.value=cur;
   };
-  const teacherNames=master.teachers;
-  const allStudentNames=master.students.map(s=>s.name||s);
-  pop('i-teacher',teacherNames,'講師を選択');
-  pop('i-subject',master.subjects,null);
-  pop('d-student',allStudentNames,'全生徒');
-  pop('d-teacher',teacherNames,'全講師');
-  pop('l-student',allStudentNames,'全生徒');
-  pop('l-teacher',teacherNames,'全講師');
-  // 生徒は講師選択後に更新
+  const tNames=master.teachers;
+  const sNames=master.students.map(s=>s.name||s);
+  pop('i-teacher',tNames,'講師を選択');
+  pop('d-teacher',tNames,'全講師');
+  pop('d-student',sNames,'生徒を選択してください');
+  pop('l-student',sNames,'全生徒');
+  pop('l-teacher',tNames,'全講師');
   onTeacherChange();
+  buildTeacherChecks();
+  buildSubjectChecks();
 }
 
 function onTeacherChange(){
+  const isDaiko=document.getElementById('daiko-check')?.checked||false;
   const teacher=document.getElementById('i-teacher')?.value||'';
-  const students=getStudentsForTeacher(teacher);
+  const students=getStudentsForTeacher(teacher, isDaiko);
   const el=document.getElementById('i-student');
   if(!el)return;
   const cur=el.value;
   el.innerHTML='<option value="">生徒を選択</option>';
   students.forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;el.appendChild(o);});
   if(students.includes(cur))el.value=cur;
+  onStudentChange();
 }
 
-// ── TEACHER CHECKBOXES (master tab) ──
-function buildTeacherChecks(){
-  const wrap=document.getElementById('teacher-checks');
-  if(!wrap)return;
-  wrap.innerHTML=master.teachers.map(t=>`
-    <label class="teacher-check">
-      <input type="checkbox" name="assign-teacher" value="${t}"> ${t}
-    </label>`).join('');
+function onDaikoChange(){
+  onTeacherChange();
 }
-function getCheckedTeachers(){
-  const boxes=document.querySelectorAll('input[name="assign-teacher"]:checked');
-  return [...boxes].map(b=>b.value).slice(0,2);
+
+// 生徒選択時に指導科目を自動フィルタ
+function onStudentChange(){
+  const studentName=document.getElementById('i-student')?.value||'';
+  const studentObj=master.students.find(s=>(s.name||s)===studentName);
+  const subjectSel=document.getElementById('i-subject');
+  if(!subjectSel)return;
+  const cur=subjectSel.value;
+  subjectSel.innerHTML='';
+  let subjects=master.subjects;
+  if(studentObj&&(studentObj.subjects||[]).length>0){
+    subjects=studentObj.subjects;
+  }
+  subjects.forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;subjectSel.appendChild(o);});
+  if(subjects.includes(cur))subjectSel.value=cur;
+}
+
+// ── MASTER CHECKS ──
+function buildTeacherChecks(){
+  const wrap=document.getElementById('teacher-checks');if(!wrap)return;
+  wrap.innerHTML=master.teachers.map(t=>`<label class="check-item"><input type="checkbox" name="assign-teacher" value="${t}"> ${t}</label>`).join('');
+}
+function buildSubjectChecks(){
+  const wrap=document.getElementById('subject-checks');if(!wrap)return;
+  wrap.innerHTML=master.subjects.map(s=>`<label class="check-item"><input type="checkbox" name="assign-subject" value="${s}"> ${s}</label>`).join('');
+}
+function getCheckedValues(name,max){
+  return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(b=>b.value).slice(0,max);
 }
 
 // ── SCORE UI ──
@@ -640,9 +588,7 @@ function updateTotal(phase){
   const total=s.u+s.o+s.s;const type=getType(total);
   document.getElementById(phase+'-total').textContent=total;
   document.getElementById(phase+'-badge').innerHTML=`<span class="type-pill t-${type}">${type}</span>`;
-  if(phase==='post'){
-    document.getElementById('hint-area').innerHTML=`<div class="hint-box hint-${type}"><strong>${type}：</strong>${HINTS[type]}</div>`;
-  }
+  if(phase==='post')document.getElementById('hint-area').innerHTML=`<div class="hint-box hint-${type}"><strong>${type}：</strong>${HINTS[type]}</div>`;
 }
 
 // ── SUBMIT ──
@@ -651,16 +597,16 @@ async function submitLog(){
   const teacher=document.getElementById('i-teacher').value;
   if(!student||!teacher){alert('生徒名と講師名を選択してください');return;}
   const s=scores;
-  if([s.pre.u,s.pre.o,s.pre.s,s.post.u,s.post.o,s.post.s].some(v=>v===null)){
-    alert('授業前後のスコアをすべて入力してください');return;
-  }
+  if([s.pre.u,s.pre.o,s.pre.s,s.post.u,s.post.o,s.post.s].some(v=>v===null)){alert('授業前後のスコアをすべて入力してください');return;}
   const preT=s.pre.u+s.pre.o+s.pre.s;
   const postT=s.post.u+s.post.o+s.post.s;
+  const isDaiko=document.getElementById('daiko-check').checked;
   const log={
     id:Date.now(),date:document.getElementById('i-date').value,
     student,teacher,subject:document.getElementById('i-subject').value,
     content:document.getElementById('i-content').value,
     memo:document.getElementById('i-memo').value,
+    daiko:isDaiko?'yes':'',
     preU:s.pre.u,preO:s.pre.o,preS:s.pre.s,preTotal:preT,preType:getType(preT),
     postU:s.post.u,postO:s.post.o,postS:s.post.s,postTotal:postT,postType:getType(postT)
   };
@@ -683,16 +629,15 @@ function resetForm(){
   document.getElementById('i-content').value='';
   document.getElementById('i-memo').value='';
   document.getElementById('hint-area').innerHTML='';
+  document.getElementById('daiko-check').checked=false;
+  onTeacherChange();
 }
 
 // ── DASHBOARD ──
-function getFiltered(){
-  const s=document.getElementById('d-student')?.value||'';
-  const t=document.getElementById('d-teacher')?.value||'';
-  return logs.filter(l=>(!s||l.student===s)&&(!t||l.teacher===t));
-}
 function renderDash(){
-  const fl=getFiltered();const total=fl.length;
+  const t=document.getElementById('d-teacher')?.value||'';
+  const fl=logs.filter(l=>!t||l.teacher===t);
+  const total=fl.length;
   const avgUp=total?(fl.reduce((a,l)=>a+(Number(l.postTotal)-Number(l.preTotal)),0)/total).toFixed(1):'—';
   const danger=fl.filter(l=>l.postType==='危険型').length;
   const avgPost=total?(fl.reduce((a,l)=>a+Number(l.postTotal),0)/total).toFixed(1):'—';
@@ -701,35 +646,22 @@ function renderDash(){
     <div class="metric m-green"><div class="metric-lbl">AVG SCORE UP</div><div class="metric-val">${total?'+'+avgUp:'—'}</div></div>
     <div class="metric m-red"><div class="metric-lbl">危険型件数</div><div class="metric-val">${danger}</div></div>
     <div class="metric m-amber"><div class="metric-lbl">AVG POST SCORE</div><div class="metric-val">${avgPost}</div></div>`;
-  renderTrend(fl);renderTeacher();renderTypeChart(fl);
+  renderTeacher(fl);renderTypeChart(fl);
 }
-function renderTrend(fl){
-  const ctx=document.getElementById('c-trend').getContext('2d');
-  if(charts.trend)charts.trend.destroy();
-  if(!fl.length)return;
-  const sts=[...new Set(fl.map(l=>l.student))];
-  const pal=['#2563eb','#16a34a','#d97706','#7c3aed','#db2777','#0d9488'];
-  const datasets=[];
-  document.getElementById('trend-legend').innerHTML='';
-  sts.forEach((st,i)=>{
-    const sl=fl.filter(l=>l.student===st);const c=pal[i%pal.length];
-    datasets.push({label:st+' 前',data:sl.map(l=>Number(l.preTotal)),borderColor:c,borderDash:[5,3],backgroundColor:'transparent',tension:.3,pointRadius:3});
-    datasets.push({label:st+' 後',data:sl.map(l=>Number(l.postTotal)),borderColor:c,backgroundColor:'transparent',tension:.3,pointRadius:5,pointStyle:'circle'});
-    document.getElementById('trend-legend').innerHTML+=`<span class="legend-item"><span class="legend-dot" style="background:${c}"></span>${st}</span>`;
-  });
-  charts.trend=new Chart(ctx,{type:'line',data:{labels:fl.map((_,i)=>`第${i+1}回`),datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:10,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}}}});
-}
-function renderTeacher(){
+
+function renderTeacher(fl){
   const ctx=document.getElementById('c-teacher').getContext('2d');
   if(charts.teacher)charts.teacher.destroy();
+  if(!fl||!fl.length)return;
   const tnames=master.teachers;
   const avgs=tnames.map(t=>{
-    const tl=logs.filter(l=>l.teacher===t);
+    const tl=fl.filter(l=>l.teacher===t);
     return tl.length?parseFloat((tl.reduce((a,l)=>a+(Number(l.postTotal)-Number(l.preTotal)),0)/tl.length).toFixed(1)):0;
   });
   const colors=['#7c3aed','#2563eb','#0d9488','#16a34a','#d97706'];
   charts.teacher=new Chart(ctx,{type:'bar',data:{labels:tnames,datasets:[{label:'平均スコアアップ',data:avgs,backgroundColor:tnames.map((_,i)=>colors[i%colors.length]),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}}}});
 }
+
 function renderTypeChart(fl){
   const ctx=document.getElementById('c-type').getContext('2d');
   if(charts.type)charts.type.destroy();
@@ -744,22 +676,91 @@ function renderTypeChart(fl){
     </div>`).join('');
 }
 
+// ── 生徒別ダッシュボード ──
+function renderStudentDash(){
+  const studentName=document.getElementById('d-student').value;
+  const area=document.getElementById('student-dash-area');
+  if(!studentName){area.innerHTML='';return;}
+  const sl=logs.filter(l=>l.student===studentName).sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  if(!sl.length){
+    area.innerHTML='<div class="card"><p style="color:var(--hint);font-size:13px;text-align:center;padding:1rem;">この生徒のログがまだありません</p></div>';
+    return;
+  }
+  const lastLog=sl[sl.length-1];
+  const lastType=lastLog.postType;
+  const adv=ADVICE[lastType]||{title:'',body:''};
+
+  // スコア推移グラフ
+  const trendHtml=`
+    <div class="card">
+      <div class="card-head"><div class="card-head-icon" style="background:var(--blue-l);">📈</div><span class="card-head-label">${studentName} のスコア推移</span></div>
+      <div class="chart-wrap" style="height:220px;"><canvas id="c-student-trend" role="img" aria-label="${studentName}スコア推移"></canvas></div>
+    </div>`;
+
+  // タイプタイムライン
+  const timelineItems=sl.map((l,i)=>{
+    const arrow=i<sl.length-1?`<span class="type-arrow">→</span>`:'';
+    return `<div style="display:flex;align-items:center;gap:4px;">
+      <div class="type-step">
+        <span class="type-step-date">${String(l.date).slice(5)}</span>
+        <span class="type-step-badge t-${l.postType}" style="font-size:11px;padding:3px 9px;border-radius:12px;font-weight:600;">${l.postType}</span>
+      </div>${arrow}</div>`;
+  }).join('');
+
+  const timelineHtml=`
+    <div class="card">
+      <div class="card-head"><div class="card-head-icon" style="background:var(--amber-l);">🗺</div><span class="card-head-label">タイプ推移</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">${timelineItems}</div>
+    </div>`;
+
+  // アドバイス
+  const adviceHtml=`
+    <div class="card">
+      <div class="card-head"><div class="card-head-icon" style="background:var(--${lastType==='加速型'?'blue':lastType==='育成型'?'green':lastType==='分解型'?'orange':'red'}-l);">💡</div><span class="card-head-label">現在の状態と指導アドバイス</span></div>
+      <div class="advice-box advice-${lastType}">
+        <div class="advice-title">${adv.title}</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.9;">${adv.body}</div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--hint);">最終授業：${lastLog.date}（${lastLog.subject}）/ 前${lastLog.preTotal}点 → 後${lastLog.postTotal}点</div>
+    </div>`;
+
+  area.innerHTML=trendHtml+timelineHtml+adviceHtml;
+
+  // グラフ描画
+  const ctx=document.getElementById('c-student-trend').getContext('2d');
+  if(charts.studentTrend)charts.studentTrend.destroy();
+  charts.studentTrend=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:sl.map(l=>String(l.date).slice(5)),
+      datasets:[
+        {label:'授業前',data:sl.map(l=>Number(l.preTotal)),borderColor:'#94a3b8',borderDash:[5,3],backgroundColor:'transparent',tension:.3,pointRadius:4},
+        {label:'授業後',data:sl.map(l=>Number(l.postTotal)),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.08)',fill:true,tension:.3,pointRadius:5}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{font:{size:11},boxWidth:14}}},
+      scales:{y:{min:0,max:10,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}}}
+  });
+}
+
 // ── LOGS ──
 function renderLogs(){
   const s=document.getElementById('l-student')?.value||'';
   const t=document.getElementById('l-teacher')?.value||'';
   const fl=logs.filter(l=>(!s||l.student===s)&&(!t||l.teacher===t));
   const tb=document.getElementById('log-body');
-  if(!fl.length){tb.innerHTML=`<tr><td colspan="9" class="empty-state">ログがありません</td></tr>`;return;}
+  if(!fl.length){tb.innerHTML=`<tr><td colspan="10" class="empty-state">ログがありません</td></tr>`;return;}
   tb.innerHTML=[...fl].reverse().map(l=>`<tr>
     <td style="font-family:var(--mono);white-space:nowrap;font-size:11px;">${l.date}</td>
     <td style="font-weight:500;">${l.student}</td>
     <td style="color:var(--muted);">${l.teacher}</td>
-    <td>${l.subject}</td>
+    <td>${l.subject||''}</td>
     <td class="score-num">${l.preTotal}</td>
     <td style="color:var(--hint);font-family:var(--mono);">→</td>
     <td class="score-num">${l.postTotal}</td>
     <td><span class="type-pill t-${l.postType}" style="font-size:11px;padding:3px 10px;">${l.postType}</span></td>
+    <td style="font-size:11px;color:${l.daiko==='yes'?'var(--amber)':'var(--hint)'};">${l.daiko==='yes'?'代講':''}</td>
     <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:12px;">${l.memo||''}</td>
   </tr>`).join('');
 }
@@ -770,88 +771,124 @@ function exportCSV(){
   const t=document.getElementById('l-teacher')?.value||'';
   const fl=logs.filter(l=>(!s||l.student===s)&&(!t||l.teacher===t));
   if(!fl.length){alert('データがありません');return;}
-  const hdr=['日付','生徒','講師','科目','授業内容','前U','前O','前S','前合計','前タイプ','後U','後O','後S','後合計','後タイプ','スコアアップ','メモ'];
-  const rows=fl.map(l=>[l.date,l.student,l.teacher,l.subject,`"${(l.content||'').replace(/"/g,'""')}"`,l.preU,l.preO,l.preS,l.preTotal,l.preType,l.postU,l.postO,l.postS,l.postTotal,l.postType,Number(l.postTotal)-Number(l.preTotal),`"${(l.memo||'').replace(/"/g,'""')}"`]);
+  const hdr=['日付','生徒','講師','科目','代講','授業内容','前U','前O','前S','前合計','前タイプ','後U','後O','後S','後合計','後タイプ','スコアアップ','メモ'];
+  const rows=fl.map(l=>[l.date,l.student,l.teacher,l.subject||'',l.daiko==='yes'?'代講':'',`"${(l.content||'').replace(/"/g,'""')}"`,l.preU,l.preO,l.preS,l.preTotal,l.preType,l.postU,l.postO,l.postS,l.postTotal,l.postType,Number(l.postTotal)-Number(l.preTotal),`"${(l.memo||'').replace(/"/g,'""')}"`]);
   const csv='\uFEFF'+[hdr,...rows].map(r=>r.join(',')).join('\n');
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-  a.download=`YCK_授業ログ_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
+  a.download=`YCK_授業ログ_${new Date().toISOString().slice(0,10)}.csv`;a.click();
 }
 
 // ── MASTER ──
 function renderMaster(){
-  const renderStudents=(id,arr)=>{
-    const ul=document.getElementById(id);
-    ul.innerHTML=arr.length?arr.map((s,i)=>{
-      const name=s.name||s;
-      const teachers=(s.teachers||[]).join('・')||'担当なし';
-      return `<li class="master-item">
+  // 生徒リスト（編集パネルつき）
+  const ul=document.getElementById('student-list');
+  ul.innerHTML=master.students.length?master.students.map((s,i)=>{
+    const name=s.name||s;
+    const teachers=(s.teachers||[]).join('・')||'担当なし';
+    const subjects=(s.subjects||[]).join('・')||'—';
+    return `<li class="master-item">
+      <div class="master-item-top">
         <div class="master-item-info">
           <div class="master-item-name">${name}</div>
-          <div class="master-item-sub">担当：${teachers}</div>
+          <div class="master-item-sub">講師：${teachers}　科目：${subjects}</div>
         </div>
-        <button class="del-btn" onclick="delStudent(${i})">×</button>
-      </li>`;
-    }).join(''):'<li style="font-size:12px;color:var(--hint);padding:8px;">（未登録）</li>';
-  };
+        <div style="display:flex;gap:4px;">
+          <button class="edit-btn" onclick="toggleEdit(${i})">編集</button>
+          <button class="del-btn" onclick="delStudent(${i})">×</button>
+        </div>
+      </div>
+      <div class="edit-panel" id="edit-panel-${i}">
+        <div class="edit-panel-row">
+          <div class="field">
+            <label>担当講師（最大2名）</label>
+            <div class="check-group" id="edit-teacher-${i}">
+              ${master.teachers.map(t=>`<label class="check-item"><input type="checkbox" name="edit-t-${i}" value="${t}" ${(s.teachers||[]).includes(t)?'checked':''}> ${t}</label>`).join('')}
+            </div>
+          </div>
+          <div class="field">
+            <label>指導科目（最大2科目）</label>
+            <div class="check-group" id="edit-subject-${i}">
+              ${master.subjects.map(sub=>`<label class="check-item"><input type="checkbox" name="edit-s-${i}" value="${sub}" ${(s.subjects||[]).includes(sub)?'checked':''}> ${sub}</label>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="edit-panel-actions">
+          <button class="save-edit-btn" onclick="saveEdit(${i})">保存</button>
+          <button class="cancel-edit-btn" onclick="toggleEdit(${i})">キャンセル</button>
+        </div>
+      </div>
+    </li>`;
+  }).join(''):'<li style="font-size:12px;color:var(--hint);padding:8px;">（未登録）</li>';
+
   const renderSimple=(id,arr,type)=>{
-    const ul=document.getElementById(id);
-    ul.innerHTML=arr.length?arr.map((v,i)=>`<li class="master-item">
-      <div class="master-item-info"><div class="master-item-name">${v}</div></div>
-      <button class="del-btn" onclick="delMaster('${type}',${i})">×</button>
-    </li>`).join(''):'<li style="font-size:12px;color:var(--hint);padding:8px;">（未登録）</li>';
+    const ul2=document.getElementById(id);
+    ul2.innerHTML=arr.length?arr.map((v,i)=>`<li class="master-item">
+      <div class="master-item-top">
+        <div class="master-item-info"><div class="master-item-name">${v}</div></div>
+        <button class="del-btn" onclick="delMaster('${type}',${i})">×</button>
+      </div></li>`).join(''):'<li style="font-size:12px;color:var(--hint);padding:8px;">（未登録）</li>';
   };
-  renderStudents('student-list',master.students);
   renderSimple('teacher-list',master.teachers,'teacher');
   renderSimple('subject-list',master.subjects,'subject');
-  buildTeacherChecks();
+  buildTeacherChecks();buildSubjectChecks();
+}
+
+function toggleEdit(i){
+  const panel=document.getElementById(`edit-panel-${i}`);
+  panel.classList.toggle('open');
+}
+
+async function saveEdit(i){
+  const teachers=[...document.querySelectorAll(`input[name="edit-t-${i}"]:checked`)].map(b=>b.value).slice(0,2);
+  const subjects=[...document.querySelectorAll(`input[name="edit-s-${i}"]:checked`)].map(b=>b.value).slice(0,2);
+  master.students[i].teachers=teachers;
+  master.students[i].subjects=subjects;
+  await saveMaster();
+  renderMaster();rebuildSelects();
+  toast('✅ 変更を保存しました');
 }
 
 async function saveMaster(){
   await api('setMaster',{master});
-  rebuildSelects();
 }
 
 async function addStudent(){
-  const name=document.getElementById('new-student').value.trim();
-  if(!name)return;
-  const teachers=getCheckedTeachers();
-  master.students.push({name,teachers});
+  const name=document.getElementById('new-student').value.trim();if(!name)return;
+  const teachers=getCheckedValues('assign-teacher',2);
+  const subjects=getCheckedValues('assign-subject',2);
+  if(master.students.some(s=>(s.name||s)===name)){toast('⚠️ すでに登録済みです');return;}
+  master.students.push({name,teachers,subjects});
   document.getElementById('new-student').value='';
-  document.querySelectorAll('input[name="assign-teacher"]').forEach(b=>b.checked=false);
-  await saveMaster();
-  renderMaster();toast('✅ 生徒を追加しました');
+  document.querySelectorAll('input[name="assign-teacher"],input[name="assign-subject"]').forEach(b=>b.checked=false);
+  await saveMaster();renderMaster();rebuildSelects();toast('✅ 追加しました');
 }
 
 async function bulkImport(){
-  const text=document.getElementById('bulk-input').value.trim();
-  if(!text)return;
+  const text=document.getElementById('bulk-input').value.trim();if(!text)return;
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   let count=0;
   lines.forEach(line=>{
     const parts=line.split(',').map(p=>p.trim()).filter(Boolean);
     if(!parts.length)return;
-    const name=parts[0];
-    if(!name)return;
-    // parts[1], parts[2] があれば講師として扱う（最大2名）
-    const teachers=parts.slice(1,3).filter(p=>master.teachers.includes(p));
-    // 既に登録済みならスキップ
+    const name=parts[0];if(!name)return;
     if(master.students.some(s=>(s.name||s)===name))return;
-    master.students.push({name,teachers});
+    const rest=parts.slice(1);
+    const teachers=rest.filter(p=>master.teachers.includes(p)).slice(0,2);
+    const subjects=rest.filter(p=>master.subjects.includes(p)).slice(0,2);
+    master.students.push({name,teachers,subjects});
     count++;
   });
-  if(count===0){toast('⚠️ 新しく追加できる生徒がいませんでした');return;}
+  if(!count){toast('⚠️ 新しく追加できる生徒がいませんでした');return;}
   document.getElementById('bulk-input').value='';
-  await saveMaster();
-  renderMaster();
+  await saveMaster();renderMaster();rebuildSelects();
   toast(`✅ ${count}名を一括登録しました`);
 }
 
 async function delStudent(idx){
   if(!confirm('削除してよいですか？'))return;
   master.students.splice(idx,1);
-  await saveMaster();renderMaster();toast('削除しました');
+  await saveMaster();renderMaster();rebuildSelects();toast('削除しました');
 }
 
 async function addMaster(type){
@@ -859,13 +896,13 @@ async function addMaster(type){
   if(type==='teacher')master.teachers.push(val);
   if(type==='subject')master.subjects.push(val);
   document.getElementById(id).value='';
-  await saveMaster();renderMaster();toast('✅ 追加しました');
+  await saveMaster();renderMaster();rebuildSelects();toast('✅ 追加しました');
 }
 async function delMaster(type,idx){
   if(!confirm('削除してよいですか？'))return;
   if(type==='teacher')master.teachers.splice(idx,1);
   if(type==='subject')master.subjects.splice(idx,1);
-  await saveMaster();renderMaster();toast('削除しました');
+  await saveMaster();renderMaster();rebuildSelects();toast('削除しました');
 }
 
 // ── PASSWORD ──
@@ -892,9 +929,29 @@ function showTab(name,btn){
   if(name==='master')renderMaster();
 }
 
+
+// ── 重複削除 ──
+async function dedupMaster(){
+  if(!confirm('マスタシートの重複データを自動削除します。よろしいですか？')) return;
+  const btn = document.querySelector('.dedup-btn');
+  btn.innerHTML = '<span class="loading"></span>削除中...'; btn.disabled = true;
+  try {
+    const res = await api('dedupMaster');
+    if(res.ok){
+      const msg = res.removed > 0 ? `✅ ${res.removed}件の重複を削除しました` : '✅ 重複はありませんでした';
+      // マスタを再取得して画面を更新
+      const mRes = await api('getMaster');
+      master = mRes.master;
+      rebuildSelects(); renderMaster();
+      toast(msg, 3000);
+    } else {
+      alert('削除に失敗しました');
+    }
+  } catch(e){ alert('通信エラーが発生しました'); }
+  btn.innerHTML = '🧹 重複データを自動削除'; btn.disabled = false;
+}
+
 document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-document.getElementById('gas-url-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')saveGasUrl();});
-initScreens();
 </script>
 </body>
 </html>
