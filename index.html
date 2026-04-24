@@ -772,25 +772,15 @@ function renderLogs(){
   const tb=document.getElementById('log-body');
   if(!fl.length){tb.innerHTML=`<tr><td colspan="10" class="empty-state">ログがありません</td></tr>`;return;}
   tb.innerHTML=[...fl].reverse().map(l=>{
-    // 旧データ互換: preTotal/postTotal を数値として安全に取得
-    const preU  = Number(l.preU)  || 0;
-    const preO  = Number(l.preO)  || 0;
-    const preS  = Number(l.preS)  || 0;
-    const postU = Number(l.postU) || 0;
-    const postO = Number(l.postO) || 0;
-    const postS = Number(l.postS) || 0;
-    // preTotal/postTotal が空・不正なら U+O+S で再計算
-    const preTotal  = (l.preTotal  !== '' && l.preTotal  !== undefined && !isNaN(Number(l.preTotal)))
-                      ? Number(l.preTotal)  : preU + preO + preS;
-    const postTotal = (l.postTotal !== '' && l.postTotal !== undefined && !isNaN(Number(l.postTotal)))
-                      ? Number(l.postTotal) : postU + postO + postS;
-    const postType  = l.postType || getType(postTotal);
-    const memo      = l.memo || '';
-    const daiko     = String(l.daiko||'') === 'yes';
+    const preTotal  = isNaN(Number(l.preTotal))  ? 0 : Number(l.preTotal);
+    const postTotal = isNaN(Number(l.postTotal)) ? 0 : Number(l.postTotal);
+    const postType  = (l.postType && String(l.postType).trim()) ? String(l.postType).trim() : getType(postTotal);
+    const memo      = l.memo !== undefined && l.memo !== null ? String(l.memo) : '';
+    const daiko     = String(l.daiko||'') === 'yes' || String(l.daiko||'') === '代講';
     return `<tr>
-      <td style="font-family:var(--mono);white-space:nowrap;font-size:11px;">${l.date}</td>
-      <td style="font-weight:500;">${l.student}</td>
-      <td style="color:var(--muted);">${l.teacher}</td>
+      <td style="font-family:var(--mono);white-space:nowrap;font-size:11px;">${l.date||''}</td>
+      <td style="font-weight:500;">${l.student||''}</td>
+      <td style="color:var(--muted);">${l.teacher||''}</td>
       <td>${l.subject||''}</td>
       <td class="score-num">${preTotal}</td>
       <td style="color:var(--hint);font-family:var(--mono);">→</td>
