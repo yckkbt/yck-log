@@ -638,7 +638,17 @@ function renderDash(){
   const t=document.getElementById('d-teacher')?.value||'';
   const fl=logs.filter(l=>!t||l.teacher===t);
   const total=fl.length;
-  const avgUp=total?(fl.reduce((a,l)=>a+(Number(l.postTotal)-Number(l.preTotal)),0)/total).toFixed(1):'—';
+  // 旧データ互換: 合計点を安全に計算
+  fl.forEach(l=>{
+    const preU=Number(l.preU)||0,preO=Number(l.preO)||0,preS=Number(l.preS)||0;
+    const postU=Number(l.postU)||0,postO=Number(l.postO)||0,postS=Number(l.postS)||0;
+    if(l.preTotal===''||l.preTotal===undefined||isNaN(Number(l.preTotal))) l.preTotal=preU+preO+preS;
+    else l.preTotal=Number(l.preTotal);
+    if(l.postTotal===''||l.postTotal===undefined||isNaN(Number(l.postTotal))) l.postTotal=postU+postO+postS;
+    else l.postTotal=Number(l.postTotal);
+    if(!l.postType) l.postType=getType(l.postTotal);
+  });
+  const avgUp=total?(fl.reduce((a,l)=>a+(l.postTotal-l.preTotal),0)/total).toFixed(1):'—';
   const danger=fl.filter(l=>l.postType==='危険型').length;
   const avgPost=total?(fl.reduce((a,l)=>a+Number(l.postTotal),0)/total).toFixed(1):'—';
   document.getElementById('d-metrics').innerHTML=`
@@ -687,6 +697,16 @@ function renderStudentDash(){
     return;
   }
   const lastLog=sl[sl.length-1];
+  // 旧データ互換: 合計点を安全に再計算
+  sl.forEach(l => {
+    const preU=Number(l.preU)||0,preO=Number(l.preO)||0,preS=Number(l.preS)||0;
+    const postU=Number(l.postU)||0,postO=Number(l.postO)||0,postS=Number(l.postS)||0;
+    if(l.preTotal===''||l.preTotal===undefined||isNaN(Number(l.preTotal))) l.preTotal=preU+preO+preS;
+    else l.preTotal=Number(l.preTotal);
+    if(l.postTotal===''||l.postTotal===undefined||isNaN(Number(l.postTotal))) l.postTotal=postU+postO+postS;
+    else l.postTotal=Number(l.postTotal);
+    if(!l.postType) l.postType=getType(l.postTotal);
+  });
   const lastType=lastLog.postType;
   const adv=ADVICE[lastType]||{title:'',body:''};
 
@@ -751,18 +771,35 @@ function renderLogs(){
   const fl=logs.filter(l=>(!s||l.student===s)&&(!t||l.teacher===t));
   const tb=document.getElementById('log-body');
   if(!fl.length){tb.innerHTML=`<tr><td colspan="10" class="empty-state">ログがありません</td></tr>`;return;}
-  tb.innerHTML=[...fl].reverse().map(l=>`<tr>
-    <td style="font-family:var(--mono);white-space:nowrap;font-size:11px;">${l.date}</td>
-    <td style="font-weight:500;">${l.student}</td>
-    <td style="color:var(--muted);">${l.teacher}</td>
-    <td>${l.subject||''}</td>
-    <td class="score-num">${l.preTotal}</td>
-    <td style="color:var(--hint);font-family:var(--mono);">→</td>
-    <td class="score-num">${l.postTotal}</td>
-    <td><span class="type-pill t-${l.postType}" style="font-size:11px;padding:3px 10px;">${l.postType}</span></td>
-    <td style="font-size:11px;color:${l.daiko==='yes'?'var(--amber)':'var(--hint)'};">${l.daiko==='yes'?'代講':''}</td>
-    <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:12px;">${l.memo||''}</td>
-  </tr>`).join('');
+  tb.innerHTML=[...fl].reverse().map(l=>{
+    // 旧データ互換: preTotal/postTotal を数値として安全に取得
+    const preU  = Number(l.preU)  || 0;
+    const preO  = Number(l.preO)  || 0;
+    const preS  = Number(l.preS)  || 0;
+    const postU = Number(l.postU) || 0;
+    const postO = Number(l.postO) || 0;
+    const postS = Number(l.postS) || 0;
+    // preTotal/postTotal が空・不正なら U+O+S で再計算
+    const preTotal  = (l.preTotal  !== '' && l.preTotal  !== undefined && !isNaN(Number(l.preTotal)))
+                      ? Number(l.preTotal)  : preU + preO + preS;
+    const postTotal = (l.postTotal !== '' && l.postTotal !== undefined && !isNaN(Number(l.postTotal)))
+                      ? Number(l.postTotal) : postU + postO + postS;
+    const postType  = l.postType || getType(postTotal);
+    const memo      = l.memo || '';
+    const daiko     = String(l.daiko||'') === 'yes';
+    return `<tr>
+      <td style="font-family:var(--mono);white-space:nowrap;font-size:11px;">${l.date}</td>
+      <td style="font-weight:500;">${l.student}</td>
+      <td style="color:var(--muted);">${l.teacher}</td>
+      <td>${l.subject||''}</td>
+      <td class="score-num">${preTotal}</td>
+      <td style="color:var(--hint);font-family:var(--mono);">→</td>
+      <td class="score-num">${postTotal}</td>
+      <td><span class="type-pill t-${postType}" style="font-size:11px;padding:3px 10px;">${postType}</span></td>
+      <td style="font-size:11px;color:${daiko?'var(--amber)':'var(--hint)'};">${daiko?'代講':''}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:12px;">${memo}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ── CSV ──
