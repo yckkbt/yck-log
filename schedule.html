@@ -533,7 +533,17 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
         <div class="ff"><label>期間（開始日）</label><input type="date" id="bw-from"></div>
         <div class="ff"><label>期間（終了日）</label><input type="date" id="bw-to"></div>
       </div>
-      <div class="ff"><label>担当生徒</label><input type="text" id="bw-students" placeholder="田中、山本"></div>
+      <div class="ff"><label>授業形式</label>
+        <select id="bw-format">
+          <option value="1対1">1対1（通常）</option>
+          <option value="1対2">1対2（割増）</option>
+          <option value="1対3">1対3</option>
+        </select>
+      </div>
+      <div class="ff"><label>担当生徒（複数選択可）</label>
+        <select id="bw-students" multiple style="min-height:72px;background:#f8f9ff;font-family:var(--sans);font-size:12px;"></select>
+        <div style="font-size:10px;color:var(--hint);margin-top:3px;">Ctrl（Mac:⌘）を押しながらクリックで複数選択</div>
+      </div>
       <div class="ff"><label>備考</label><input type="text" id="bw-note"></div>
       <button class="save-btn" onclick="execBulkWeekly()">この曜日・時間で一括登録</button>
     </div>
@@ -1021,7 +1031,9 @@ async function execBulkWeekly(){
   const slots=document.getElementById('bw-slots').value;
   const from=new Date(document.getElementById('bw-from').value);
   const to=new Date(document.getElementById('bw-to').value);
-  const students=document.getElementById('bw-students').value.trim();
+  const bwEl=document.getElementById('bw-students');
+  const students=bwEl.multiple?[...bwEl.selectedOptions].map(o=>o.value).join('、'):bwEl.value.trim();
+  const format=document.getElementById('bw-format')?.value||'1対1';
   const note=document.getElementById('bw-note').value.trim();
 
   if(!teacher||!dows.length||!startTime){toast('⚠️ 講師・曜日・開始時間を入力してください');return;}
