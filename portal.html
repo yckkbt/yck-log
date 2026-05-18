@@ -111,22 +111,22 @@ body{font-family:var(--sans);background:var(--bg);min-height:100vh;color:var(--t
   <div class="main">
     <div id="notice-area"></div>
     <div class="grid-menu">
-      <a class="menu-card blue" href="schedule.html">
-        <div class="menu-icon">📅</div>
-        <div class="menu-title">月次スケジュール</div>
-        <div class="menu-desc">講師シフト・学校行事・テスト日程を一覧表示。自分のコマを素早く確認・変更できます。</div>
-        <span class="menu-arrow">›</span>
-      </a>
       <a class="menu-card teal" href="index.html">
         <div class="menu-icon">📝</div>
         <div class="menu-title">授業ログ</div>
-        <div class="menu-desc">授業前後のスコア記録・生徒の状態管理・塾長ダッシュボード。</div>
+        <div class="menu-desc">授業前後のスコア記録・生徒の状態管理・ダッシュボード。</div>
         <span class="menu-arrow">›</span>
       </a>
-      <a class="menu-card amber" href="index.html#tab-master">
+      <a class="menu-card blue" href="schedule.html">
+        <div class="menu-icon">📅</div>
+        <div class="menu-title">月次スケジュール</div>
+        <div class="menu-desc">講師シフト・行事・振替管理・給与集計。自分のコマを確認・変更。</div>
+        <span class="menu-arrow">›</span>
+      </a>
+      <a class="menu-card amber" href="master.html" id="admin-menu" style="display:none;">
         <div class="menu-icon">⚙️</div>
-        <div class="menu-title">マスタ管理</div>
-        <div class="menu-desc">生徒・講師・科目マスタの追加・編集。担当講師の紐づけ設定。</div>
+        <div class="menu-title">管理システム</div>
+        <div class="menu-desc" style="color:#92400e;">塾長専用 — 生徒・講師・科目マスタ管理、パスワード変更。</div>
         <span class="menu-arrow">›</span>
       </a>
     </div>
@@ -160,6 +160,11 @@ async function portalLogin(){
       sessionStorage.setItem('yck_user',user);
       document.getElementById('login-area').style.display='none';
       document.getElementById('portal-app').style.display='block';
+      // 塾長（名前未選択）の場合のみ管理メニューを表示
+      if(!user){
+        document.getElementById('admin-menu').style.display='block';
+        sessionStorage.setItem('yck_admin','1');
+      }
       loadNotices();
     }else{
       document.getElementById('portal-err').style.display='block';
@@ -202,6 +207,9 @@ async function loadNotices(){
 if(sessionStorage.getItem('yck_auth')==='1'){
   document.getElementById('login-area').style.display='none';
   document.getElementById('portal-app').style.display='block';
+  if(!sessionStorage.getItem('yck_user')){
+    document.getElementById('admin-menu').style.display='block';
+  }
   loadNotices();
 }
 

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YCK 管理システム</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1a2a6c;--blue:#2563eb;--blue-l:#dbeafe;
+  --purple:#7c3aed;--purple-l:#ede9fe;
+  --teal:#0d9488;--teal-l:#ccfbf1;
+  --green:#16a34a;--green-l:#dcfce7;
+  --amber:#d97706;--amber-l:#fef3c7;
+  --red:#dc2626;--red-l:#fee2e2;
+  --sky:#0ea5e9;--sky-l:#e0f2fe;
+  --bg:#f0f2f8;--surface:#fff;--border:#dde2f0;--border-s:#b8c0d8;
+  --text:#1a1c2e;--muted:#5a6080;--hint:#9098b8;
+  --sans:'Noto Sans JP',sans-serif;--mono:'DM Mono',monospace;
+  --r:8px;--rl:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;}
+
+/* 塾長認証画面 */
+#auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--navy) 0%,#1e40af 50%,var(--purple) 100%);}
+.auth-card{background:#fff;border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.auth-logo{background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:var(--rl);padding:14px 18px;margin-bottom:1.5rem;display:flex;align-items:center;gap:10px;}
+.logo-yck{font-family:'Zen Kaku Gothic New',var(--sans);font-weight:900;font-size:18px;color:#fff;}
+.logo-sub{font-size:9px;letter-spacing:.12em;color:rgba(255,255,255,.7);font-family:var(--mono);}
+.auth-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:.25rem;}
+.auth-sub{font-size:12px;color:var(--muted);margin-bottom:1.25rem;}
+.auth-card label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;font-weight:500;}
+.auth-card input{width:100%;padding:10px 12px;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:14px;font-family:var(--mono);background:#f8f9ff;color:var(--text);margin-bottom:1rem;}
+.auth-card input:focus{outline:none;border-color:var(--blue);}
+.auth-btn{width:100%;padding:11px;background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;}
+.auth-err{font-size:12px;color:var(--red);margin-top:8px;display:none;}
+
+/* ヘッダー */
+#app{display:none;}
+.header{background:linear-gradient(135deg,var(--navy) 0%,#1e40af 60%,var(--purple) 100%);padding:0 1.5rem;display:flex;align-items:center;gap:1rem;height:56px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(26,42,108,.25);}
+.back-btn{color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;white-space:nowrap;}
+.back-btn:hover{color:#fff;}
+.header-brand{font-family:var(--mono);font-size:13px;font-weight:500;color:#fff;}
+.header-title{font-size:14px;color:rgba(255,255,255,.8);}
+.admin-badge{margin-left:auto;font-size:11px;background:rgba(255,255,255,.15);color:#fff;padding:3px 10px;border-radius:10px;font-family:var(--mono);}
+
+.main{max-width:900px;margin:0 auto;padding:1.5rem 1rem 3rem;}
+
+/* カード */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(26,42,108,.06);}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:1rem;}
+.card-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.card-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;font-family:var(--mono);}
+
+.master-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.field label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;font-weight:500;}
+input[type=text],input[type=password],select,textarea{
+  width:100%;padding:9px 11px;border:1.5px solid var(--border-s);border-radius:var(--r);
+  font-size:13px;font-family:var(--sans);background:#f8f9ff;color:var(--text);
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);}
+textarea{resize:vertical;min-height:60px;}
+
+.master-list{list-style:none;margin-bottom:12px;max-height:300px;overflow-y:auto;}
+.master-item{padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;background:#f8f9ff;font-size:13px;}
+.master-item-top{display:flex;align-items:center;justify-content:space-between;}
+.master-item-info{flex:1;}
+.master-item-name{font-weight:600;color:var(--text);}
+.master-item-sub{font-size:11px;color:var(--hint);font-family:var(--mono);margin-top:2px;}
+.del-btn{background:none;border:none;color:var(--hint);cursor:pointer;font-size:18px;line-height:1;padding:0 4px;}
+.del-btn:hover{color:var(--red);}
+.edit-btn{background:none;border:1px solid var(--border-s);border-radius:4px;color:var(--muted);cursor:pointer;font-size:11px;padding:2px 8px;margin-right:4px;}
+.edit-btn:hover{border-color:var(--blue);color:var(--blue);}
+
+.edit-panel{background:#fff;border:1.5px solid var(--blue);border-radius:var(--r);padding:12px;margin-top:8px;display:none;}
+.edit-panel.open{display:block;}
+.edit-panel-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.save-edit-btn{padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;}
+.cancel-edit-btn{padding:7px 16px;background:none;border:1px solid var(--border-s);border-radius:var(--r);font-size:12px;cursor:pointer;color:var(--muted);}
+
+.check-group{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
+.check-item{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;}
+.check-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--blue);}
+
+.add-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
+.add-row input,.add-row select{flex:1;min-width:100px;}
+.add-btn{padding:9px 16px;background:linear-gradient(135deg,var(--blue),var(--teal));color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;white-space:nowrap;}
+
+.bulk-area{margin-top:1rem;border-top:1px dashed var(--border-s);padding-top:1rem;}
+.bulk-label{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.bulk-badge{font-size:10px;background:var(--sky-l);color:var(--sky);padding:2px 7px;border-radius:10px;font-family:var(--mono);font-weight:600;}
+.bulk-textarea{width:100%;min-height:90px;font-family:var(--mono);font-size:12px;border:1.5px dashed var(--border-s);border-radius:var(--r);padding:10px;background:#f8f9ff;resize:vertical;}
+.bulk-textarea:focus{outline:none;border-color:var(--blue);}
+.bulk-note{font-size:11px;color:var(--hint);margin-top:4px;line-height:1.6;}
+.bulk-btn{margin-top:8px;padding:9px 18px;background:linear-gradient(135deg,var(--sky),var(--teal));color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;}
+
+.dedup-btn{padding:8px 18px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;}
+.section-sep{font-size:11px;font-weight:700;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;font-family:var(--mono);margin:1.25rem 0 .75rem;display:flex;align-items:center;gap:8px;}
+.section-sep::after{content:'';flex:1;height:1px;background:var(--border);}
+.pw-msg{font-size:12px;margin-top:6px;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:13px;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;}
+.toast.show{opacity:1;}
+.loading{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<!-- 塾長認証画面 -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <rect width="36" height="36" rx="8" fill="rgba(255,255,255,0.15)"/>
+        <text x="18" y="25" text-anchor="middle" font-family="'Zen Kaku Gothic New',sans-serif" font-weight="900" font-size="18" fill="white">Y</text>
+        <circle cx="28" cy="10" r="5" fill="#f59e0b"/>
+        <circle cx="8" cy="10" r="3" fill="#34d399"/>
+      </svg>
+      <div>
+        <div class="logo-yck">YCK</div>
+        <div class="logo-sub">YAMAGUCHICHU KOBETSU</div>
+      </div>
+    </div>
+    <div class="auth-title">管理システム</div>
+    <div class="auth-sub">塾長専用ページです。パスワードを入力してください。</div>
+    <div class="field"><label>パスワード</label><input type="password" id="auth-pw" placeholder="パスワードを入力"></div>
+    <button class="auth-btn" onclick="doAuth()">ログイン</button>
+    <div class="auth-err" id="auth-err">パスワードが違います</div>
+  </div>
+</div>
+
+<!-- 管理アプリ -->
+<div id="app">
+  <div class="header">
+    <a class="back-btn" href="portal.html">← ポータル</a>
+    <div style="width:1px;height:20px;background:rgba(255,255,255,.2);"></div>
+    <div class="header-brand">YCK</div>
+    <div class="header-title">管理システム</div>
+    <div class="admin-badge">👑 塾長</div>
+  </div>
+
+  <div class="main">
+
+    <!-- 生徒マスタ -->
+    <div class="card">
+      <div class="card-head"><div class="card-icon" style="background:var(--sky-l);">👤</div><span class="card-label">生徒マスタ</span></div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+        <button class="dedup-btn" onclick="dedupMaster()">🧹 重複データを自動削除</button>
+      </div>
+      <ul class="master-list" id="student-list"></ul>
+
+      <div class="section-sep">個別追加</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div class="field"><label>生徒名</label><input type="text" id="new-student" placeholder="例：田中 花子"></div>
+        <div class="field">
+          <label>担当講師（最大2名）</label>
+          <div class="check-group" id="teacher-checks"></div>
+        </div>
+        <div class="field">
+          <label>指導科目（最大2科目）</label>
+          <div class="check-group" id="subject-checks"></div>
+        </div>
+      </div>
+      <button class="add-btn" onclick="addStudent()">追加</button>
+
+      <div class="bulk-area">
+        <div class="bulk-label">一括登録 <span class="bulk-badge">BULK</span></div>
+        <textarea class="bulk-textarea" id="bulk-input" placeholder="1行に1名。カンマ区切りで講師名・科目名を続けられます。
+例：
+田中 花子
+山本 太郎,中村 先生,数学
+鈴木 一郎,中村 先生,渡辺 先生,英語"></textarea>
+        <div class="bulk-note">・講師名は最大2名、科目名は最大2科目まで認識します<br>・すでに登録済みの名前はスキップされます</div>
+        <button class="bulk-btn" onclick="bulkImport()">📋 一括登録する</button>
+      </div>
+    </div>
+
+    <div class="master-grid">
+      <!-- 講師マスタ -->
+      <div class="card">
+        <div class="card-head"><div class="card-icon" style="background:var(--purple-l);">👨‍🏫</div><span class="card-label">講師マスタ</span></div>
+        <ul class="master-list" id="teacher-list"></ul>
+        <div class="add-row"><input type="text" id="new-teacher" placeholder="講師名"><button class="add-btn" onclick="addMaster('teacher')">追加</button></div>
+      </div>
+      <!-- 科目マスタ -->
+      <div class="card">
+        <div class="card-head"><div class="card-icon" style="background:var(--teal-l);">📚</div><span class="card-label">科目マスタ</span></div>
+        <ul class="master-list" id="subject-list"></ul>
+        <div class="add-row"><input type="text" id="new-subject" placeholder="科目名"><button class="add-btn" onclick="addMaster('subject')">追加</button></div>
+      </div>
+    </div>
+
+    <!-- パスワード変更 -->
+    <div class="card" style="max-width:400px;">
+      <div class="card-head"><div class="card-icon" style="background:var(--amber-l);">🔑</div><span class="card-label">パスワード変更</span></div>
+      <div class="field" style="margin-bottom:10px;"><label>現在のパスワード</label><input type="password" id="pw-old"></div>
+      <div class="field" style="margin-bottom:10px;"><label>新しいパスワード</label><input type="password" id="pw-new"></div>
+      <div class="field" style="margin-bottom:10px;"><label>確認</label><input type="password" id="pw-conf"></div>
+      <button class="add-btn" style="width:100%;padding:10px;" onclick="changePw()">変更する</button>
+      <div class="pw-msg" id="pw-msg"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const GAS_URL='https://script.google.com/macros/s/AKfycbz8k41UXf6w3mkSQ3ARc4ReQ_v2xO2t2-xKizYtQ3Y_s2k1iAHEwVNSUlI52V5Go4NsZg/exec';
+let master={students:[],teachers:[],subjects:[]};
+
+function toast(msg,dur=2200){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+async function api(action,body={}){
+  const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,...body})});
+  return res.json();
+}
+
+// ── 塾長認証 ──
+async function doAuth(){
+  const pw=document.getElementById('auth-pw').value;
+  const btn=document.querySelector('.auth-btn');
+  btn.innerHTML='<span class="loading"></span>確認中...';btn.disabled=true;
+  try{
+    const res=await api('auth',{password:pw});
+    if(res.ok){
+      sessionStorage.setItem('yck_admin','1');
+      sessionStorage.setItem('yck_pw',pw);
+      document.getElementById('auth-screen').style.display='none';
+      document.getElementById('app').style.display='block';
+      await loadMaster();
+    }else{
+      document.getElementById('auth-err').style.display='block';
+    }
+  }catch(e){alert('接続に失敗しました');}
+  btn.innerHTML='ログイン';btn.disabled=false;
+}
+
+async function loadMaster(){
+  const res=await api('getMaster');
+  master=res.master||{students:[],teachers:[],subjects:[]};
+  renderMaster();
+}
+
+// ── マスタ表示 ──
+function renderMaster(){
+  // 生徒リスト
+  const ul=document.getElementById('student-list');
+  ul.innerHTML=master.students.length?master.students.map((s,i)=>{
+    const name=s.name||s;
+    const teachers=(s.teachers||[]).join('・')||'担当なし';
+    const subjects=(s.subjects||[]).join('・')||'—';
+    return `<li class="master-item">
+      <div class="master-item-top">
+        <div class="master-item-info">
+          <div class="master-item-name">${name}</div>
+          <div class="master-item-sub">講師：${teachers}　科目：${subjects}</div>
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button class="edit-btn" onclick="toggleEdit(${i})">編集</button>
+          <button class="del-btn" onclick="delStudent(${i})">×</button>
+        </div>
+      </div>
+      <div class="edit-panel" id="edit-panel-${i}">
+        <div class="edit-panel-row">
+          <div class="field">
+            <label>担当講師（最大2名）</label>
+            <div class="check-group">
+              ${master.teachers.map(t=>`<label class="check-item"><input type="checkbox" name="edit-t-${i}" value="${t}" ${(s.teachers||[]).includes(t)?'checked':''}> ${t}</label>`).join('')}
+            </div>
+          </div>
+          <div class="field">
+            <label>指導科目（最大2科目）</label>
+            <div class="check-group">
+              ${master.subjects.map(sub=>`<label class="check-item"><input type="checkbox" name="edit-s-${i}" value="${sub}" ${(s.subjects||[]).includes(sub)?'checked':''}> ${sub}</label>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="save-edit-btn" onclick="saveEdit(${i})">保存</button>
+          <button class="cancel-edit-btn" onclick="toggleEdit(${i})">キャンセル</button>
+        </div>
+      </div>
+    </li>`;
+  }).join(''):'<li style="font-size:12px;color:var(--hint);padding:8px;">（未登録）</li>';
+
+  // 講師・科目リスト
+  ['teacher','subject'].forEach(type=>{
+    const arr=type==='teacher'?master.teachers:master.subjects;
+    const ul2=document.getElementById(type+'-list');
+    ul2.innerHTML=arr.length?arr.map((v,i)=>`<li class="master-item">
+      <div class="master-item-top">
+        <div class="master-item-info"><div class="master-item-name">${v}</div></div>
+        <button class="del-btn" onclick="delMaster('${type}',${i})">×</button>
+      </div></li>`).join(''):'<li style="font-size:12px;color:var(--hint);padding:8px;">（未登録）</li>';
+  });
+  buildChecks();
+}
+
+function buildChecks(){
+  const tc=document.getElementById('teacher-checks');
+  if(tc) tc.innerHTML=master.teachers.map(t=>`<label class="check-item"><input type="checkbox" name="assign-teacher" value="${t}"> ${t}</label>`).join('');
+  const sc=document.getElementById('subject-checks');
+  if(sc) sc.innerHTML=master.subjects.map(s=>`<label class="check-item"><input type="checkbox" name="assign-subject" value="${s}"> ${s}</label>`).join('');
+}
+
+function toggleEdit(i){
+  document.getElementById('edit-panel-'+i).classList.toggle('open');
+}
+
+async function saveEdit(i){
+  const teachers=[...document.querySelectorAll(`input[name="edit-t-${i}"]:checked`)].map(b=>b.value).slice(0,2);
+  const subjects=[...document.querySelectorAll(`input[name="edit-s-${i}"]:checked`)].map(b=>b.value).slice(0,2);
+  master.students[i].teachers=teachers;
+  master.students[i].subjects=subjects;
+  await api('setMaster',{master});
+  renderMaster();toast('✅ 変更を保存しました');
+}
+
+async function addStudent(){
+  const name=document.getElementById('new-student').value.trim();if(!name)return;
+  const teachers=[...document.querySelectorAll('input[name="assign-teacher"]:checked')].map(b=>b.value).slice(0,2);
+  const subjects=[...document.querySelectorAll('input[name="assign-subject"]:checked')].map(b=>b.value).slice(0,2);
+  if(master.students.some(s=>(s.name||s)===name)){toast('⚠️ すでに登録済みです');return;}
+  master.students.push({name,teachers,subjects});
+  document.getElementById('new-student').value='';
+  document.querySelectorAll('input[name="assign-teacher"],input[name="assign-subject"]').forEach(b=>b.checked=false);
+  await api('setMaster',{master});renderMaster();toast('✅ 追加しました');
+}
+
+async function bulkImport(){
+  const text=document.getElementById('bulk-input').value.trim();if(!text)return;
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  let count=0;
+  lines.forEach(line=>{
+    const parts=line.split(',').map(p=>p.trim()).filter(Boolean);
+    if(!parts.length)return;
+    const name=parts[0];if(!name)return;
+    if(master.students.some(s=>(s.name||s)===name))return;
+    const rest=parts.slice(1);
+    const teachers=rest.filter(p=>master.teachers.includes(p)).slice(0,2);
+    const subjects=rest.filter(p=>master.subjects.includes(p)).slice(0,2);
+    master.students.push({name,teachers,subjects});count++;
+  });
+  if(!count){toast('⚠️ 新しく追加できる生徒がいませんでした');return;}
+  document.getElementById('bulk-input').value='';
+  await api('setMaster',{master});renderMaster();toast(`✅ ${count}名を一括登録しました`);
+}
+
+async function delStudent(idx){
+  if(!confirm('削除してよいですか？'))return;
+  master.students.splice(idx,1);
+  await api('setMaster',{master});renderMaster();toast('削除しました');
+}
+
+async function addMaster(type){
+  const id='new-'+type;const val=document.getElementById(id).value.trim();if(!val)return;
+  if(type==='teacher')master.teachers.push(val);
+  if(type==='subject')master.subjects.push(val);
+  document.getElementById(id).value='';
+  await api('setMaster',{master});renderMaster();toast('✅ 追加しました');
+}
+
+async function delMaster(type,idx){
+  if(!confirm('削除してよいですか？'))return;
+  if(type==='teacher')master.teachers.splice(idx,1);
+  if(type==='subject')master.subjects.splice(idx,1);
+  await api('setMaster',{master});renderMaster();toast('削除しました');
+}
+
+async function dedupMaster(){
+  if(!confirm('マスタシートの重複データを自動削除します。よろしいですか？'))return;
+  const btn=document.querySelector('.dedup-btn');
+  btn.innerHTML='<span class="loading"></span>削除中...';btn.disabled=true;
+  try{
+    const res=await api('dedupMaster');
+    if(res.ok){
+      const msg=res.removed>0?`✅ ${res.removed}件の重複を削除しました`:'✅ 重複はありませんでした';
+      await loadMaster();toast(msg,3000);
+    }else alert('削除に失敗しました');
+  }catch(e){alert('通信エラーが発生しました');}
+  btn.innerHTML='🧹 重複データを自動削除';btn.disabled=false;
+}
+
+async function changePw(){
+  const old=document.getElementById('pw-old').value;
+  const nw=document.getElementById('pw-new').value;
+  const cf=document.getElementById('pw-conf').value;
+  const msg=document.getElementById('pw-msg');
+  if(!nw){msg.style.color='var(--red)';msg.textContent='新しいパスワードを入力してください';return;}
+  if(nw!==cf){msg.style.color='var(--red)';msg.textContent='パスワードが一致しません';return;}
+  const res=await api('changePass',{oldPw:old,newPw:nw});
+  if(res.ok){msg.style.color='var(--green)';msg.textContent='✅ 変更しました';['pw-old','pw-new','pw-conf'].forEach(id=>document.getElementById(id).value='');}
+  else{msg.style.color='var(--red)';msg.textContent=res.error||'エラーが発生しました';}
+}
+
+// セッション確認
+document.getElementById('auth-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doAuth();});
+if(sessionStorage.getItem('yck_admin')==='1'){
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadMaster();
+}
+</script>
+</body>
+</html>
