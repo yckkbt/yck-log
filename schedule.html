@@ -640,6 +640,14 @@ function setDefaultDates(){
   document.getElementById('bw-to').value=last;
 }
 
+function rebuildStudentSelects(){
+  const studentNames=(master.students||[]).map(function(s){return s.name||s;});
+  ['s-students','bw-students'].forEach(function(id){
+    const el=document.getElementById(id);if(!el)return;
+    el.innerHTML=studentNames.map(function(n){return '<option value="'+n+'">'+n+'</option>';}).join('');
+  });
+}
+
 function rebuildSelects(){
   const pop=(id,arr,addAll)=>{
     const el=document.getElementById(id);if(!el)return;
@@ -660,6 +668,7 @@ function rebuildSelects(){
   pop('bw-teacher',isAdmin?teachers:[currentUser],false);
 
   // 凡例
+  rebuildStudentSelects();
   const leg=document.getElementById('legend');
   leg.innerHTML=
     `<span class="legend-item"><span class="legend-dot" style="background:var(--amber-l);border:1px solid var(--amber);"></span>塾行事</span>
