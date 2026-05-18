@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YCK 月次スケジュール</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1a2a6c;--blue:#2563eb;--blue-l:#dbeafe;
+  --purple:#7c3aed;--purple-l:#ede9fe;
+  --teal:#0d9488;--teal-l:#ccfbf1;
+  --green:#16a34a;--green-l:#dcfce7;
+  --amber:#d97706;--amber-l:#fef3c7;
+  --orange:#ea580c;--orange-l:#ffedd5;
+  --red:#dc2626;--red-l:#fee2e2;
+  --pink:#db2777;--pink-l:#fce7f3;
+  --bg:#f0f2f8;--surface:#fff;--border:#dde2f0;--border-s:#b8c0d8;
+  --text:#1a1c2e;--muted:#5a6080;--hint:#9098b8;
+  --sans:'Noto Sans JP',sans-serif;--mono:'DM Mono',monospace;
+  --r:8px;--rl:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;}
+
+.header{background:linear-gradient(135deg,var(--navy) 0%,#1e40af 60%,var(--purple) 100%);padding:0 1.5rem;display:flex;align-items:center;gap:1rem;height:56px;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(26,42,108,.25);}
+.back-btn{color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:4px;}
+.back-btn:hover{color:#fff;}
+.header-brand{font-family:var(--mono);font-size:13px;font-weight:500;color:#fff;letter-spacing:.05em;}
+.header-title{font-size:14px;color:rgba(255,255,255,.8);}
+
+.toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:56px;z-index:100;box-shadow:0 1px 4px rgba(26,42,108,.06);}
+.month-nav{display:flex;align-items:center;gap:8px;}
+.nav-btn{width:32px;height:32px;border:1.5px solid var(--border-s);background:#fff;border-radius:var(--r);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--muted);}
+.nav-btn:hover{border-color:var(--blue);color:var(--blue);}
+.month-label{font-size:16px;font-weight:700;color:var(--text);min-width:100px;text-align:center;font-family:var(--mono);}
+.toolbar-sep{width:1px;height:28px;background:var(--border);margin:0 4px;}
+.filter-label{font-size:12px;color:var(--muted);font-weight:500;}
+.teacher-filter{padding:7px 10px;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:13px;background:#f8f9ff;color:var(--text);}
+.teacher-filter:focus{outline:none;border-color:var(--blue);}
+.action-btn{padding:7px 16px;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;font-family:var(--sans);}
+.btn-primary{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;}
+.btn-outline{background:#fff;border:1.5px solid var(--border-s);color:var(--muted);}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue);}
+.btn-green{background:linear-gradient(135deg,var(--teal),var(--green));color:#fff;}
+
+.main{padding:1rem 1.5rem 3rem;max-width:1100px;margin:0 auto;}
+
+/* CALENDAR */
+.cal-wrap{background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);overflow:hidden;box-shadow:0 2px 8px rgba(26,42,108,.06);}
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:2px solid var(--border);}
+.cal-dow{padding:8px 4px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.08em;font-family:var(--mono);}
+.cal-dow.sun{color:var(--red);}
+.cal-dow.sat{color:var(--blue);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);}
+.cal-cell{min-height:130px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:4px;position:relative;vertical-align:top;}
+.cal-cell:nth-child(7n){border-right:none;}
+.cal-cell.other-month{background:#f8f9ff;opacity:.5;}
+.cal-cell.today{background:linear-gradient(180deg,#eff6ff,#fff);}
+.cal-cell.today .cell-date{background:var(--blue);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;}
+.cell-date{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);}
+.cell-date.sun{color:var(--red);}
+.cell-date.sat{color:var(--blue);}
+.cell-date.holiday{color:var(--red);}
+
+/* EVENTS in cell */
+.event-chip{font-size:10px;border-radius:4px;padding:2px 5px;margin-bottom:2px;cursor:pointer;line-height:1.4;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+.event-chip:hover{opacity:.85;}
+.chip-event{background:var(--amber-l);color:#92400e;border-left:2px solid var(--amber);}
+.chip-school{background:var(--red-l);color:#7f1d1d;border-left:2px solid var(--red);}
+.chip-shift{border-left:2px solid;}
+.chip-holiday{background:#f3f4f6;color:var(--hint);border-left:2px solid var(--hint);}
+
+/* LEGEND */
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);}
+.legend-dot{width:10px;height:10px;border-radius:3px;}
+
+/* PANELS */
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;box-shadow:0 1px 4px rgba(26,42,108,.06);}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.panel-title{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;font-family:var(--mono);}
+
+/* FORM */
+.form-field{margin-bottom:12px;}
+.form-field label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;font-weight:500;}
+.form-field input,.form-field select,.form-field textarea{
+  width:100%;padding:8px 10px;border:1.5px solid var(--border-s);border-radius:var(--r);
+  font-size:13px;font-family:var(--sans);background:#f8f9ff;color:var(--text);
+}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{outline:none;border-color:var(--blue);}
+.form-field textarea{min-height:64px;resize:vertical;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.save-btn{width:100%;padding:10px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;margin-top:4px;}
+.save-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* SHIFT LIST */
+.shift-list{list-style:none;max-height:320px;overflow-y:auto;}
+.shift-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;background:#f8f9ff;font-size:12px;}
+.shift-item-left{flex:1;}
+.shift-item-name{font-weight:600;color:var(--text);}
+.shift-item-detail{color:var(--muted);font-family:var(--mono);font-size:11px;margin-top:1px;}
+.shift-actions{display:flex;gap:4px;}
+.edit-chip-btn{padding:3px 8px;border:1px solid var(--border-s);background:#fff;border-radius:4px;font-size:11px;cursor:pointer;color:var(--muted);}
+.edit-chip-btn:hover{border-color:var(--blue);color:var(--blue);}
+.del-chip-btn{padding:3px 8px;border:none;background:none;font-size:14px;cursor:pointer;color:var(--hint);}
+.del-chip-btn:hover{color:var(--red);}
+
+/* EVENT LIST */
+.event-list{list-style:none;max-height:320px;overflow-y:auto;}
+.event-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;background:#f8f9ff;font-size:12px;}
+
+/* MODAL */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;display:flex;align-items:center;justify-content:center;display:none;}
+.modal-backdrop.open{display:flex;}
+.modal{background:#fff;border-radius:var(--rl);padding:1.5rem;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:1rem;color:var(--text);}
+.modal-actions{display:flex;gap:8px;margin-top:1rem;justify-content:flex-end;}
+.modal-cancel{padding:8px 16px;border:1.5px solid var(--border-s);background:#fff;border-radius:var(--r);font-size:13px;cursor:pointer;color:var(--muted);}
+.modal-save{padding:8px 16px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:13px;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;}
+.toast.show{opacity:1;}
+.loading{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* COLORS per teacher */
+.tc0{background:#dbeafe;color:#1e40af;border-color:#2563eb;}
+.tc1{background:#dcfce7;color:#15803d;border-color:#16a34a;}
+.tc2{background:#ede9fe;color:#5b21b6;border-color:#7c3aed;}
+.tc3{background:#fce7f3;color:#9d174d;border-color:#db2777;}
+.tc4{background:#ccfbf1;color:#0f766e;border-color:#0d9488;}
+.tc5{background:#ffedd5;color:#c2410c;border-color:#ea580c;}
+.tc6{background:#fef3c7;color:#92400e;border-color:#d97706;}
+.tc7{background:#f3e8ff;color:#6b21a8;border-color:#9333ea;}
+
+@media(max-width:700px){
+  .panels{grid-template-columns:1fr;}
+  .cal-cell{min-height:80px;}
+  .event-chip{font-size:9px;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="back-btn" href="portal.html">← ポータルへ</a>
+  <div style="width:1px;height:24px;background:rgba(255,255,255,.2);"></div>
+  <div class="header-brand">YCK</div>
+  <div class="header-title">月次スケジュール</div>
+</div>
+
+<div class="toolbar">
+  <div class="month-nav">
+    <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+    <div class="month-label" id="month-label"></div>
+    <button class="nav-btn" onclick="changeMonth(1)">›</button>
+  </div>
+  <div class="toolbar-sep"></div>
+  <span class="filter-label">講師フィルタ：</span>
+  <select class="teacher-filter" id="teacher-filter" onchange="renderCal()">
+    <option value="">全員表示</option>
+  </select>
+  <div class="toolbar-sep"></div>
+  <button class="action-btn btn-outline" onclick="goToday()">今月</button>
+</div>
+
+<div class="main">
+  <div class="legend" id="legend"></div>
+
+  <div class="cal-wrap">
+    <div class="cal-header">
+      <div class="cal-dow sun">日</div>
+      <div class="cal-dow">月</div>
+      <div class="cal-dow">火</div>
+      <div class="cal-dow">水</div>
+      <div class="cal-dow">木</div>
+      <div class="cal-dow fri">金</div>
+      <div class="cal-dow sat">土</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+
+  <div class="panels">
+    <!-- シフト入力 -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">📅 シフト登録・編集</div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>講師名</label>
+          <select id="s-teacher"></select>
+        </div>
+        <div class="form-field">
+          <label>日付</label>
+          <input type="date" id="s-date">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>開始時間</label>
+          <select id="s-start">
+            <option>16:00</option><option>16:25</option><option>17:30</option>
+            <option>19:15</option><option>20:45</option><option>10:30</option>
+            <option>14:00</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>コマ数</label>
+          <select id="s-slots">
+            <option value="1">1コマ</option>
+            <option value="2">2コマ</option>
+            <option value="3">3コマ</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>担当生徒（任意）</label>
+        <input type="text" id="s-students" placeholder="例：田中 花子、山本 太郎">
+      </div>
+      <div class="form-field">
+        <label>備考</label>
+        <input type="text" id="s-note" placeholder="例：代講、テスト前など">
+      </div>
+      <button class="save-btn" id="shift-save-btn" onclick="saveShift()">シフトを保存</button>
+
+      <div style="margin-top:1rem;">
+        <div class="panel-title" style="margin-bottom:.5rem;">今月のシフト一覧</div>
+        <ul class="shift-list" id="shift-list"></ul>
+      </div>
+    </div>
+
+    <!-- 行事入力 -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">🏫 行事・予定登録</div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>開始日</label>
+          <input type="date" id="e-start">
+        </div>
+        <div class="form-field">
+          <label>終了日（1日の場合は同日）</label>
+          <input type="date" id="e-end">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>種別</label>
+        <select id="e-type">
+          <option value="event">塾行事（テスト前学習会など）</option>
+          <option value="school">学校行事（定期テスト・修学旅行など）</option>
+          <option value="holiday">休講日</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>内容</label>
+        <input type="text" id="e-content" placeholder="例：山口中央 中間テスト">
+      </div>
+      <div class="form-field">
+        <label>対象校（任意）</label>
+        <input type="text" id="e-school" placeholder="例：山口中央、鴻南">
+      </div>
+      <button class="save-btn" id="event-save-btn" onclick="saveEvent()">行事を保存</button>
+
+      <div style="margin-top:1rem;">
+        <div class="panel-title" style="margin-bottom:.5rem;">今月の行事一覧</div>
+        <ul class="event-list" id="event-list"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 編集モーダル -->
+<div class="modal-backdrop" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">シフトを編集</div>
+    <div id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="modal-save" id="modal-save-btn">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const GAS_URL='https://script.google.com/macros/s/AKfycbz8k41UXf6w3mkSQ3ARc4ReQ_v2xO2t2-xKizYtQ3Y_s2k1iAHEwVNSUlI52V5Go4NsZg/exec';
+const SLOT_MINS={1:85,2:85*2+10,3:85*3+20};
+const TEACHER_COLORS=['tc0','tc1','tc2','tc3','tc4','tc5','tc6','tc7'];
+const HOLIDAYS_2025_2026={
+  '2026-01-01':true,'2026-01-12':true,'2026-02-11':true,'2026-02-23':true,
+  '2026-03-20':true,'2026-04-29':true,'2026-05-03':true,'2026-05-04':true,
+  '2026-05-05':true,'2026-05-06':true,'2026-07-20':true,'2026-08-11':true,
+  '2026-09-21':true,'2026-09-23':true,'2026-10-12':true,'2026-11-03':true,
+  '2026-11-23':true
+};
+
+let curYear=new Date().getFullYear();
+let curMonth=new Date().getMonth();
+let shifts=[];
+let events=[];
+let teachers=[];
+let editTarget=null;
+let teacherColorMap={};
+
+function toast(msg,dur=2200){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+async function api(action,body={}){
+  const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,...body})});
+  return res.json();
+}
+
+// ── INIT ──
+async function init(){
+  // 認証チェック
+  const pw=sessionStorage.getItem('yck_pw');
+  if(!pw){window.location.href='portal.html';return;}
+
+  const[mRes,sRes,eRes]=await Promise.all([
+    api('getMaster'),
+    api('getShifts'),
+    api('getEvents')
+  ]);
+  teachers=(mRes.master?.teachers||[]);
+  shifts=sRes.shifts||[];
+  events=eRes.events||[];
+
+  // 色マッピング
+  teachers.forEach((t,i)=>teacherColorMap[t]=TEACHER_COLORS[i%TEACHER_COLORS.length]);
+
+  rebuildTeacherSelects();
+  document.getElementById('s-date').value=toDateStr(new Date());
+  document.getElementById('e-start').value=toDateStr(new Date());
+  document.getElementById('e-end').value=toDateStr(new Date());
+  renderAll();
+}
+
+function toDateStr(d){return d.toISOString().slice(0,10);}
+
+function rebuildTeacherSelects(){
+  const tf=document.getElementById('teacher-filter');
+  const st=document.getElementById('s-teacher');
+  const cur1=tf.value,cur2=st.value;
+  tf.innerHTML='<option value="">全員表示</option>';
+  st.innerHTML='';
+  teachers.forEach(t=>{
+    tf.innerHTML+=`<option value="${t}">${t}</option>`;
+    st.innerHTML+=`<option value="${t}">${t}</option>`;
+  });
+  tf.value=cur1;st.value=cur2;
+
+  // 凡例
+  const leg=document.getElementById('legend');
+  leg.innerHTML=`
+    <span class="legend-item"><span class="legend-dot" style="background:var(--amber-l);border:1px solid var(--amber);"></span>塾行事</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--red-l);border:1px solid var(--red);"></span>学校行事</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#f3f4f6;border:1px solid #9ca3af;"></span>休講</span>`+
+    teachers.map(t=>`<span class="legend-item"><span class="legend-dot ${teacherColorMap[t]}" style="width:10px;height:10px;border-radius:3px;"></span>${t}</span>`).join('');
+}
+
+function renderAll(){
+  updateMonthLabel();
+  renderCal();
+  renderShiftList();
+  renderEventList();
+}
+
+function updateMonthLabel(){
+  document.getElementById('month-label').textContent=`${curYear}年${curMonth+1}月`;
+}
+
+function changeMonth(d){curMonth+=d;if(curMonth>11){curMonth=0;curYear++;}else if(curMonth<0){curMonth=11;curYear--;}renderAll();}
+function goToday(){curYear=new Date().getFullYear();curMonth=new Date().getMonth();renderAll();}
+
+// ── CALENDAR ──
+function renderCal(){
+  const grid=document.getElementById('cal-grid');
+  const filter=document.getElementById('teacher-filter').value;
+  const today=toDateStr(new Date());
+  const firstDay=new Date(curYear,curMonth,1).getDay();
+  const daysInMonth=new Date(curYear,curMonth+1,0).getDate();
+  const prevDays=new Date(curYear,curMonth,0).getDate();
+
+  let cells=[];
+  // 前月
+  for(let i=firstDay-1;i>=0;i--){
+    cells.push({date:null,day:prevDays-i,other:true});
+  }
+  // 当月
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${curYear}-${String(curMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells.push({date:dateStr,day:d,other:false});
+  }
+  // 翌月
+  const remaining=(7-cells.length%7)%7;
+  for(let i=1;i<=remaining;i++) cells.push({date:null,day:i,other:true});
+
+  grid.innerHTML=cells.map((c,idx)=>{
+    const dow=idx%7;
+    const isToday=c.date===today;
+    const isHoliday=c.date&&HOLIDAYS_2025_2026[c.date];
+    const isSun=dow===0;
+    const isSat=dow===6;
+
+    let dateClass='cell-date';
+    if(isSun||isHoliday) dateClass+=' sun';
+    else if(isSat) dateClass+=' sat';
+
+    let cellClass='cal-cell';
+    if(c.other) cellClass+=' other-month';
+    if(isToday) cellClass+=' today';
+
+    // イベント取得
+    const dayEvents=c.date?events.filter(e=>{
+      return c.date>=e.startDate&&c.date<=e.endDate;
+    }):[];
+    const dayShifts=c.date?shifts.filter(s=>{
+      return s.date===c.date&&(!filter||s.teacher===filter);
+    }):[];
+
+    const eventChips=dayEvents.map(e=>{
+      const cls=e.type==='school'?'chip-school':e.type==='holiday'?'chip-holiday':'chip-event';
+      const label=e.school?`${e.content}（${e.school}）`:e.content;
+      return `<span class="event-chip ${cls}" title="${label}">${label}</span>`;
+    }).join('');
+
+    const shiftChips=dayShifts.map(s=>{
+      const tc=teacherColorMap[s.teacher]||'tc0';
+      const label=`${s.teacher} ${s.startTime}〜`;
+      return `<span class="event-chip chip-shift ${tc}" onclick="openEditModal('shift','${s.id}')" title="${label}${s.students?'\n担当:'+s.students:''}">${label}</span>`;
+    }).join('');
+
+    return `<div class="${cellClass}" onclick="onCellClick('${c.date||''}')">
+      <div class="${dateClass}">${c.day}</div>
+      ${eventChips}${shiftChips}
+    </div>`;
+  }).join('');
+}
+
+function onCellClick(dateStr){
+  if(!dateStr)return;
+  document.getElementById('s-date').value=dateStr;
+  document.getElementById('e-start').value=dateStr;
+  document.getElementById('e-end').value=dateStr;
+}
+
+// ── SHIFT ──
+async function saveShift(){
+  const teacher=document.getElementById('s-teacher').value;
+  const date=document.getElementById('s-date').value;
+  const startTime=document.getElementById('s-start').value;
+  const slots=document.getElementById('s-slots').value;
+  const students=document.getElementById('s-students').value.trim();
+  const note=document.getElementById('s-note').value.trim();
+  if(!teacher||!date||!startTime){toast('⚠️ 講師・日付・開始時間は必須です');return;}
+
+  const shift={id:'s'+Date.now(),teacher,date,startTime,slots,students,note};
+  const btn=document.getElementById('shift-save-btn');
+  btn.innerHTML='<span class="loading"></span>保存中...';btn.disabled=true;
+  try{
+    const res=await api('addShift',{shift});
+    if(res.ok){shifts.push(shift);toast('✅ シフトを保存しました');renderAll();}
+    else alert('保存に失敗しました');
+  }catch(e){alert('通信エラー');}
+  btn.innerHTML='シフトを保存';btn.disabled=false;
+}
+
+function renderShiftList(){
+  const ul=document.getElementById('shift-list');
+  const monthShifts=shifts.filter(s=>s.date&&s.date.startsWith(`${curYear}-${String(curMonth+1).padStart(2,'0')}`))
+    .sort((a,b)=>a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime));
+  if(!monthShifts.length){ul.innerHTML='<li style="font-size:12px;color:var(--hint);padding:8px;">シフトなし</li>';return;}
+  ul.innerHTML=monthShifts.map(s=>`
+    <li class="shift-item">
+      <div class="shift-item-left">
+        <div class="shift-item-name">${s.date.slice(5)} ${s.teacher}</div>
+        <div class="shift-item-detail">${s.startTime}〜 ${s.slots}コマ${s.students?' / '+s.students:''}${s.note?' 【'+s.note+'】':''}</div>
+      </div>
+      <div class="shift-actions">
+        <button class="edit-chip-btn" onclick="openEditModal('shift','${s.id}')">編集</button>
+        <button class="del-chip-btn" onclick="deleteShift('${s.id}')">×</button>
+      </div>
+    </li>`).join('');
+}
+
+async function deleteShift(id){
+  if(!confirm('このシフトを削除しますか？'))return;
+  try{
+    const res=await api('deleteShift',{id});
+    if(res.ok){shifts=shifts.filter(s=>s.id!==id);toast('削除しました');renderAll();}
+  }catch(e){alert('通信エラー');}
+}
+
+// ── EVENT ──
+async function saveEvent(){
+  const startDate=document.getElementById('e-start').value;
+  const endDate=document.getElementById('e-end').value||startDate;
+  const type=document.getElementById('e-type').value;
+  const content=document.getElementById('e-content').value.trim();
+  const school=document.getElementById('e-school').value.trim();
+  if(!startDate||!content){toast('⚠️ 開始日と内容は必須です');return;}
+
+  const ev={id:'e'+Date.now(),startDate,endDate,type,content,school};
+  const btn=document.getElementById('event-save-btn');
+  btn.innerHTML='<span class="loading"></span>保存中...';btn.disabled=true;
+  try{
+    const res=await api('addEvent',{event:ev});
+    if(res.ok){events.push(ev);toast('✅ 行事を保存しました');renderAll();}
+    else alert('保存に失敗しました');
+  }catch(e){alert('通信エラー');}
+  btn.innerHTML='行事を保存';btn.disabled=false;
+}
+
+function renderEventList(){
+  const ul=document.getElementById('event-list');
+  const monthEvents=events.filter(e=>
+    (e.startDate&&e.startDate.startsWith(`${curYear}-${String(curMonth+1).padStart(2,'0')}`)) ||
+    (e.endDate&&e.endDate.startsWith(`${curYear}-${String(curMonth+1).padStart(2,'0')}`))
+  ).sort((a,b)=>a.startDate.localeCompare(b.startDate));
+  if(!monthEvents.length){ul.innerHTML='<li style="font-size:12px;color:var(--hint);padding:8px;">行事なし</li>';return;}
+  const typeLabel={event:'塾行事',school:'学校行事',holiday:'休講'};
+  ul.innerHTML=monthEvents.map(e=>`
+    <li class="event-item">
+      <div style="flex:1;">
+        <div style="font-weight:600;color:var(--text);font-size:12px;">${e.startDate.slice(5)}${e.endDate&&e.endDate!==e.startDate?'〜'+e.endDate.slice(5):''} ${e.content}</div>
+        <div style="font-size:11px;color:var(--hint);font-family:var(--mono);">${typeLabel[e.type]||e.type}${e.school?' / '+e.school:''}</div>
+      </div>
+      <div class="shift-actions">
+        <button class="del-chip-btn" onclick="deleteEvent('${e.id}')">×</button>
+      </div>
+    </li>`).join('');
+}
+
+async function deleteEvent(id){
+  if(!confirm('この行事を削除しますか？'))return;
+  try{
+    const res=await api('deleteEvent',{id});
+    if(res.ok){events=events.filter(e=>e.id!==id);toast('削除しました');renderAll();}
+  }catch(e){alert('通信エラー');}
+}
+
+// ── EDIT MODAL ──
+function openEditModal(type,id){
+  editTarget={type,id};
+  const modal=document.getElementById('edit-modal');
+  const body=document.getElementById('modal-body');
+
+  if(type==='shift'){
+    const s=shifts.find(x=>x.id===id);
+    if(!s)return;
+    document.getElementById('modal-title').textContent='シフトを編集';
+    body.innerHTML=`
+      <div class="form-row">
+        <div class="form-field"><label>講師名</label>
+          <select id="m-teacher">${teachers.map(t=>`<option${t===s.teacher?' selected':''}>${t}</option>`).join('')}</select>
+        </div>
+        <div class="form-field"><label>日付</label><input type="date" id="m-date" value="${s.date}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>開始時間</label>
+          <select id="m-start">
+            ${['16:00','16:25','17:30','19:15','20:45','10:30','14:00'].map(t=>`<option${t===s.startTime?' selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-field"><label>コマ数</label>
+          <select id="m-slots">
+            ${[1,2,3].map(n=>`<option value="${n}"${String(n)===String(s.slots)?' selected':''}>${n}コマ</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-field"><label>担当生徒</label><input type="text" id="m-students" value="${s.students||''}"></div>
+      <div class="form-field"><label>備考</label><input type="text" id="m-note" value="${s.note||''}"></div>`;
+    document.getElementById('modal-save-btn').onclick=saveEditShift;
+  }
+  modal.classList.add('open');
+}
+
+async function saveEditShift(){
+  const id=editTarget.id;
+  const idx=shifts.findIndex(s=>s.id===id);
+  if(idx<0)return;
+  const updated={
+    ...shifts[idx],
+    teacher:document.getElementById('m-teacher').value,
+    date:document.getElementById('m-date').value,
+    startTime:document.getElementById('m-start').value,
+    slots:document.getElementById('m-slots').value,
+    students:document.getElementById('m-students').value.trim(),
+    note:document.getElementById('m-note').value.trim(),
+  };
+  const btn=document.getElementById('modal-save-btn');
+  btn.textContent='保存中...';btn.disabled=true;
+  try{
+    const res=await api('updateShift',{shift:updated});
+    if(res.ok){shifts[idx]=updated;toast('✅ 更新しました');closeModal();renderAll();}
+    else alert('更新に失敗しました');
+  }catch(e){alert('通信エラー');}
+  btn.textContent='保存';btn.disabled=false;
+}
+
+function closeModal(){
+  document.getElementById('edit-modal').classList.remove('open');
+  editTarget=null;
+}
+
+document.getElementById('edit-modal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('edit-modal'))closeModal();
+});
+
+init();
+</script>
+</body>
+</html>

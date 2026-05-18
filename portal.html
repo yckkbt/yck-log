@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YCK 講師ポータル</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1a2a6c;--blue:#2563eb;--purple:#7c3aed;
+  --teal:#0d9488;--green:#16a34a;--amber:#d97706;--red:#dc2626;
+  --bg:#f0f2f8;--surface:#fff;--border:#dde2f0;
+  --text:#1a1c2e;--muted:#5a6080;--hint:#9098b8;
+  --sans:'Noto Sans JP',sans-serif;--mono:'DM Mono',monospace;
+  --r:12px;--rl:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);min-height:100vh;color:var(--text);}
+
+.hero{
+  background:linear-gradient(135deg,var(--navy) 0%,#1e40af 55%,var(--purple) 100%);
+  padding:2.5rem 2rem 3rem;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-inner{max-width:900px;margin:0 auto;position:relative;}
+.logo-wrap{display:flex;align-items:center;gap:14px;margin-bottom:2rem;}
+.logo-mark{width:52px;height:52px;}
+.logo-texts{line-height:1.1;}
+.logo-yck{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:28px;color:#fff;letter-spacing:.05em;}
+.logo-sub{font-size:11px;letter-spacing:.15em;color:rgba(255,255,255,.6);font-family:var(--mono);}
+.hero-title{font-size:15px;color:rgba(255,255,255,.7);margin-bottom:.3rem;}
+.hero-date{font-family:var(--mono);font-size:13px;color:rgba(255,255,255,.5);}
+
+.login-section{max-width:900px;margin:-1.5rem auto 0;padding:0 1.5rem;}
+.login-card{background:#fff;border-radius:var(--rl);box-shadow:0 8px 32px rgba(26,42,108,.15);padding:1.5rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.login-card label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;font-weight:500;}
+.login-card input[type=password]{padding:9px 12px;border:1.5px solid #dde2f0;border-radius:8px;font-size:14px;font-family:var(--mono);background:#f8f9ff;color:var(--text);width:200px;}
+.login-card input:focus{outline:none;border-color:var(--blue);}
+.login-btn{padding:10px 24px;background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;}
+.login-err{font-size:12px;color:var(--red);display:none;}
+.login-note{font-size:11px;color:var(--hint);margin-left:auto;}
+
+.main{max-width:900px;margin:2rem auto;padding:0 1.5rem 3rem;}
+
+.grid-menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin-bottom:2rem;}
+.menu-card{background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);padding:1.5rem;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(26,42,108,.06);text-decoration:none;display:block;position:relative;overflow:hidden;}
+.menu-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;}
+.menu-card.blue::before{background:linear-gradient(90deg,var(--blue),var(--purple));}
+.menu-card.teal::before{background:linear-gradient(90deg,var(--teal),var(--green));}
+.menu-card.amber::before{background:linear-gradient(90deg,var(--amber),var(--red));}
+.menu-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(26,42,108,.12);}
+.menu-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:1rem;}
+.blue .menu-icon{background:linear-gradient(135deg,#dbeafe,#ede9fe);}
+.teal .menu-icon{background:linear-gradient(135deg,#ccfbf1,#dcfce7);}
+.amber .menu-icon{background:linear-gradient(135deg,#fef3c7,#ffedd5);}
+.menu-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:.4rem;}
+.menu-desc{font-size:12px;color:var(--muted);line-height:1.7;}
+.menu-arrow{position:absolute;right:1.25rem;top:50%;transform:translateY(-50%);color:var(--hint);font-size:18px;}
+
+.notice-card{background:linear-gradient(135deg,#fef9ec,#fff8f0);border:1px solid #fcd34d;border-radius:var(--rl);padding:1.25rem 1.5rem;margin-bottom:1rem;}
+.notice-title{font-size:12px;font-weight:700;color:var(--amber);letter-spacing:.1em;font-family:var(--mono);margin-bottom:.5rem;}
+.notice-body{font-size:13px;color:#78350f;line-height:1.8;}
+
+#portal-app{display:none;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="logo-wrap">
+      <svg class="logo-mark" viewBox="0 0 52 52" fill="none">
+        <rect width="52" height="52" rx="12" fill="rgba(255,255,255,0.12)"/>
+        <text x="26" y="36" text-anchor="middle" font-family="'Zen Kaku Gothic New',sans-serif" font-weight="900" font-size="26" fill="white">Y</text>
+        <circle cx="40" cy="14" r="7" fill="#f59e0b"/>
+        <circle cx="12" cy="14" r="4.5" fill="#34d399"/>
+      </svg>
+      <div class="logo-texts">
+        <div class="logo-yck">YCK山口中央個別</div>
+        <div class="logo-sub">YAMAGUCHICHU KOBETSU JUKU</div>
+      </div>
+    </div>
+    <div class="hero-title">講師ポータル</div>
+    <div class="hero-date" id="hero-date"></div>
+  </div>
+</div>
+
+<div class="login-section" id="login-area">
+  <div class="login-card">
+    <div>
+      <label>パスワード</label>
+      <input type="password" id="portal-pw" placeholder="パスワードを入力">
+    </div>
+    <button class="login-btn" onclick="portalLogin()">ログイン</button>
+    <div class="login-err" id="portal-err">パスワードが違います</div>
+    <div class="login-note">※ YCK講師・塾長専用システムです</div>
+  </div>
+</div>
+
+<div id="portal-app">
+  <div class="main">
+    <div id="notice-area"></div>
+    <div class="grid-menu">
+      <a class="menu-card blue" href="schedule.html">
+        <div class="menu-icon">📅</div>
+        <div class="menu-title">月次スケジュール</div>
+        <div class="menu-desc">講師シフト・学校行事・テスト日程を一覧表示。自分のコマを素早く確認・変更できます。</div>
+        <span class="menu-arrow">›</span>
+      </a>
+      <a class="menu-card teal" href="index.html">
+        <div class="menu-icon">📝</div>
+        <div class="menu-title">授業ログ</div>
+        <div class="menu-desc">授業前後のスコア記録・生徒の状態管理・塾長ダッシュボード。</div>
+        <span class="menu-arrow">›</span>
+      </a>
+      <a class="menu-card amber" href="index.html#tab-master">
+        <div class="menu-icon">⚙️</div>
+        <div class="menu-title">マスタ管理</div>
+        <div class="menu-desc">生徒・講師・科目マスタの追加・編集。担当講師の紐づけ設定。</div>
+        <span class="menu-arrow">›</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+const GAS_URL='https://script.google.com/macros/s/AKfycbz8k41UXf6w3mkSQ3ARc4ReQ_v2xO2t2-xKizYtQ3Y_s2k1iAHEwVNSUlI52V5Go4NsZg/exec';
+
+// 日付表示
+const now=new Date();
+const days=['日','月','火','水','木','金','土'];
+document.getElementById('hero-date').textContent=
+  `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${days[now.getDay()]}）`;
+
+async function api(action,body={}){
+  const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,...body})});
+  return res.json();
+}
+
+async function portalLogin(){
+  const pw=document.getElementById('portal-pw').value;
+  const btn=document.querySelector('.login-btn');
+  btn.textContent='確認中...';btn.disabled=true;
+  try{
+    const res=await api('auth',{password:pw});
+    if(res.ok){
+      sessionStorage.setItem('yck_auth','1');
+      sessionStorage.setItem('yck_pw',pw);
+      document.getElementById('login-area').style.display='none';
+      document.getElementById('portal-app').style.display='block';
+      loadNotices();
+    }else{
+      document.getElementById('portal-err').style.display='block';
+    }
+  }catch(e){alert('接続に失敗しました');}
+  btn.textContent='ログイン';btn.disabled=false;
+}
+
+async function loadNotices(){
+  try{
+    const res=await api('getNotices');
+    const notices=(res.notices||[]).filter(n=>n.content&&n.content.trim());
+    if(!notices.length)return;
+    document.getElementById('notice-area').innerHTML=notices.map(n=>`
+      <div class="notice-card">
+        <div class="notice-title">📢 お知らせ</div>
+        <div class="notice-body">${n.content.replace(/\n/g,'<br>')}</div>
+      </div>`).join('');
+  }catch(e){}
+}
+
+// セッション維持
+if(sessionStorage.getItem('yck_auth')==='1'){
+  document.getElementById('login-area').style.display='none';
+  document.getElementById('portal-app').style.display='block';
+  loadNotices();
+}
+
+document.getElementById('portal-pw').addEventListener('keydown',e=>{if(e.key==='Enter')portalLogin();});
+</script>
+</body>
+</html>
