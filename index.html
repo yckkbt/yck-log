@@ -231,7 +231,7 @@ textarea{resize:vertical;min-height:60px;}
       <button class="tab" onclick="showTab('logs',this)">ログ一覧</button>
       <button class="tab" onclick="showTab('master',this)">マスタ管理</button>
     </div>
-    <button class="logout-btn" onclick="doLogout()">ログアウト</button>
+    <a href="portal.html" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;margin-left:auto;">← ポータル</a>
   </div>
 
   <div class="main">
@@ -982,6 +982,7 @@ async function dedupMaster(){
 document.getElementById('login-screen').style.display='none';
 document.getElementById('app').style.display='block';
 initApp();
+// ポータルに戻るボタンの表示
 </script>
 </body>
 </html>

@@ -220,8 +220,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
   <div class="tsep"></div>
   <button class="tb-btn tb-btn-outline" onclick="goToday()">今月/今週</button>
   <div class="tsep"></div>
-  <button class="tb-btn tb-btn-outline" id="view-month-btn" onclick="setView('month')" style="font-weight:600;">📅 月</button>
+  <button class="tb-btn tb-btn-outline" id="view-month-btn" onclick="setView('month')">📅 月</button>
   <button class="tb-btn tb-btn-outline" id="view-week-btn" onclick="setView('week')">📋 週</button>
+  <button class="tb-btn tb-btn-outline" id="view-absence-btn" onclick="setView('absence')">🔄 振替</button>
+  <button class="tb-btn tb-btn-outline" id="view-salary-btn" onclick="setView('salary')">💴 給与集計</button>
   <div class="tsep"></div>
   <button class="tb-btn tb-btn-amber" onclick="openBulkModal()">📋 一括登録</button>
 </div>
