@@ -978,7 +978,10 @@ async function dedupMaster(){
   btn.innerHTML = '🧹 重複データを自動削除'; btn.disabled = false;
 }
 
-document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+// ポータルから認証済みの場合はそのままアプリを起動
+document.getElementById('login-screen').style.display='none';
+document.getElementById('app').style.display='block';
+initApp();
 </script>
 </body>
 </html>

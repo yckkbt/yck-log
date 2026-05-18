@@ -799,9 +799,9 @@ function openBulkModal(){
   const hint=document.getElementById('bm-teacher-hint');
   if(hint){
     if(isAdmin){
-      hint.innerHTML='<strong>全講師：</strong> '+teachers.map(t=>`<span style="background:#fff;border:1px solid var(--border);border-radius:3px;padding:1px 6px;margin-right:4px;cursor:pointer;" onclick="insertTeacherName('${t}')">${t}</span>`).join('');
+      hint.innerHTML='<strong>全講師：</strong> '+teachers.map(t=>'<span style="background:#fff;border:1px solid var(--border);border-radius:3px;padding:1px 6px;margin-right:4px;cursor:pointer;" onclick="insertTeacherName(\'' +t+ '\')">' +t+ '</span>').join('');
     }else{
-      hint.innerHTML='<strong>あなたの名前：</strong> <span style="background:#dbeafe;border:1px solid #2563eb;border-radius:3px;padding:1px 6px;cursor:pointer;" onclick="insertTeacherName(''+currentUser+'')">'+currentUser+'</span>';
+      hint.innerHTML='<strong>あなたの名前：</strong> <span style="background:#dbeafe;border:1px solid #2563eb;border-radius:3px;padding:1px 6px;cursor:pointer;" onclick="insertTeacherName(\'' +currentUser+ '\')">'+currentUser+'</span>';
     }
   }
   document.getElementById('bulk-modal').classList.add('open');
@@ -935,20 +935,13 @@ function renderWeek(){
   const today=toDateStr(new Date());
   const dowNames=['日','月','火','水','木','金','土'];
   const TIMES=[
-    {key:'10:30（午前）', label:'午前
-10:30'},
-    {key:'14:00（午後）', label:'午後
-14:00'},
-    {key:'16:00（0コマ）',label:'0コマ
-16:00'},
-    {key:'16:25（0コマ）',label:'0コマ
-16:25'},
-    {key:'17:30（1コマ）',label:'1コマ
-17:30'},
-    {key:'19:15（2コマ）',label:'2コマ
-19:15'},
-    {key:'20:45（3コマ）',label:'3コマ
-20:45'},
+    {key:'10:30（午前）', label:'午前<br>10:30'},
+    {key:'14:00（午後）', label:'午後<br>14:00'},
+    {key:'16:00（0コマ）',label:'0コマ<br>16:00'},
+    {key:'16:25（0コマ）',label:'0コマ<br>16:25'},
+    {key:'17:30（1コマ）',label:'1コマ<br>17:30'},
+    {key:'19:15（2コマ）',label:'2コマ<br>19:15'},
+    {key:'20:45（3コマ）',label:'3コマ<br>20:45'},
   ];
 
   // 週ラベル
@@ -1007,20 +1000,18 @@ function renderWeek(){
           const isMine=s.teacher===currentUser;
           const canEdit=isAdmin||isMine;
           const onclick=canEdit?`onclick="openEditModal('${s.id}')"`:'';
-          return `<div class="week-slot ${tc}" ${onclick} title="${s.teacher}${s.students?'
-担当:'+s.students:''}${s.note?'
-'+s.note:''}">
-            <div class="week-slot-teacher">${s.teacher}</div>
-            ${s.students?`<div class="week-slot-students">👤 ${s.students}</div>`:''}
-            ${s.note?`<div class="week-slot-note">📌 ${s.note}</div>`:''}
-          </div>`;
+          const t2=s.teacher+(s.students?' 担当:'+s.students:'')+(s.note?' '+s.note:'');
+          const inner='<div class="week-slot-teacher">'+s.teacher+'</div>'
+            +(s.students?'<div class="week-slot-students">👤 '+s.students+'</div>':'')
+            +(s.note?'<div class="week-slot-note">📌 '+s.note+'</div>':'');
+          return '<div class="week-slot '+tc+'" '+onclick+' title="'+t2+'">'+inner+'</div>';
         }).join('');
 
       return `<td class="${cellCls}">${i===0?eventHtml:''}${shiftHtml}</td>`;
     }).join('');
 
-    const timeLabel=time.label.replace('
-','<br>');
+    const timeLabel=time.label;
+
     return `<tr><td class="time-col">${timeLabel}</td>${cells}</tr>`;
   }).join('');
 }
