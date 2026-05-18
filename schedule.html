@@ -435,9 +435,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
           </select>
         </div>
       </div>
-      <div class="ff"><label>担当生徒（複数選択可）</label>
-        <select id="s-students" multiple style="min-height:72px;background:#f8f9ff;font-family:var(--sans);"></select>
-        <div style="font-size:10px;color:var(--hint);margin-top:3px;">Ctrl（Mac:⌘）を押しながらクリックで複数選択</div>
+      <div class="ff"><label>担当生徒</label>
+        <input type="text" id="s-students" placeholder="例：田中 花子、山本 太郎">
       </div>
       <div class="ff"><label>備考</label><input type="text" id="s-note" placeholder="代講・テスト前など"></div>
       <button class="save-btn" id="shift-save-btn" onclick="saveShift()">シフトを保存</button>
@@ -540,9 +539,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
           <option value="1対3">1対3</option>
         </select>
       </div>
-      <div class="ff"><label>担当生徒（複数選択可）</label>
-        <select id="bw-students" multiple style="min-height:72px;background:#f8f9ff;font-family:var(--sans);font-size:12px;"></select>
-        <div style="font-size:10px;color:var(--hint);margin-top:3px;">Ctrl（Mac:⌘）を押しながらクリックで複数選択</div>
+      <div class="ff"><label>担当生徒</label>
+        <input type="text" id="bw-students" placeholder="例：田中 花子、山本 太郎">
       </div>
       <div class="ff"><label>備考</label><input type="text" id="bw-note"></div>
       <button class="save-btn" onclick="execBulkWeekly()">この曜日・時間で一括登録</button>
@@ -688,7 +686,6 @@ function rebuildSelects(){
   pop('bw-teacher',isAdmin?teachers:[currentUser],false);
 
   // 凡例
-  rebuildStudentSelects();
   const leg=document.getElementById('legend');
   leg.innerHTML=
     `<span class="legend-item"><span class="legend-dot" style="background:var(--amber-l);border:1px solid var(--amber);"></span>塾行事</span>
@@ -799,8 +796,7 @@ async function saveShift(){
   if(!teacher||!date){toast('⚠️ 講師・日付は必須です');return;}
   // 権限チェック
   if(!isAdmin&&teacher!==currentUser){toast('⚠️ 自分のシフトのみ登録できます');return;}
-  const studentsEl=document.getElementById('s-students');
-  const students=studentsEl.multiple?[...studentsEl.selectedOptions].map(o=>o.value).join('、'):studentsEl.value.trim();
+  const students=document.getElementById('s-students').value.trim();
   const format=document.getElementById('s-format')?.value||'1対1';
   const note=document.getElementById('s-note').value.trim();
   const shift={id:'s'+Date.now(),teacher,campus,date,startTime,slots,format,students,note};
@@ -949,12 +945,12 @@ function openEditModal(id){
         </select>
       </div>
     </div>
-    <div class="ff"><label>担当生徒（複数選択可）</label>
-      <select id="m-students" multiple style="min-height:80px;width:100%;background:#f8f9ff;font-size:12px;font-family:var(--sans);border:1.5px solid var(--border-s);border-radius:var(--r);padding:4px;">
-        ${(master.students||[]).map(st=>{const n=st.name||st;const reg=s.students?(s.students+'').split(',').map(x=>x.trim()):[]; return '<option value="'+n+'"'+(reg.includes(n)?' selected':'')+'>'+n+'</option>';}).join('')}
-      </select>
-      <div style="font-size:10px;color:var(--hint);margin-top:3px;">Ctrl（Mac:⌘）を押しながらクリックで複数選択</div>
+    <div class="ff"><label>担当生徒</label>
+      <input type="text" id="m-students" value="${s.students||''}" placeholder="例：田中 花子、山本 太郎">
     </div>
+
+
+
     <div class="ff"><label>備考</label><input type="text" id="m-note" value="${s.note||''}" ></div>`;
 
   document.getElementById('modal-save-btn').onclick=saveEditShift;
@@ -963,10 +959,7 @@ function openEditModal(id){
 
 async function saveEditShift(){
   const idx=shifts.findIndex(s=>s.id===editTarget);if(idx<0)return;
-  const mSel=document.getElementById('m-students');
-  const mStudents=mSel.tagName==='SELECT'&&mSel.multiple
-    ?[...mSel.selectedOptions].map(o=>o.value).join('、')
-    :mSel.value||'';
+  const mStudents=document.getElementById('m-students').value.trim();
   const updated={...shifts[idx],
     teacher:document.getElementById('m-teacher').value,
     campus:document.getElementById('m-campus').value,
@@ -1043,8 +1036,7 @@ async function execBulkWeekly(){
   const slots=document.getElementById('bw-slots').value;
   const from=new Date(document.getElementById('bw-from').value);
   const to=new Date(document.getElementById('bw-to').value);
-  const bwEl=document.getElementById('bw-students');
-  const students=bwEl.multiple?[...bwEl.selectedOptions].map(o=>o.value).join('、'):bwEl.value.trim();
+  const students=document.getElementById('bw-students').value.trim();
   const format=document.getElementById('bw-format')?.value||'1対1';
   const note=document.getElementById('bw-note').value.trim();
 
