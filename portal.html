@@ -95,6 +95,12 @@ body{font-family:var(--sans);background:var(--bg);min-height:100vh;color:var(--t
       <label>パスワード</label>
       <input type="password" id="portal-pw" placeholder="パスワードを入力">
     </div>
+    <div>
+      <label>あなたの名前（講師の方）</label>
+      <select id="portal-user" style="padding:9px 12px;border:1.5px solid #dde2f0;border-radius:8px;font-size:14px;background:#f8f9ff;color:#1a1c2e;width:160px;">
+        <option value="">塾長</option>
+      </select>
+    </div>
     <button class="login-btn" onclick="portalLogin()">ログイン</button>
     <div class="login-err" id="portal-err">パスワードが違います</div>
     <div class="login-note">※ YCK講師・塾長専用システムです</div>
@@ -148,8 +154,10 @@ async function portalLogin(){
   try{
     const res=await api('auth',{password:pw});
     if(res.ok){
+      const user=document.getElementById('portal-user').value||'';
       sessionStorage.setItem('yck_auth','1');
       sessionStorage.setItem('yck_pw',pw);
+      sessionStorage.setItem('yck_user',user);
       document.getElementById('login-area').style.display='none';
       document.getElementById('portal-app').style.display='block';
       loadNotices();
@@ -158,6 +166,23 @@ async function portalLogin(){
     }
   }catch(e){alert('接続に失敗しました');}
   btn.textContent='ログイン';btn.disabled=false;
+}
+
+async function loadTeachers(){
+  try{
+    const res=await api('getMaster');
+    const teachers=res.master?.teachers||[];
+    const sel=document.getElementById('portal-user');
+    sel.innerHTML='<option value="">塾長（管理者）</option>';
+    teachers.forEach(t=>{
+      const o=document.createElement('option');
+      o.value=o.textContent=t;
+      sel.appendChild(o);
+    });
+    // 前回のユーザーを復元
+    const saved=sessionStorage.getItem('yck_user')||'';
+    sel.value=saved;
+  }catch(e){}
 }
 
 async function loadNotices(){
@@ -181,6 +206,7 @@ if(sessionStorage.getItem('yck_auth')==='1'){
 }
 
 document.getElementById('portal-pw').addEventListener('keydown',e=>{if(e.key==='Enter')portalLogin();});
+loadTeachers();
 </script>
 </body>
 </html>
