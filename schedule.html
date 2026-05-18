@@ -427,7 +427,17 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
         <div class="ff"><label>コマ数</label>
           <select id="s-slots"><option value="1">1コマ</option><option value="2">2コマ</option><option value="3">3コマ</option></select>
         </div>
-        <div class="ff"><label>担当生徒</label><input type="text" id="s-students" placeholder="田中、山本"></div>
+        <div class="ff"><label>授業形式</label>
+          <select id="s-format">
+            <option value="1対1">1対1（通常）</option>
+            <option value="1対2">1対2（割増）</option>
+            <option value="1対3">1対3</option>
+          </select>
+        </div>
+      </div>
+      <div class="ff"><label>担当生徒（複数選択可）</label>
+        <select id="s-students" multiple style="min-height:72px;background:#f8f9ff;font-family:var(--sans);"></select>
+        <div style="font-size:10px;color:var(--hint);margin-top:3px;">Ctrl（Mac:⌘）を押しながらクリックで複数選択</div>
       </div>
       <div class="ff"><label>備考</label><input type="text" id="s-note" placeholder="代講・テスト前など"></div>
       <button class="save-btn" id="shift-save-btn" onclick="saveShift()">シフトを保存</button>
@@ -779,9 +789,11 @@ async function saveShift(){
   if(!teacher||!date){toast('⚠️ 講師・日付は必須です');return;}
   // 権限チェック
   if(!isAdmin&&teacher!==currentUser){toast('⚠️ 自分のシフトのみ登録できます');return;}
-  const shift={id:'s'+Date.now(),teacher,campus,date,startTime,slots,
-    students:document.getElementById('s-students').value.trim(),
-    note:document.getElementById('s-note').value.trim()};
+  const studentsEl=document.getElementById('s-students');
+  const students=studentsEl.multiple?[...studentsEl.selectedOptions].map(o=>o.value).join('、'):studentsEl.value.trim();
+  const format=document.getElementById('s-format')?.value||'1対1';
+  const note=document.getElementById('s-note').value.trim();
+  const shift={id:'s'+Date.now(),teacher,campus,date,startTime,slots,format,students,note};
   const btn=document.getElementById('shift-save-btn');
   btn.innerHTML='<span class="loading"></span>保存中...';btn.disabled=true;
   try{
@@ -929,13 +941,18 @@ function openEditModal(id){
 
 async function saveEditShift(){
   const idx=shifts.findIndex(s=>s.id===editTarget);if(idx<0)return;
+  const mSel=document.getElementById('m-students');
+  const mStudents=mSel.tagName==='SELECT'&&mSel.multiple
+    ?[...mSel.selectedOptions].map(o=>o.value).join('、')
+    :mSel.value||'';
   const updated={...shifts[idx],
     teacher:document.getElementById('m-teacher').value,
     campus:document.getElementById('m-campus').value,
     date:document.getElementById('m-date').value,
     startTime:document.getElementById('m-start').value,
     slots:document.getElementById('m-slots').value,
-    students:document.getElementById('m-students').value.trim(),
+    format:document.getElementById('m-format')?.value||'1対1',
+    students:mStudents,
     note:document.getElementById('m-note').value.trim()};
   if(!isAdmin&&updated.teacher!==currentUser){toast('⚠️ 自分のシフトのみ編集できます');return;}
   const btn=document.getElementById('modal-save-btn');
