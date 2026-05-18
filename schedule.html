@@ -139,6 +139,38 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 .tc6{background:#fef3c7;color:#92400e;border-color:#d97706;}
 .tc7{background:#f3e8ff;color:#6b21a8;border-color:#9333ea;}
 
+/* 振替ステータス */
+/* 給与集計 */
+.salary-th{padding:10px 12px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);border-right:1px solid var(--border);background:#f8f9ff;white-space:nowrap;}
+.salary-th-name{text-align:left;min-width:100px;}
+.salary-td{padding:8px 10px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border);font-size:12px;font-family:var(--mono);vertical-align:middle;}
+.salary-td-name{text-align:left;font-weight:600;color:var(--text);font-size:13px;border-right:1px solid var(--border);}
+.salary-cell-1{background:var(--blue-l);color:#1e40af;}
+.salary-cell-2{background:var(--amber-l);color:#92400e;}
+.salary-cell-u{background:var(--purple-l);color:#5b21b6;}
+.salary-cell-0{color:var(--hint);}
+.salary-total-row td{background:#f0f4ff;font-weight:700;border-top:2px solid var(--border);}
+.salary-summary{margin-top:6px;font-size:12px;color:var(--muted);}
+.salary-detail-item{padding:6px 10px;border-bottom:1px solid var(--border);font-size:12px;display:flex;gap:12px;flex-wrap:wrap;}
+.salary-detail-item:last-child{border-bottom:none;}
+.sd-date{font-family:var(--mono);color:var(--muted);min-width:90px;}
+.sd-teacher{font-weight:600;min-width:80px;}
+.sd-slot{color:var(--blue);font-family:var(--mono);min-width:100px;}
+.sd-students{color:var(--muted);}
+.sd-badge-1{background:var(--blue-l);color:#1e40af;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600;}
+.sd-badge-2{background:var(--amber-l);color:#92400e;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600;}
+.sd-badge-u{background:var(--purple-l);color:#5b21b6;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600;}
+
+.ab-status-pending{background:var(--red-l);color:#b91c1c;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.ab-status-scheduled{background:var(--amber-l);color:#92400e;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.ab-status-done{background:var(--green-l);color:#15803d;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.ab-row td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;}
+.ab-row:hover td{background:#f8f9ff;}
+.ab-done-btn{padding:3px 8px;background:var(--green-l);border:1px solid var(--green);border-radius:4px;font-size:10px;cursor:pointer;color:#15803d;font-weight:500;margin-right:3px;}
+.ab-done-btn:hover{background:var(--green);color:#fff;}
+.ab-del-btn{padding:3px 6px;background:none;border:none;font-size:13px;cursor:pointer;color:var(--hint);}
+.ab-del-btn:hover{color:var(--red);}
+
 /* 週表示テーブル */
 .week-table-wrap{overflow-x:auto;}
 .week-table{width:100%;border-collapse:collapse;min-width:600px;}
@@ -213,6 +245,128 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
         <thead id="week-thead"></thead>
         <tbody id="week-tbody"></tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- 振替管理 -->
+  <div id="absence-view" style="display:none;margin-bottom:1rem;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+
+      <!-- 振替入力フォーム -->
+      <div class="panel">
+        <div class="panel-title">🔄 欠席・振替を登録</div>
+        <div class="fr">
+          <div class="ff"><label>生徒名</label><select id="ab-student"></select></div>
+          <div class="ff"><label>担当講師</label><select id="ab-teacher"></select></div>
+        </div>
+        <div class="fr">
+          <div class="ff"><label>欠席日</label><input type="date" id="ab-absent"></div>
+          <div class="ff"><label>欠席コマ</label>
+            <select id="ab-slot">
+              <option>10:30（午前）</option><option>14:00（午後）</option>
+              <option>16:00（0コマ）</option><option>16:25（0コマ）</option>
+              <option>17:30（1コマ）</option><option>19:15（2コマ）</option>
+              <option>20:45（3コマ）</option>
+            </select>
+          </div>
+        </div>
+        <div class="ff"><label>欠席理由</label>
+          <select id="ab-reason">
+            <option value="体調不良">体調不良</option>
+            <option value="学校行事">学校行事</option>
+            <option value="部活">部活</option>
+            <option value="修学旅行">修学旅行</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+        <div class="fr">
+          <div class="ff"><label>振替日（未定の場合は空欄）</label><input type="date" id="ab-makeup"></div>
+          <div class="ff"><label>振替コマ</label>
+            <select id="ab-makeup-slot">
+              <option value="">未定</option>
+              <option>10:30（午前）</option><option>14:00（午後）</option>
+              <option>16:00（0コマ）</option><option>16:25（0コマ）</option>
+              <option>17:30（1コマ）</option><option>19:15（2コマ）</option>
+              <option>20:45（3コマ）</option>
+            </select>
+          </div>
+        </div>
+        <div class="ff"><label>備考</label><input type="text" id="ab-note" placeholder="連絡内容など"></div>
+        <button class="save-btn" id="ab-save-btn" onclick="saveAbsence()">登録する</button>
+      </div>
+
+      <!-- フィルタ -->
+      <div class="panel">
+        <div class="panel-title">🔍 絞り込み</div>
+        <div class="ff"><label>生徒</label><select id="ab-filter-student" onchange="renderAbsenceList()"></select></div>
+        <div class="ff"><label>講師</label><select id="ab-filter-teacher" onchange="renderAbsenceList()"></select></div>
+        <div class="ff"><label>状態</label>
+          <select id="ab-filter-status" onchange="renderAbsenceList()">
+            <option value="">すべて</option>
+            <option value="pending">振替未定</option>
+            <option value="scheduled">振替予定あり</option>
+            <option value="done">振替完了</option>
+          </select>
+        </div>
+        <div style="margin-top:1rem;padding:12px;background:var(--amber-l);border-radius:var(--r);font-size:12px;color:#92400e;">
+          <div style="font-weight:700;margin-bottom:4px;">📊 サマリー</div>
+          <div id="ab-summary"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 振替一覧テーブル -->
+    <div class="panel" style="margin-top:1rem;padding:0;overflow:hidden;">
+      <table class="week-table" style="min-width:auto;">
+        <thead>
+          <tr style="background:#f8f9ff;">
+            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);">生徒</th>
+            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);">担当</th>
+            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);">欠席日・コマ</th>
+            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);">理由</th>
+            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);">振替日・コマ</th>
+            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);">状態</th>
+            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);">備考</th>
+            <th style="padding:10px 12px;border-bottom:2px solid var(--border);"></th>
+          </tr>
+        </thead>
+        <tbody id="ab-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 給与集計 -->
+  <div id="salary-view" style="display:none;margin-bottom:1rem;">
+
+    <!-- 集計期間ナビ -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap;">
+      <button class="nav-btn" onclick="changeSalaryMonth(-1)">‹</button>
+      <div style="font-size:15px;font-weight:700;color:var(--text);font-family:var(--mono);min-width:200px;text-align:center;" id="salary-period-label"></div>
+      <button class="nav-btn" onclick="changeSalaryMonth(1)">›</button>
+      <button class="tb-btn tb-btn-outline" onclick="goSalaryToday()">今期</button>
+      <button class="tb-btn tb-btn-green" onclick="exportSalaryCSV()">📥 CSVダウンロード</button>
+    </div>
+
+    <!-- 凡例 -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1rem;font-size:12px;color:var(--muted);align-items:center;">
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:14px;height:14px;background:var(--blue-l);border:1.5px solid var(--blue);border-radius:3px;display:inline-block;"></span>生徒1名（通常）</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:14px;height:14px;background:var(--amber-l);border:1.5px solid var(--amber);border-radius:3px;display:inline-block;"></span>生徒2名（割増）</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:14px;height:14px;background:var(--purple-l);border:1.5px solid var(--purple);border-radius:3px;display:inline-block;"></span>担当不明（要確認）</span>
+    </div>
+
+    <!-- 集計テーブル -->
+    <div class="panel" style="padding:0;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;" id="salary-table">
+        <thead id="salary-thead"></thead>
+        <tbody id="salary-tbody"></tbody>
+        <tfoot id="salary-tfoot"></tfoot>
+      </table>
+    </div>
+
+    <!-- 詳細ログ -->
+    <div class="panel" style="margin-top:1rem;">
+      <div class="panel-title">📋 期間内シフト詳細</div>
+      <div id="salary-detail"></div>
     </div>
   </div>
 
@@ -403,7 +557,7 @@ const HOLIDAYS={'2026-01-01':1,'2026-01-12':1,'2026-02-11':1,'2026-02-23':1,'202
 
 let curYear=new Date().getFullYear();
 let curMonth=new Date().getMonth();
-let shifts=[], events=[], teachers=[], teacherColorMap={};
+let shifts=[], events=[], teachers=[], teacherColorMap={}, master={};
 let currentUser=''; // ログイン中の講師名（塾長は空）
 let isAdmin=false;
 let editTarget=null;
@@ -431,7 +585,8 @@ async function init(){
     api('getMaster'),api('getShifts'),api('getEvents'),api('getNotices')
   ]);
 
-  teachers=mRes.master?.teachers||[];
+  master=mRes.master||{students:[],teachers:[],subjects:[]};
+  teachers=master.teachers||[];
   shifts=sRes.shifts||[];
   events=eRes.events||[];
 
@@ -462,7 +617,11 @@ async function init(){
 
   teachers.forEach((t,i)=>teacherColorMap[t]=TEACHER_COLORS[i%TEACHER_COLORS.length]);
   currentWeekStart=getWeekStart(new Date());
+  const sp=getCurrentSalaryPeriod();
+  salaryBaseYear=sp.year; salaryBaseMonth=sp.month-1;
+  await loadAbsences();
   rebuildSelects();
+  rebuildAbsenceSelects();
   setDefaultDates();
   renderAll();
 }
@@ -472,6 +631,7 @@ function setDefaultDates(){
   document.getElementById('s-date').value=today;
   document.getElementById('e-start').value=today;
   document.getElementById('e-end').value=today;
+  document.getElementById('ab-absent').value=today;
   const first=`${curYear}-${String(curMonth+1).padStart(2,'0')}-01`;
   const last=toDateStr(new Date(curYear,curMonth+1,0));
   document.getElementById('bw-from').value=first;
@@ -886,6 +1046,349 @@ async function execBulkMonth(){
   }catch(e){alert('通信エラー');}
 }
 
+// ── 給与集計 ──
+let salaryBaseYear = new Date().getFullYear();
+let salaryBaseMonth = new Date().getMonth(); // 0-indexed
+
+function getSalaryPeriod(baseYear, baseMonth){
+  // 締め日：26日〜翌25日
+  // baseMonthの給与期間 = (baseMonth-1)月26日 〜 baseMonth月25日
+  const from = new Date(baseYear, baseMonth - 1, 26);
+  const to   = new Date(baseYear, baseMonth, 25);
+  return { from, to,
+    fromStr: toDateStr(from),
+    toStr:   toDateStr(to)
+  };
+}
+
+function getCurrentSalaryPeriod(){
+  // 今日がどの締め期間か判定
+  const today = new Date();
+  const d = today.getDate();
+  // 26日以降は翌月分の集計期間
+  let year = today.getFullYear();
+  let month = today.getMonth() + 1; // 1-indexed
+  if(d >= 26) month += 1;
+  if(month > 12){ month = 1; year++; }
+  return { year, month };
+}
+
+function goSalaryToday(){
+  const p = getCurrentSalaryPeriod();
+  salaryBaseYear = p.year;
+  salaryBaseMonth = p.month - 1;
+  renderSalary();
+}
+
+function changeSalaryMonth(d){
+  salaryBaseMonth += d;
+  if(salaryBaseMonth > 11){ salaryBaseMonth = 0; salaryBaseYear++; }
+  else if(salaryBaseMonth < 0){ salaryBaseMonth = 11; salaryBaseYear--; }
+  renderSalary();
+}
+
+function countStudents(studentsStr){
+  if(!studentsStr || !studentsStr.trim()) return 0;
+  // カンマ・読点・スペースで区切って数える
+  const parts = studentsStr.split(/[,、・\s]+/).filter(s=>s.trim());
+  return parts.length;
+}
+
+function renderSalary(){
+  const year = salaryBaseYear;
+  const month = salaryBaseMonth + 1; // 1-indexed
+  const period = getSalaryPeriod(year, month);
+
+  // ラベル
+  document.getElementById('salary-period-label').textContent =
+    `${period.fromStr} 〜 ${period.toStr}（${year}年${month}月分）`;
+
+  // 期間内シフトを抽出
+  const periodShifts = shifts.filter(s =>
+    s.date >= period.fromStr && s.date <= period.toStr
+  ).sort((a,b) => a.date.localeCompare(b.date) || a.teacher.localeCompare(b.teacher));
+
+  if(!periodShifts.length){
+    document.getElementById('salary-thead').innerHTML = '';
+    document.getElementById('salary-tbody').innerHTML =
+      '<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--hint);">この期間のシフトがありません</td></tr>';
+    document.getElementById('salary-tfoot').innerHTML = '';
+    document.getElementById('salary-detail').innerHTML = '<div style="color:var(--hint);font-size:13px;padding:1rem;">データなし</div>';
+    return;
+  }
+
+  // 日付一覧（列）
+  const dates = [...new Set(periodShifts.map(s=>s.date))].sort();
+
+  // 講師ごとに集計
+  const teacherData = {}; // { teacher: { date: [{slots,students}] } }
+  periodShifts.forEach(s => {
+    if(!teacherData[s.teacher]) teacherData[s.teacher] = {};
+    if(!teacherData[s.teacher][s.date]) teacherData[s.teacher][s.date] = [];
+    teacherData[s.teacher][s.date].push(s);
+  });
+
+  // thead
+  const thead = document.getElementById('salary-thead');
+  const dateHeaders = dates.map(d => {
+    const dt = new Date(d+'T00:00:00');
+    const dow = ['日','月','火','水','木','金','土'][dt.getDay()];
+    return `<th class="salary-th">${d.slice(5)}<br><span style="font-weight:400;">${dow}</span></th>`;
+  }).join('');
+  thead.innerHTML = `<tr>
+    <th class="salary-th salary-th-name">講師</th>
+    ${dateHeaders}
+    <th class="salary-th">1名<br>計</th>
+    <th class="salary-th">2名<br>計</th>
+    <th class="salary-th">合計<br>コマ</th>
+  </tr>`;
+
+  // tbody
+  const tbody = document.getElementById('salary-tbody');
+  let totalByDate = {}; dates.forEach(d=>totalByDate[d]={c1:0,c2:0,cu:0});
+  let grandTotal1=0, grandTotal2=0;
+
+  const rows = Object.keys(teacherData).sort().map(teacher => {
+    let total1=0, total2=0;
+    const cells = dates.map(d => {
+      const dayShifts = teacherData[teacher][d] || [];
+      if(!dayShifts.length) return '<td class="salary-td salary-cell-0">—</td>';
+
+      const cellParts = dayShifts.map(s => {
+        const slots = Number(s.slots) || 1;
+        const sc = countStudents(s.students);
+        let cls, badge;
+        if(sc === 0){
+          cls='salary-cell-u'; badge='?名'; totalByDate[d].cu += slots;
+        } else if(sc >= 2){
+          cls='salary-cell-2'; badge='2名'; total2+=slots; totalByDate[d].c2+=slots;
+        } else {
+          cls='salary-cell-1'; badge='1名'; total1+=slots; totalByDate[d].c1+=slots;
+        }
+        return `<span class="${cls}" style="display:inline-block;border-radius:4px;padding:2px 5px;font-size:11px;margin:1px;" title="${s.startTime} ${s.students||'生徒未入力'}">${slots}コマ(${badge})</span>`;
+      }).join('');
+
+      return `<td class="salary-td">${cellParts}</td>`;
+    }).join('');
+
+    grandTotal1+=total1; grandTotal2+=total2;
+    const total=total1+total2;
+    return `<tr>
+      <td class="salary-td salary-td-name">${teacher}</td>
+      ${cells}
+      <td class="salary-td salary-cell-1"><strong>${total1||'—'}</strong></td>
+      <td class="salary-td salary-cell-2"><strong>${total2||'—'}</strong></td>
+      <td class="salary-td" style="font-weight:700;color:var(--text);font-size:14px;">${total}</td>
+    </tr>`;
+  }).join('');
+  tbody.innerHTML = rows;
+
+  // tfoot（合計行）
+  const tfoot = document.getElementById('salary-tfoot');
+  const dateTotals = dates.map(d => {
+    const t = totalByDate[d];
+    const parts = [];
+    if(t.c1) parts.push(`<span class="salary-cell-1" style="display:inline-block;border-radius:3px;padding:1px 4px;font-size:10px;">${t.c1}</span>`);
+    if(t.c2) parts.push(`<span class="salary-cell-2" style="display:inline-block;border-radius:3px;padding:1px 4px;font-size:10px;">${t.c2}</span>`);
+    if(t.cu) parts.push(`<span class="salary-cell-u" style="display:inline-block;border-radius:3px;padding:1px 4px;font-size:10px;">?${t.cu}</span>`);
+    return `<td class="salary-td">${parts.join(' ')}</td>`;
+  }).join('');
+  tfoot.innerHTML = `<tr class="salary-total-row">
+    <td class="salary-td salary-td-name">合計</td>
+    ${dateTotals}
+    <td class="salary-td salary-cell-1"><strong>${grandTotal1}</strong></td>
+    <td class="salary-td salary-cell-2"><strong>${grandTotal2}</strong></td>
+    <td class="salary-td" style="font-weight:700;font-size:14px;">${grandTotal1+grandTotal2}</td>
+  </tr>`;
+
+  // 詳細ログ
+  const detail = document.getElementById('salary-detail');
+  detail.innerHTML = periodShifts.map(s => {
+    const sc = countStudents(s.students);
+    const badge = sc===0
+      ? '<span class="sd-badge-u">生徒未入力</span>'
+      : sc>=2
+        ? '<span class="sd-badge-2">2名指導</span>'
+        : '<span class="sd-badge-1">1名指導</span>';
+    return `<div class="salary-detail-item">
+      <span class="sd-date">${s.date}</span>
+      <span class="sd-teacher">${s.teacher}</span>
+      <span class="sd-slot">${s.startTime} ${s.slots}コマ</span>
+      <span class="sd-students">${s.students||'（生徒未入力）'}</span>
+      ${badge}
+      ${s.campus?`<span style="font-size:11px;color:var(--hint);">${s.campus}</span>`:''}
+      ${s.note?`<span style="font-size:11px;color:var(--hint);">📌${s.note}</span>`:''}
+    </div>`;
+  }).join('');
+}
+
+function exportSalaryCSV(){
+  const year = salaryBaseYear;
+  const month = salaryBaseMonth + 1;
+  const period = getSalaryPeriod(year, month);
+  const periodShifts = shifts.filter(s =>
+    s.date >= period.fromStr && s.date <= period.toStr
+  ).sort((a,b) => a.date.localeCompare(b.date));
+
+  if(!periodShifts.length){ toast('⚠️ この期間のシフトがありません'); return; }
+
+  const hdr = ['日付','講師','教室','開始時間','コマ数','生徒','生徒人数','指導区分','備考'];
+  const rows = periodShifts.map(s => {
+    const sc = countStudents(s.students);
+    const kubun = sc===0 ? '要確認' : sc>=2 ? '2名指導' : '1名指導';
+    return [s.date, s.teacher, s.campus||'本校', s.startTime, s.slots,
+      '"'+(s.students||'').replace(/"/g,'""')+'"', sc, kubun,
+      '"'+(s.note||'').replace(/"/g,'""')+'"'];
+  });
+  const csv = '\uFEFF' + [hdr, ...rows].map(r=>r.join(',')).join('\r\n');
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
+  a.download = `YCK_給与集計_${year}年${month}月分.csv`;
+  a.click();
+  toast('✅ CSVをダウンロードしました');
+}
+
+// ── 振替管理 ──
+let absences = [];
+
+async function loadAbsences(){
+  try{
+    const res = await api('getAbsences');
+    absences = res.absences || [];
+  }catch(e){ absences=[]; }
+}
+
+function rebuildAbsenceSelects(){
+  const popWithAll = (id, arr) => {
+    const el = document.getElementById(id); if(!el) return;
+    el.innerHTML = '<option value="">すべて</option>';
+    arr.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; el.appendChild(o); });
+  };
+  const popNoAll = (id, arr) => {
+    const el = document.getElementById(id); if(!el) return;
+    const cur = el.value;
+    el.innerHTML = '<option value="">選択してください</option>';
+    arr.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; el.appendChild(o); });
+    el.value = cur;
+  };
+  const studentNames = master ? (master.students||[]).map(s=>s.name||s) : [];
+  popNoAll('ab-student', studentNames);
+  popNoAll('ab-teacher', teachers);
+  popWithAll('ab-filter-student', studentNames);
+  popWithAll('ab-filter-teacher', teachers);
+}
+
+async function saveAbsence(){
+  const student = document.getElementById('ab-student').value;
+  const teacher = document.getElementById('ab-teacher').value;
+  const absentDate = document.getElementById('ab-absent').value;
+  const absentSlot = document.getElementById('ab-slot').value;
+  const reason = document.getElementById('ab-reason').value;
+  const makeupDate = document.getElementById('ab-makeup').value;
+  const makeupSlot = document.getElementById('ab-makeup-slot').value;
+  const note = document.getElementById('ab-note').value.trim();
+
+  if(!student || !absentDate){ toast('⚠️ 生徒名と欠席日は必須です'); return; }
+
+  const status = makeupDate ? 'scheduled' : 'pending';
+  const ab = {
+    id: 'ab'+Date.now(), student, teacher, absentDate, absentSlot,
+    reason, makeupDate: makeupDate||'', makeupSlot: makeupSlot||'',
+    note, status
+  };
+
+  const btn = document.getElementById('ab-save-btn');
+  btn.innerHTML = '<span class="loading"></span>登録中...'; btn.disabled = true;
+  try{
+    const res = await api('addAbsence', {absence: ab});
+    if(res.ok){
+      absences.push(ab);
+      toast('✅ 振替を登録しました');
+      document.getElementById('ab-absent').value = '';
+      document.getElementById('ab-makeup').value = '';
+      document.getElementById('ab-makeup-slot').value = '';
+      document.getElementById('ab-note').value = '';
+      renderAbsenceList();
+    }
+  }catch(e){ alert('通信エラー'); }
+  btn.innerHTML = '登録する'; btn.disabled = false;
+}
+
+async function markAbsenceDone(id){
+  const idx = absences.findIndex(a=>a.id===id);
+  if(idx<0) return;
+  absences[idx].status = 'done';
+  try{
+    await api('updateAbsence', {absence: absences[idx]});
+    toast('✅ 振替完了にしました');
+    renderAbsenceList();
+  }catch(e){ alert('通信エラー'); }
+}
+
+async function deleteAbsence(id){
+  if(!confirm('この記録を削除しますか？')) return;
+  try{
+    const res = await api('deleteAbsence', {id});
+    if(res.ok){
+      absences = absences.filter(a=>a.id!==id);
+      toast('削除しました');
+      renderAbsenceList();
+    }
+  }catch(e){ alert('通信エラー'); }
+}
+
+function renderAbsenceList(){
+  const fs = document.getElementById('ab-filter-student')?.value || '';
+  const ft = document.getElementById('ab-filter-teacher')?.value || '';
+  const fst = document.getElementById('ab-filter-status')?.value || '';
+
+  let fl = absences.filter(a =>
+    (!fs || a.student===fs) &&
+    (!ft || a.teacher===ft) &&
+    (!fst || a.status===fst)
+  ).sort((a,b) => b.absentDate.localeCompare(a.absentDate));
+
+  // サマリー
+  const pending = absences.filter(a=>a.status==='pending').length;
+  const scheduled = absences.filter(a=>a.status==='scheduled').length;
+  const done = absences.filter(a=>a.status==='done').length;
+  const sum = document.getElementById('ab-summary');
+  if(sum) sum.innerHTML =
+    `振替未定：<strong>${pending}件</strong>　振替予定：<strong>${scheduled}件</strong>　完了：<strong>${done}件</strong>`;
+
+  const tbody = document.getElementById('ab-tbody');
+  if(!fl.length){
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--hint);font-size:13px;">記録がありません</td></tr>';
+    return;
+  }
+
+  const statusLabel = {
+    pending: '<span class="ab-status-pending">振替未定</span>',
+    scheduled: '<span class="ab-status-scheduled">振替予定</span>',
+    done: '<span class="ab-status-done">振替完了</span>'
+  };
+
+  tbody.innerHTML = fl.map(a => `
+    <tr class="ab-row">
+      <td style="font-weight:600;">${a.student}</td>
+      <td style="color:var(--muted);">${a.teacher||''}</td>
+      <td style="font-family:var(--mono);font-size:11px;">${a.absentDate}<br><span style="color:var(--muted);">${a.absentSlot}</span></td>
+      <td>${a.reason||''}</td>
+      <td style="font-family:var(--mono);font-size:11px;">
+        ${a.makeupDate
+          ? a.makeupDate+'<br><span style="color:var(--muted);">'+(a.makeupSlot||'未定')+'</span>'
+          : '<span style="color:var(--hint);">未定</span>'}
+      </td>
+      <td>${statusLabel[a.status]||a.status}</td>
+      <td style="color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.note||''}</td>
+      <td style="white-space:nowrap;">
+        ${a.status!=='done'?`<button class="ab-done-btn" onclick="markAbsenceDone('${a.id}')">完了</button>`:''}
+        <button class="ab-del-btn" onclick="deleteAbsence('${a.id}')">×</button>
+      </td>
+    </tr>`).join('');
+}
+
 // ── 表示切替 ──
 let currentView='month';
 let currentWeekStart=null;
@@ -895,13 +1398,22 @@ function setView(view){
   currentView=view;
   document.getElementById('month-view').style.display=view==='month'?'block':'none';
   document.getElementById('week-view').style.display=view==='week'?'block':'none';
-  document.getElementById('view-month-btn').style.fontWeight=view==='month'?'700':'400';
-  document.getElementById('view-week-btn').style.fontWeight=view==='week'?'700':'400';
+  document.getElementById('absence-view').style.display=view==='absence'?'block':'none';
+  document.getElementById('salary-view').style.display=view==='salary'?'block':'none';
   document.getElementById('view-month-btn').className='tb-btn '+(view==='month'?'tb-btn-primary':'tb-btn-outline');
   document.getElementById('view-week-btn').className='tb-btn '+(view==='week'?'tb-btn-primary':'tb-btn-outline');
+  document.getElementById('view-absence-btn').className='tb-btn '+(view==='absence'?'tb-btn-primary':'tb-btn-outline');
+  document.getElementById('view-salary-btn').className='tb-btn '+(view==='salary'?'tb-btn-primary':'tb-btn-outline');
   if(view==='week'){
     if(!currentWeekStart) currentWeekStart=getWeekStart(new Date());
     renderWeek();
+  }
+  if(view==='absence'){
+    rebuildAbsenceSelects();
+    renderAbsenceList();
+  }
+  if(view==='salary'){
+    renderSalary();
   }
 }
 
