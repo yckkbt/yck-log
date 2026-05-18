@@ -375,11 +375,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
     <!-- 1ヶ月分タブ -->
     <div id="bulk-month" style="display:none;">
       <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.7;">1行に1コマのシフトを入力してください。<br>形式：<span style="font-family:var(--mono);background:#f3f4f6;padding:1px 5px;border-radius:3px;">講師名,教室,日付,開始時間,コマ数,生徒,備考</span></p>
+      <div class="ff">
+        <label>登録済み講師名（コピーして使用してください）</label>
+        <div id="bm-teacher-hint" style="font-size:11px;font-family:var(--mono);background:#f3f4f6;border-radius:var(--r);padding:6px 10px;color:var(--muted);margin-bottom:6px;line-height:1.8;"></div>
+      </div>
       <div class="ff"><label>テキスト入力（1行1コマ）</label>
         <textarea id="bm-text" style="min-height:140px;font-family:var(--mono);font-size:11px;" placeholder="例：
-中村 先生,本校,2026-06-02,16:00,2,田中 花子,
-渡辺 先生,南校,2026-06-02,17:30,1,山本 太郎,テスト前
-小林 先生,本校,2026-06-03,16:25,1,,"></textarea>
+中村 先生,本校,2026-06-02,16:00（0コマ）,2,田中 花子,
+渡辺 先生,南校,2026-06-02,17:30（1コマ）,1,山本 太郎,テスト前
+小林 先生,本校,2026-06-03,16:25（0コマ）,1,,"></textarea>
       </div>
       <button class="save-btn save-btn-green" onclick="execBulkMonth()">一括登録する</button>
     </div>
@@ -457,6 +461,7 @@ async function init(){
   }
 
   teachers.forEach((t,i)=>teacherColorMap[t]=TEACHER_COLORS[i%TEACHER_COLORS.length]);
+  currentWeekStart=getWeekStart(new Date());
   rebuildSelects();
   setDefaultDates();
   renderAll();
@@ -518,7 +523,12 @@ function changeMonth(d){
   else if(curMonth<0){curMonth=11;curYear--;}
   renderAll();
 }
-function goToday(){curYear=new Date().getFullYear();curMonth=new Date().getMonth();renderAll();}
+function goToday(){
+  curYear=new Date().getFullYear();curMonth=new Date().getMonth();
+  currentWeekStart=getWeekStart(new Date());
+  renderAll();
+  if(currentView==='week') renderWeek();
+}
 
 function renderCal(campus, gridId){
   const grid=document.getElementById(gridId);
@@ -780,12 +790,31 @@ function closeModal(){
 
 // ── 一括登録モーダル ──
 function openBulkModal(){
-  // 月の初日・末日を設定
   const first=`${curYear}-${String(curMonth+1).padStart(2,'0')}-01`;
   const last=toDateStr(new Date(curYear,curMonth+1,0));
   document.getElementById('bw-from').value=first;
   document.getElementById('bw-to').value=last;
+
+  // 講師名ヒントを更新
+  const hint=document.getElementById('bm-teacher-hint');
+  if(hint){
+    if(isAdmin){
+      hint.innerHTML='<strong>全講師：</strong> '+teachers.map(t=>`<span style="background:#fff;border:1px solid var(--border);border-radius:3px;padding:1px 6px;margin-right:4px;cursor:pointer;" onclick="insertTeacherName('${t}')">${t}</span>`).join('');
+    }else{
+      hint.innerHTML='<strong>あなたの名前：</strong> <span style="background:#dbeafe;border:1px solid #2563eb;border-radius:3px;padding:1px 6px;cursor:pointer;" onclick="insertTeacherName(''+currentUser+'')">'+currentUser+'</span>';
+    }
+  }
   document.getElementById('bulk-modal').classList.add('open');
+}
+
+function insertTeacherName(name){
+  const ta=document.getElementById('bm-text');
+  const pos=ta.selectionStart;
+  const before=ta.value.substring(0,pos);
+  const after=ta.value.substring(pos);
+  ta.value=before+name+after;
+  ta.focus();
+  ta.selectionStart=ta.selectionEnd=pos+name.length;
 }
 function closeBulkModal(){document.getElementById('bulk-modal').classList.remove('open');}
 function switchBulkTab(tab){
@@ -841,7 +870,10 @@ async function execBulkMonth(){
     if(parts.length<4){errors.push(`行${i+1}: 列が不足`);return;}
     const [teacher,campus,date,startTime,slots='1',students='',note=''] = parts;
     if(!teacher||!date||!startTime){errors.push(`行${i+1}: 必須項目不足`);return;}
-    if(!isAdmin&&teacher!==currentUser){errors.push(`行${i+1}: 自分以外のシフトは登録不可`);return;}
+    // 権限チェック：講師は自分のシフトのみ。塾長は全員OK
+    if(!isAdmin && currentUser && teacher!==currentUser){
+      errors.push(`行${i+1}: "${teacher}" は自分以外のシフトのため登録できません`);return;
+    }
     newShifts.push({id:'s'+Date.now()+Math.random(),teacher,campus:campus||'本校',date,startTime,slots,students,note});
   });
   if(errors.length){alert('以下の行にエラーがあります：\n'+errors.join('\n'));return;}
@@ -992,15 +1024,6 @@ function renderWeek(){
     return `<tr><td class="time-col">${timeLabel}</td>${cells}</tr>`;
   }).join('');
 }
-
-// goTodayも週表示に対応
-const _origGoToday=goToday;
-goToday=function(){
-  curYear=new Date().getFullYear();curMonth=new Date().getMonth();
-  currentWeekStart=getWeekStart(new Date());
-  renderAll();
-  if(currentView==='week') renderWeek();
-};
 
 // モーダル外クリックで閉じる
 document.getElementById('edit-modal').addEventListener('click',e=>{if(e.target===document.getElementById('edit-modal'))closeModal();});
