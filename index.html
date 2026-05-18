@@ -255,7 +255,17 @@ textarea{resize:vertical;min-height:60px;}
           <div class="field"><label>科目</label><select id="i-subject"></select></div>
           <div class="field"><label>授業日</label><input type="date" id="i-date"></div>
         </div>
-        <div class="field"><label>授業内容</label><textarea id="i-content" placeholder="例：二次方程式の因数分解"></textarea></div>
+        <div class="grid-2">
+          <div class="field">
+            <label>授業形式</label>
+            <select id="i-format">
+              <option value="1対1">1対1（通常）</option>
+              <option value="1対2">1対2（割増）</option>
+              <option value="1対3">1対3</option>
+            </select>
+          </div>
+          <div class="field"><label>授業内容</label><input type="text" id="i-content" placeholder="例：二次方程式の因数分解"></div>
+        </div>
       </div>
 
       <div class="card">
@@ -594,6 +604,7 @@ function updateTotal(phase){
 async function submitLog(){
   const student=document.getElementById('i-student').value;
   const teacher=document.getElementById('i-teacher').value;
+  const format=document.getElementById('i-format')?.value||'1対1';
   if(!student||!teacher){alert('生徒名と講師名を選択してください');return;}
   const s=scores;
   if([s.pre.u,s.pre.o,s.pre.s,s.post.u,s.post.o,s.post.s].some(v=>v===null)){alert('授業前後のスコアをすべて入力してください');return;}
@@ -606,6 +617,7 @@ async function submitLog(){
     content:document.getElementById('i-content').value,
     memo:document.getElementById('i-memo').value,
     daiko:isDaiko?'yes':'',
+    format,
     preU:s.pre.u,preO:s.pre.o,preS:s.pre.s,preTotal:preT,preType:getType(preT),
     postU:s.post.u,postO:s.post.o,postS:s.post.s,postTotal:postT,postType:getType(postT)
   };
