@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YCK授業ログ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#f0f2f8;--surface:#fff;--border:#dde2f0;--border-s:#b8c0d8;
+  --text:#1a1c2e;--muted:#5a6080;--hint:#9098b8;
+  --mono:'DM Mono',monospace;--sans:'Noto Sans JP',sans-serif;
+  --r:8px;--rl:14px;
+  --navy:#1a2a6c;--blue:#2563eb;--blue-l:#dbeafe;
+  --sky:#0ea5e9;--sky-l:#e0f2fe;
+  --teal:#0d9488;--teal-l:#ccfbf1;
+  --green:#16a34a;--green-l:#dcfce7;
+  --amber:#d97706;--amber-l:#fef3c7;
+  --orange:#ea580c;--orange-l:#ffedd5;
+  --red:#dc2626;--red-l:#fee2e2;
+  --purple:#7c3aed;--purple-l:#ede9fe;
+  --pink:#db2777;--pink-l:#fce7f3;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh;}
+.yck-logo{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:36px;height:36px;flex-shrink:0;}
+.logo-text-wrap{display:flex;flex-direction:column;line-height:1.1;}
+.logo-yck{font-family:'Zen Kaku Gothic New',var(--sans);font-weight:900;font-size:18px;letter-spacing:.05em;color:#fff;}
+.logo-sub{font-size:9px;letter-spacing:.12em;color:rgba(255,255,255,.7);font-family:var(--mono);}
+
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--navy) 0%,#1e40af 50%,var(--purple) 100%);}
+.login-card{background:#fff;border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.login-logo-wrap{background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:var(--rl);padding:16px 20px;margin-bottom:1.75rem;display:flex;align-items:center;gap:12px;}
+.login-card label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;}
+.login-card input{width:100%;padding:10px 12px;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:14px;font-family:var(--mono);background:#f8f9ff;color:var(--text);margin-bottom:1rem;}
+.login-card input:focus{outline:none;border-color:var(--blue);}
+.login-main-btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:500;cursor:pointer;}
+.login-err{font-size:12px;color:var(--red);margin-top:8px;display:none;}
+
+#app{display:none;}
+.header{background:linear-gradient(135deg,var(--navy) 0%,#1e40af 60%,var(--purple) 100%);padding:0 1.5rem;display:flex;align-items:center;gap:1.25rem;height:56px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(26,42,108,.25);}
+.tab-bar{display:flex;flex:1;}
+.tab{padding:0 14px;height:56px;font-size:13px;cursor:pointer;border:none;background:none;color:rgba(255,255,255,.6);border-bottom:3px solid transparent;font-family:var(--sans);white-space:nowrap;transition:color .15s;}
+.tab:hover{color:rgba(255,255,255,.9);}
+.tab.active{color:#fff;border-bottom-color:#fff;font-weight:500;}
+.logout-btn{margin-left:auto;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;background:none;border:none;font-family:var(--sans);white-space:nowrap;}
+
+.main{max-width:880px;margin:0 auto;padding:1.5rem 1rem 3rem;}
+.section{display:none;}.section.active{display:block;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(26,42,108,.06);}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:1rem;}
+.card-head-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.card-head-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;font-family:var(--mono);}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.field label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;font-weight:500;}
+select,input[type=text],input[type=date],input[type=password],textarea{
+  width:100%;padding:9px 11px;border:1.5px solid var(--border-s);border-radius:var(--r);
+  font-size:13px;font-family:var(--sans);background:#f8f9ff;color:var(--text);transition:border-color .15s;
+}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--blue);}
+textarea{resize:vertical;min-height:60px;}
+
+/* 代講チェック */
+.daiko-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--amber-l);border-radius:var(--r);margin-bottom:12px;border:1px solid #fcd34d;}
+.daiko-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--amber);cursor:pointer;}
+.daiko-label{font-size:13px;font-weight:600;color:var(--amber);cursor:pointer;}
+.daiko-note{font-size:11px;color:#92400e;margin-left:auto;}
+
+.score-section{margin-bottom:18px;}
+.score-head{display:flex;align-items:baseline;gap:8px;margin-bottom:6px;}
+.score-head .lbl{font-size:13px;font-weight:600;color:var(--text);}
+.score-head .desc{font-size:11px;color:var(--hint);font-family:var(--mono);}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;}
+.sb{padding:7px 15px;font-size:12px;border:1.5px solid var(--border-s);background:#fff;border-radius:var(--r);cursor:pointer;color:var(--muted);font-family:var(--mono);transition:all .12s;}
+.sb:hover{border-color:var(--blue);color:var(--blue);}
+.sb.sel-u{background:var(--blue-l);border-color:var(--blue);color:#1d4ed8;font-weight:500;}
+.sb.sel-o{background:var(--teal-l);border-color:var(--teal);color:#0f766e;font-weight:500;}
+.sb.sel-s{background:var(--amber-l);border-color:var(--amber);color:#b45309;font-weight:500;}
+
+.total-row{display:flex;align-items:center;gap:16px;border-radius:var(--r);padding:12px 16px;margin-top:12px;}
+.total-num{font-size:36px;font-weight:700;font-family:var(--mono);}
+.type-pill{font-size:12px;padding:5px 14px;border-radius:20px;font-weight:600;}
+.t-加速{background:var(--blue-l);color:#1d4ed8;}
+.t-育成{background:var(--green-l);color:#15803d;}
+.t-分解{background:var(--orange-l);color:#c2410c;}
+.t-危険{background:var(--red-l);color:#b91c1c;}
+.hint-box{font-size:12px;color:var(--muted);border-left:3px solid;padding:10px 14px;margin-top:10px;line-height:1.9;border-radius:0 var(--r) var(--r) 0;}
+.hint-加速{border-color:var(--blue);background:var(--blue-l);}
+.hint-育成{border-color:var(--green);background:var(--green-l);}
+.hint-分解{border-color:var(--orange);background:var(--orange-l);}
+.hint-危険{border-color:var(--red);background:var(--red-l);}
+
+.submit-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;transition:opacity .15s;}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:1.5rem;}
+.metric{border-radius:var(--rl);padding:16px 18px;}
+.metric-lbl{font-size:10px;letter-spacing:.1em;font-family:var(--mono);margin-bottom:6px;font-weight:500;}
+.metric-val{font-size:28px;font-weight:700;font-family:var(--mono);}
+.m-blue{background:linear-gradient(135deg,#dbeafe,#ede9fe);}.m-blue .metric-lbl{color:#3730a3;}.m-blue .metric-val{color:#1e40af;}
+.m-green{background:linear-gradient(135deg,#dcfce7,#ccfbf1);}.m-green .metric-lbl{color:#065f46;}.m-green .metric-val{color:#15803d;}
+.m-red{background:linear-gradient(135deg,#fee2e2,#fce7f3);}.m-red .metric-lbl{color:#9f1239;}.m-red .metric-val{color:#b91c1c;}
+.m-amber{background:linear-gradient(135deg,#fef3c7,#ffedd5);}.m-amber .metric-lbl{color:#92400e;}.m-amber .metric-val{color:#b45309;}
+
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1rem;}
+.filter-row select{width:auto;min-width:130px;}
+.filter-label{font-size:12px;color:var(--muted);font-weight:500;}
+.chart-wrap{position:relative;width:100%;}
+.legend-wrap{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-size:12px;}
+.legend-item{display:flex;align-items:center;gap:5px;color:var(--muted);}
+.legend-dot{width:10px;height:10px;border-radius:3px;}
+
+/* 生徒別詳細ダッシュボード */
+.student-dash{background:linear-gradient(135deg,#f0f4ff,#f5f0ff);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem;border:1px solid var(--border);}
+.student-dash-name{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:1rem;}
+.type-timeline{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem;}
+.type-step{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.type-step-date{font-size:9px;color:var(--hint);font-family:var(--mono);}
+.type-step-badge{font-size:11px;padding:3px 9px;border-radius:12px;font-weight:600;}
+.type-arrow{color:var(--hint);font-size:12px;align-self:center;margin-top:12px;}
+.advice-box{border-radius:var(--r);padding:12px 14px;font-size:13px;line-height:1.8;}
+.advice-加速{background:var(--blue-l);border-left:4px solid var(--blue);}
+.advice-育成{background:var(--green-l);border-left:4px solid var(--green);}
+.advice-分解{background:var(--orange-l);border-left:4px solid var(--orange);}
+.advice-危険{background:var(--red-l);border-left:4px solid var(--red);}
+.advice-title{font-weight:700;margin-bottom:4px;}
+
+.log-table{width:100%;border-collapse:collapse;font-size:12px;}
+.log-table th{font-size:10px;font-weight:700;color:var(--muted);text-align:left;padding:9px 10px;border-bottom:2px solid var(--border);font-family:var(--mono);letter-spacing:.08em;white-space:nowrap;background:#f8f9ff;}
+.log-table td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+.log-table tr:hover td{background:#f0f4ff;}
+.score-num{font-family:var(--mono);font-weight:600;}
+.empty-state{text-align:center;padding:3rem;color:var(--hint);font-size:13px;}
+.export-btn{padding:8px 16px;border:1.5px solid var(--border-s);background:#fff;border-radius:var(--r);font-size:12px;cursor:pointer;color:var(--muted);font-weight:500;}
+.export-btn:hover{border-color:var(--blue);color:var(--blue);}
+
+.master-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.master-list{list-style:none;margin-bottom:12px;max-height:300px;overflow-y:auto;}
+.master-item{padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;background:#f8f9ff;font-size:13px;}
+.master-item-top{display:flex;align-items:center;justify-content:space-between;}
+.master-item-info{flex:1;}
+.master-item-name{font-weight:600;color:var(--text);}
+.master-item-sub{font-size:11px;color:var(--hint);font-family:var(--mono);margin-top:2px;}
+.del-btn{background:none;border:none;color:var(--hint);cursor:pointer;font-size:18px;line-height:1;padding:0 4px;}
+.del-btn:hover{color:var(--red);}
+.edit-btn{background:none;border:1px solid var(--border-s);border-radius:4px;color:var(--muted);cursor:pointer;font-size:11px;padding:2px 8px;margin-right:4px;}
+.edit-btn:hover{border-color:var(--blue);color:var(--blue);}
+
+/* インライン編集パネル */
+.edit-panel{background:#fff;border:1.5px solid var(--blue);border-radius:var(--r);padding:12px;margin-top:8px;display:none;}
+.edit-panel.open{display:block;}
+.edit-panel-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.edit-panel-actions{display:flex;gap:8px;}
+.save-edit-btn{padding:7px 16px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;}
+.cancel-edit-btn{padding:7px 16px;background:none;border:1px solid var(--border-s);border-radius:var(--r);font-size:12px;cursor:pointer;color:var(--muted);}
+
+.add-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
+.add-row input,.add-row select{flex:1;min-width:100px;}
+.add-btn{padding:9px 16px;background:linear-gradient(135deg,var(--blue),var(--teal));color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;white-space:nowrap;}
+
+/* チェックボックスグループ */
+.check-group{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
+.check-item{display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;}
+.check-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--blue);}
+
+.bulk-area{margin-top:1rem;border-top:1px dashed var(--border-s);padding-top:1rem;}
+.bulk-label{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.bulk-badge{font-size:10px;background:var(--sky-l);color:var(--sky);padding:2px 7px;border-radius:10px;font-family:var(--mono);font-weight:600;}
+.bulk-textarea{width:100%;min-height:90px;font-family:var(--mono);font-size:12px;border:1.5px dashed var(--border-s);border-radius:var(--r);padding:10px;background:#f8f9ff;resize:vertical;}
+.bulk-textarea:focus{outline:none;border-color:var(--blue);}
+.bulk-note{font-size:11px;color:var(--hint);margin-top:4px;line-height:1.6;}
+.bulk-btn{margin-top:8px;padding:9px 18px;background:linear-gradient(135deg,var(--sky),var(--teal));color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;}
+.dedup-btn{padding:8px 18px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;}
+
+.pw-section{max-width:380px;}
+.pw-msg{font-size:12px;margin-top:6px;}
+.section-sep{font-size:11px;font-weight:700;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;font-family:var(--mono);margin:1.25rem 0 .75rem;display:flex;align-items:center;gap:8px;}
+.section-sep::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:13px;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;}
+.toast.show{opacity:1;}
+.loading{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo-wrap">
+      <svg width="40" height="40" viewBox="0 0 36 36" fill="none">
+        <rect width="36" height="36" rx="8" fill="rgba(255,255,255,0.15)"/>
+        <text x="18" y="25" text-anchor="middle" font-family="'Zen Kaku Gothic New',sans-serif" font-weight="900" font-size="18" fill="white">Y</text>
+        <circle cx="28" cy="10" r="5" fill="#f59e0b"/>
+        <circle cx="8" cy="10" r="3" fill="#34d399"/>
+      </svg>
+      <div class="logo-text-wrap">
+        <span class="logo-yck">YCK</span>
+        <span class="logo-sub">YAMAGUCHICHU KOBETSU</span>
+      </div>
+    </div>
+    <div class="field"><label>パスワード</label><input type="password" id="pw-input" placeholder="パスワードを入力"></div>
+    <button class="login-main-btn" onclick="doLogin()">ログイン</button>
+    <div class="login-err" id="login-err">パスワードが違います</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="header">
+    <div class="yck-logo">
+      <svg class="logo-mark" viewBox="0 0 36 36" fill="none">
+        <rect width="36" height="36" rx="8" fill="rgba(255,255,255,0.15)"/>
+        <text x="18" y="25" text-anchor="middle" font-family="'Zen Kaku Gothic New',sans-serif" font-weight="900" font-size="18" fill="white">Y</text>
+        <circle cx="28" cy="10" r="5" fill="#f59e0b"/>
+        <circle cx="8" cy="10" r="3" fill="#34d399"/>
+      </svg>
+      <div class="logo-text-wrap">
+        <span class="logo-yck">YCK</span>
+        <span class="logo-sub">YAMAGUCHICHU KOBETSU</span>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab active" onclick="showTab('input',this)">授業入力</button>
+      <button class="tab" onclick="showTab('dashboard',this)">ダッシュボード</button>
+      <button class="tab" onclick="showTab('logs',this)">ログ一覧</button>
+      <button class="tab" onclick="showTab('master',this)">マスタ管理</button>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">ログアウト</button>
+  </div>
+
+  <div class="main">
+
+    <!-- ── 授業入力 ── -->
+    <div id="tab-input" class="section active">
+      <div class="card">
+        <div class="card-head"><div class="card-head-icon" style="background:var(--blue-l);">📋</div><span class="card-head-label">基本情報</span></div>
+
+        <!-- 代講チェック -->
+        <div class="daiko-row">
+          <input type="checkbox" id="daiko-check" onchange="onDaikoChange()">
+          <label class="daiko-label" for="daiko-check">代講</label>
+          <span class="daiko-note">チェックすると全生徒から選択できます</span>
+        </div>
+
+        <div class="grid-2">
+          <div class="field"><label>講師名</label><select id="i-teacher" onchange="onTeacherChange()"></select></div>
+          <div class="field"><label>生徒名</label><select id="i-student" onchange="onStudentChange()"></select></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>科目</label><select id="i-subject"></select></div>
+          <div class="field"><label>授業日</label><input type="date" id="i-date"></div>
+        </div>
+        <div class="field"><label>授業内容</label><textarea id="i-content" placeholder="例：二次方程式の因数分解"></textarea></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-head-icon" style="background:var(--blue-l);">📊</div><span class="card-head-label">授業前スコア</span></div>
+        <div id="pre-scores"></div>
+        <div class="total-row" style="background:var(--blue-l);">
+          <div><div style="font-size:10px;color:#3730a3;margin-bottom:2px;font-family:var(--mono);font-weight:600;letter-spacing:.1em;">PRE TOTAL</div><div class="total-num" id="pre-total" style="color:#1e40af;">—</div></div>
+          <div id="pre-badge"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-head-icon" style="background:var(--green-l);">✅</div><span class="card-head-label">授業後スコア</span></div>
+        <div id="post-scores"></div>
+        <div class="total-row" style="background:var(--green-l);">
+          <div><div style="font-size:10px;color:#065f46;margin-bottom:2px;font-family:var(--mono);font-weight:600;letter-spacing:.1em;">POST TOTAL</div><div class="total-num" id="post-total" style="color:#15803d;">—</div></div>
+          <div id="post-badge"></div>
+        </div>
+        <div id="hint-area"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div class="card-head-icon" style="background:var(--amber-l);">📝</div><span class="card-head-label">メモ・引き継ぎ</span></div>
+        <textarea id="i-memo" placeholder="気になった点、次回への引き継ぎなど"></textarea>
+        <button class="submit-btn" id="save-btn" onclick="submitLog()">授業ログを保存</button>
+      </div>
+    </div>
+
+    <!-- ── ダッシュボード ── -->
+    <div id="tab-dashboard" class="section">
+      <!-- 全体サマリー -->
+      <div class="section-sep">全体サマリー</div>
+      <div class="filter-row">
+        <span class="filter-label">講師：</span><select id="d-teacher" onchange="renderDash()"></select>
+      </div>
+      <div class="metrics" id="d-metrics"></div>
+      <div class="card">
+        <div class="card-head"><div class="card-head-icon" style="background:var(--purple-l);">👨‍🏫</div><span class="card-head-label">講師別 平均スコアアップ</span></div>
+        <div class="chart-wrap" style="height:180px;"><canvas id="c-teacher" role="img" aria-label="講師別スコアアップ"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div class="card-head-icon" style="background:var(--teal-l);">🎯</div><span class="card-head-label">授業タイプ分布（授業後）</span></div>
+        <div style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap;">
+          <div class="chart-wrap" style="height:180px;width:180px;flex-shrink:0;"><canvas id="c-type" role="img" aria-label="タイプ分布"></canvas></div>
+          <div id="type-legend" style="font-size:13px;line-height:2.4;"></div>
+        </div>
+      </div>
+
+      <!-- 生徒別スコア推移 -->
+      <div class="section-sep">生徒別スコア推移・アドバイス</div>
+      <div class="filter-row">
+        <span class="filter-label">生徒：</span>
+        <select id="d-student" onchange="renderStudentDash()">
+          <option value="">生徒を選択してください</option>
+        </select>
+      </div>
+      <div id="student-dash-area"></div>
+    </div>
+
+    <!-- ── ログ一覧 ── -->
+    <div id="tab-logs" class="section">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1rem;">
+        <select id="l-student" onchange="renderLogs()" style="width:auto;min-width:130px;"></select>
+        <select id="l-teacher" onchange="renderLogs()" style="width:auto;min-width:130px;"></select>
+        <button class="export-btn" onclick="exportCSV()">📥 CSVダウンロード</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="log-table">
+          <thead><tr>
+            <th>日付</th><th>生徒</th><th>講師</th><th>科目</th>
+            <th>前計</th><th></th><th>後計</th><th>タイプ</th><th>代講</th><th>メモ</th>
+          </tr></thead>
+          <tbody id="log-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── マスタ管理 ── -->
+    <div id="tab-master" class="section">
+
+      <!-- 生徒マスタ -->
+      <div class="card">
+        <div class="card-head"><div class="card-head-icon" style="background:var(--sky-l);">👤</div><span class="card-head-label">生徒マスタ</span></div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+          <button class="dedup-btn" onclick="dedupMaster()">🧹 重複データを自動削除</button>
+        </div>
+        <ul class="master-list" id="student-list"></ul>
+
+        <div class="section-sep">個別追加</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div class="field"><label>生徒名</label><input type="text" id="new-student" placeholder="例：田中 花子"></div>
+          <div class="field">
+            <label>担当講師（最大2名）</label>
+            <div class="check-group" id="teacher-checks"></div>
+          </div>
+          <div class="field">
+            <label>指導科目（最大2科目）</label>
+            <div class="check-group" id="subject-checks"></div>
+          </div>
+        </div>
+        <button class="add-btn" onclick="addStudent()">追加</button>
+
+        <div class="bulk-area">
+          <div class="bulk-label">一括登録 <span class="bulk-badge">BULK</span></div>
+          <textarea class="bulk-textarea" id="bulk-input" placeholder="1行に1名。カンマ区切りで講師名・科目名を続けられます。
+例：
+田中 花子
+山本 太郎,中村 先生,数学
+鈴木 一郎,中村 先生,渡辺 先生,英語"></textarea>
+          <div class="bulk-note">・講師名は最大2名、科目名は最大2科目まで認識します<br>・すでに登録済みの名前はスキップされます</div>
+          <button class="bulk-btn" onclick="bulkImport()">📋 一括登録する</button>
+        </div>
+      </div>
+
+      <div class="master-grid">
+        <div class="card">
+          <div class="card-head"><div class="card-head-icon" style="background:var(--purple-l);">👨‍🏫</div><span class="card-head-label">講師マスタ</span></div>
+          <ul class="master-list" id="teacher-list"></ul>
+          <div class="add-row"><input type="text" id="new-teacher" placeholder="講師名"><button class="add-btn" onclick="addMaster('teacher')">追加</button></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-head-icon" style="background:var(--teal-l);">📚</div><span class="card-head-label">科目マスタ</span></div>
+          <ul class="master-list" id="subject-list"></ul>
+          <div class="add-row"><input type="text" id="new-subject" placeholder="科目名"><button class="add-btn" onclick="addMaster('subject')">追加</button></div>
+        </div>
+      </div>
+
+      <div class="card pw-section">
+        <div class="card-head"><div class="card-head-icon" style="background:var(--amber-l);">🔑</div><span class="card-head-label">パスワード変更</span></div>
+        <div class="field" style="margin-bottom:10px;"><label>現在のパスワード</label><input type="password" id="pw-old"></div>
+        <div class="field" style="margin-bottom:10px;"><label>新しいパスワード</label><input type="password" id="pw-new"></div>
+        <div class="field" style="margin-bottom:10px;"><label>確認</label><input type="password" id="pw-conf"></div>
+        <button class="add-btn" style="width:100%;padding:10px;" onclick="changePw()">変更する</button>
+        <div class="pw-msg" id="pw-msg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const GAS_URL='https://script.google.com/macros/s/AKfycbz8k41UXf6w3mkSQ3ARc4ReQ_v2xO2t2-xKizYtQ3Y_s2k1iAHEwVNSUlI52V5Go4NsZg/exec';
+const HINTS={
+  '加速型':'応用問題を混ぜる・制限時間設定・自己解説させる',
+  '育成型':'同形式反復・途中式徹底・成功承認多め',
+  '分解型':'1工程ずつ・超具体例・ヒント細分化',
+  '危険型':'まず会話・成功体験を超小さく・承認を多く'
+};
+const ADVICE={
+  '加速型':{
+    title:'🔵 加速型 — 自走できる状態です',
+    body:'理解が定着し、スピードも出ています。応用問題を積極的に取り入れ、制限時間を設けて思考スピードを鍛えましょう。自己解説（生徒に説明させる）を使うと定着がさらに深まります。'
+  },
+  '育成型':{
+    title:'🟡 育成型 — 伸び代がある状態です',
+    body:'部分的に理解できています。同じ形式の問題を繰り返し、途中式を丁寧に書く習慣をつけましょう。小さな成功をしっかり承認して自信をつけることが次のステップへの鍵です。'
+  },
+  '分解型':{
+    title:'🟠 分解型 — 丁寧なサポートが必要です',
+    body:'理解が弱い状態です。1工程ずつ確認しながら進め、超具体的な例え（身近なものに置き換えるなど）を使いましょう。ヒントを細かく出して、小さな成功体験を積み重ねることが重要です。'
+  },
+  '危険型':{
+    title:'🔴 危険型 — まず状態の改善を優先してください',
+    body:'学習以前に心理的・身体的な状態が整っていない可能性があります。まず会話から始め、安心できる雰囲気を作りましょう。超小さな成功体験（1問だけ解けた、など）と承認を繰り返し、塾に来ること自体をポジティブな体験にすることが最優先です。'
+  }
+};
+const TYPE_COLORS=['#2563eb','#16a34a','#ea580c','#dc2626'];
+const TYPES=['加速型','育成型','分解型','危険型'];
+const scores={pre:{u:null,o:null,s:null},post:{u:null,o:null,s:null}};
+let master={students:[],teachers:[],subjects:[]};
+let logs=[];
+let charts={};
+
+// ── TOAST ──
+function toast(msg,dur=2200){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+// ── API ──
+async function api(action,body={}){
+  const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,...body})});
+  return res.json();
+}
+
+// ── AUTH ──
+async function doLogin(){
+  const pw=document.getElementById('pw-input').value;
+  const btn=document.querySelector('.login-main-btn');
+  btn.innerHTML='<span class="loading"></span>確認中...';btn.disabled=true;
+  try{
+    const res=await api('auth',{password:pw});
+    if(res.ok){
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').style.display='block';
+      await initApp();
+    }else{
+      document.getElementById('login-err').style.display='block';
+    }
+  }catch(e){alert('接続に失敗しました。');}
+  btn.innerHTML='ログイン';btn.disabled=false;
+}
+function doLogout(){
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+  document.getElementById('pw-input').value='';
+  document.getElementById('login-err').style.display='none';
+}
+
+// ── INIT ──
+async function initApp(){
+  const[mRes,lRes]=await Promise.all([api('getMaster'),api('getLogs')]);
+  master=mRes.master;
+  logs=lRes.logs||[];
+  rebuildSelects();
+  buildScoreInputs();
+  document.getElementById('i-date').value=new Date().toISOString().slice(0,10);
+  renderMaster();renderLogs();renderDash();
+}
+
+function getType(t){
+  if(t>=9)return '加速型';if(t>=7)return '育成型';
+  if(t>=4)return '分解型';return '危険型';
+}
+
+// ── SELECTS ──
+function getStudentsForTeacher(teacherName, ignoreDaiko=false){
+  if(ignoreDaiko) return master.students.map(s=>s.name||s);
+  if(!teacherName) return master.students.map(s=>s.name||s);
+  return master.students
+    .filter(s=>{const ts=s.teachers||[];return ts.length===0||ts.includes(teacherName);})
+    .map(s=>s.name||s);
+}
+
+function rebuildSelects(){
+  const pop=(id,arr,all)=>{
+    const el=document.getElementById(id);if(!el)return;
+    const cur=el.value;
+    el.innerHTML=all?`<option value="">${all}</option>`:'';
+    arr.forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;el.appendChild(o);});
+    el.value=cur;
+  };
+  const tNames=master.teachers;
+  const sNames=master.students.map(s=>s.name||s);
+  pop('i-teacher',tNames,'講師を選択');
+  pop('d-teacher',tNames,'全講師');
+  pop('d-student',sNames,'生徒を選択してください');
+  pop('l-student',sNames,'全生徒');
+  pop('l-teacher',tNames,'全講師');
+  onTeacherChange();
+  buildTeacherChecks();
+  buildSubjectChecks();
+}
+
+function onTeacherChange(){
+  const isDaiko=document.getElementById('daiko-check')?.checked||false;
+  const teacher=document.getElementById('i-teacher')?.value||'';
+  const students=getStudentsForTeacher(teacher, isDaiko);
+  const el=document.getElementById('i-student');
+  if(!el)return;
+  const cur=el.value;
+  el.innerHTML='<option value="">生徒を選択</option>';
+  students.forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;el.appendChild(o);});
+  if(students.includes(cur))el.value=cur;
+  onStudentChange();
+}
+
+function onDaikoChange(){
+  onTeacherChange();
+}
+
+// 生徒選択時に指導科目を自動フィルタ
+function onStudentChange(){
+  const studentName=document.getElementById('i-student')?.value||'';
+  const studentObj=master.students.find(s=>(s.name||s)===studentName);
+  const subjectSel=document.getElementById('i-subject');
+  if(!subjectSel)return;
+  const cur=subjectSel.value;
+  subjectSel.innerHTML='';
+  let subjects=master.subjects;
+  if(studentObj&&(studentObj.subjects||[]).length>0){
+    subjects=studentObj.subjects;
+  }
+  subjects.forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;subjectSel.appendChild(o);});
+  if(subjects.includes(cur))subjectSel.value=cur;
+}
+
+// ── MASTER CHECKS ──
+function buildTeacherChecks(){
+  const wrap=document.getElementById('teacher-checks');if(!wrap)return;
+  wrap.innerHTML=master.teachers.map(t=>`<label class="check-item"><input type="checkbox" name="assign-teacher" value="${t}"> ${t}</label>`).join('');
+}
+function buildSubjectChecks(){
+  const wrap=document.getElementById('subject-checks');if(!wrap)return;
+  wrap.innerHTML=master.subjects.map(s=>`<label class="check-item"><input type="checkbox" name="assign-subject" value="${s}"> ${s}</label>`).join('');
+}
+function getCheckedValues(name,max){
+  return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(b=>b.value).slice(0,max);
+}
+
+// ── SCORE UI ──
+function buildScoreInputs(){
+  const dims=[
+    {key:'u',label:'① 習熟度（Understanding）',desc:'4=高 3=やや高 2=中 1=やや低 0=低',vals:[0,1,2,3,4],cls:'sel-u',lbls:{0:'0 低',1:'1 やや低',2:'2 中',3:'3 やや高',4:'4 高'}},
+    {key:'o',label:'② 発話量（Output）',desc:'2=高 1=中 0=低',vals:[0,1,2],cls:'sel-o',lbls:{0:'0 低',1:'1 中',2:'2 高'}},
+    {key:'s',label:'③ 表情・集中度（State）',desc:'4=高 3=やや高 2=中 1=やや低 0=低',vals:[0,1,2,3,4],cls:'sel-s',lbls:{0:'0 低',1:'1 やや低',2:'2 中',3:'3 やや高',4:'4 高'}},
+  ];
+  ['pre','post'].forEach(phase=>{
+    const c=document.getElementById(phase+'-scores');c.innerHTML='';
+    dims.forEach(d=>{
+      const s=document.createElement('div');s.className='score-section';
+      s.innerHTML=`<div class="score-head"><span class="lbl">${d.label}</span><span class="desc">${d.desc}</span></div>
+        <div class="btn-row">${d.vals.map(v=>`<button class="sb" data-phase="${phase}" data-dim="${d.key}" data-val="${v}" data-cls="${d.cls}" onclick="setScore(this)">${d.lbls[v]}</button>`).join('')}</div>`;
+      c.appendChild(s);
+    });
+  });
+}
+function setScore(btn){
+  const{phase,dim,cls}=btn.dataset;const val=parseInt(btn.dataset.val);
+  scores[phase][dim]=val;
+  document.querySelectorAll(`.sb[data-phase="${phase}"][data-dim="${dim}"]`).forEach(b=>b.classList.remove('sel-u','sel-o','sel-s'));
+  btn.classList.add(cls);updateTotal(phase);
+}
+function updateTotal(phase){
+  const s=scores[phase];
+  if(s.u===null||s.o===null||s.s===null)return;
+  const total=s.u+s.o+s.s;const type=getType(total);
+  document.getElementById(phase+'-total').textContent=total;
+  document.getElementById(phase+'-badge').innerHTML=`<span class="type-pill t-${type}">${type}</span>`;
+  if(phase==='post')document.getElementById('hint-area').innerHTML=`<div class="hint-box hint-${type}"><strong>${type}：</strong>${HINTS[type]}</div>`;
+}
+
+// ── SUBMIT ──
+async function submitLog(){
+  const student=document.getElementById('i-student').value;
+  const teacher=document.getElementById('i-teacher').value;
+  if(!student||!teacher){alert('生徒名と講師名を選択してください');return;}
+  const s=scores;
+  if([s.pre.u,s.pre.o,s.pre.s,s.post.u,s.post.o,s.post.s].some(v=>v===null)){alert('授業前後のスコアをすべて入力してください');return;}
+  const preT=s.pre.u+s.pre.o+s.pre.s;
+  const postT=s.post.u+s.post.o+s.post.s;
+  const isDaiko=document.getElementById('daiko-check').checked;
+  const log={
+    id:Date.now(),date:document.getElementById('i-date').value,
+    student,teacher,subject:document.getElementById('i-subject').value,
+    content:document.getElementById('i-content').value,
+    memo:document.getElementById('i-memo').value,
+    daiko:isDaiko?'yes':'',
+    preU:s.pre.u,preO:s.pre.o,preS:s.pre.s,preTotal:preT,preType:getType(preT),
+    postU:s.post.u,postO:s.post.o,postS:s.post.s,postTotal:postT,postType:getType(postT)
+  };
+  const btn=document.getElementById('save-btn');
+  btn.innerHTML='<span class="loading"></span>保存中...';btn.disabled=true;
+  try{
+    const res=await api('addLog',{log});
+    if(res.ok){logs.push(log);toast('✅ 保存しました！');resetForm();}
+    else alert('保存に失敗しました');
+  }catch(e){alert('通信エラーが発生しました');}
+  btn.innerHTML='授業ログを保存';btn.disabled=false;
+}
+function resetForm(){
+  ['pre','post'].forEach(p=>{
+    Object.keys(scores[p]).forEach(k=>scores[p][k]=null);
+    document.querySelectorAll(`.sb[data-phase="${p}"]`).forEach(b=>b.classList.remove('sel-u','sel-o','sel-s'));
+    document.getElementById(p+'-total').textContent='—';
+    document.getElementById(p+'-badge').innerHTML='';
+  });
+  document.getElementById('i-content').value='';
+  document.getElementById('i-memo').value='';
+  document.getElementById('hint-area').innerHTML='';
+  document.getElementById('daiko-check').checked=false;
+  onTeacherChange();
+}
+
+// ── DASHBOARD ──
+function renderDash(){
+  const t=document.getElementById('d-teacher')?.value||'';
+  const fl=logs.filter(l=>!t||l.teacher===t);
+  const total=fl.length;
+  // 旧データ互換: 合計点を安全に計算
+  fl.forEach(l=>{
+    const preU=Number(l.preU)||0,preO=Number(l.preO)||0,preS=Number(l.preS)||0;
+    const postU=Number(l.postU)||0,postO=Number(l.postO)||0,postS=Number(l.postS)||0;
+    if(l.preTotal===''||l.preTotal===undefined||isNaN(Number(l.preTotal))) l.preTotal=preU+preO+preS;
+    else l.preTotal=Number(l.preTotal);
+    if(l.postTotal===''||l.postTotal===undefined||isNaN(Number(l.postTotal))) l.postTotal=postU+postO+postS;
+    else l.postTotal=Number(l.postTotal);
+    if(!l.postType) l.postType=getType(l.postTotal);
+  });
+  const avgUp=total?(fl.reduce((a,l)=>a+(l.postTotal-l.preTotal),0)/total).toFixed(1):'—';
+  const danger=fl.filter(l=>l.postType==='危険型').length;
+  const avgPost=total?(fl.reduce((a,l)=>a+Number(l.postTotal),0)/total).toFixed(1):'—';
+  document.getElementById('d-metrics').innerHTML=`
+    <div class="metric m-blue"><div class="metric-lbl">TOTAL LESSONS</div><div class="metric-val">${total}</div></div>
+    <div class="metric m-green"><div class="metric-lbl">AVG SCORE UP</div><div class="metric-val">${total?'+'+avgUp:'—'}</div></div>
+    <div class="metric m-red"><div class="metric-lbl">危険型件数</div><div class="metric-val">${danger}</div></div>
+    <div class="metric m-amber"><div class="metric-lbl">AVG POST SCORE</div><div class="metric-val">${avgPost}</div></div>`;
+  renderTeacher(fl);renderTypeChart(fl);
+}
+
+function renderTeacher(fl){
+  const ctx=document.getElementById('c-teacher').getContext('2d');
+  if(charts.teacher)charts.teacher.destroy();
+  if(!fl||!fl.length)return;
+  const tnames=master.teachers;
+  const avgs=tnames.map(t=>{
+    const tl=fl.filter(l=>l.teacher===t);
+    return tl.length?parseFloat((tl.reduce((a,l)=>a+(Number(l.postTotal)-Number(l.preTotal)),0)/tl.length).toFixed(1)):0;
+  });
+  const colors=['#7c3aed','#2563eb','#0d9488','#16a34a','#d97706'];
+  charts.teacher=new Chart(ctx,{type:'bar',data:{labels:tnames,datasets:[{label:'平均スコアアップ',data:avgs,backgroundColor:tnames.map((_,i)=>colors[i%colors.length]),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}}}});
+}
+
+function renderTypeChart(fl){
+  const ctx=document.getElementById('c-type').getContext('2d');
+  if(charts.type)charts.type.destroy();
+  const counts=TYPES.map(t=>fl.filter(l=>l.postType===t).length);
+  charts.type=new Chart(ctx,{type:'doughnut',data:{labels:TYPES,datasets:[{data:counts,backgroundColor:TYPE_COLORS,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  const tot=fl.length||1;
+  document.getElementById('type-legend').innerHTML=TYPES.map((t,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="width:10px;height:10px;border-radius:3px;background:${TYPE_COLORS[i]};display:inline-block;"></span>
+      <span class="type-pill t-${t}" style="font-size:11px;padding:3px 10px;">${t}</span>
+      <span style="color:var(--muted);font-size:12px;">${counts[i]}回（${Math.round(counts[i]/tot*100)}%）</span>
+    </div>`).join('');
+}
+
+// ── 生徒別ダッシュボード ──
+function renderStudentDash(){
+  const studentName=document.getElementById('d-student').value;
+  const area=document.getElementById('student-dash-area');
+  if(!studentName){area.innerHTML='';return;}
+  const sl=logs.filter(l=>l.student===studentName).sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  if(!sl.length){
+    area.innerHTML='<div class="card"><p style="color:var(--hint);font-size:13px;text-align:center;padding:1rem;">この生徒のログがまだありません</p></div>';
+    return;
+  }
+  const lastLog=sl[sl.length-1];
+  // 旧データ互換: 合計点を安全に再計算
+  sl.forEach(l => {
+    const preU=Number(l.preU)||0,preO=Number(l.preO)||0,preS=Number(l.preS)||0;
+    const postU=Number(l.postU)||0,postO=Number(l.postO)||0,postS=Number(l.postS)||0;
+    if(l.preTotal===''||l.preTotal===undefined||isNaN(Number(l.preTotal))) l.preTotal=preU+preO+preS;
+    else l.preTotal=Number(l.preTotal);
+    if(l.postTotal===''||l.postTotal===undefined||isNaN(Number(l.postTotal))) l.postTotal=postU+postO+postS;
+    else l.postTotal=Number(l.postTotal);
+    if(!l.postType) l.postType=getType(l.postTotal);
+  });
+  const lastType=lastLog.postType;
+  const adv=ADVICE[lastType]||{title:'',body:''};
+
+  // スコア推移グラフ
+  const trendHtml=`
+    <div class="card">
+      <div class="card-head"><div class="card-head-icon" style="background:var(--blue-l);">📈</div><span class="card-head-label">${studentName} のスコア推移</span></div>
+      <div class="chart-wrap" style="height:220px;"><canvas id="c-student-trend" role="img" aria-label="${studentName}スコア推移"></canvas></div>
+    </div>`;
+
+  // タイプタイムライン
+  const timelineItems=sl.map((l,i)=>{
+    const arrow=i<sl.length-1?`<span class="type-arrow">→</span>`:'';
+    return `<div style="display:flex;align-items:center;gap:4px;">
+      <div class="type-step">
+        <span class="type-step-date">${String(l.date).slice(5)}</span>
+        <span class="type-step-badge t-${l.postType}" style="font-size:11px;padding:3px 9px;border-radius:12px;font-weight:600;">${l.postType}</span>
+      </div>${arrow}</div>`;
+  }).join('');
+
+  const timelineHtml=`
+    <div class="card">
+      <div class="card-head"><div class="card-head-icon" style="background:var(--amber-l);">🗺</div><span class="card-head-label">タイプ推移</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">${timelineItems}</div>
+    </div>`;
+
+  // アドバイス
+  const adviceHtml=`
+    <div class="card">
+      <div class="card-head"><div class="card-head-icon" style="background:var(--${lastType==='加速型'?'blue':lastType==='育成型'?'green':lastType==='分解型'?'orange':'red'}-l);">💡</div><span class="card-head-label">現在の状態と指導アドバイス</span></div>
+      <div class="advice-box advice-${lastType}">
+        <div class="advice-title">${adv.title}</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.9;">${adv.body}</div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--hint);">最終授業：${lastLog.date}（${lastLog.subject}）/ 前${lastLog.preTotal}点 → 後${lastLog.postTotal}点</div>
+    </div>`;
+
+  area.innerHTML=trendHtml+timelineHtml+adviceHtml;
+
+  // グラフ描画
+  const ctx=document.getElementById('c-student-trend').getContext('2d');
+  if(charts.studentTrend)charts.studentTrend.destroy();
+  charts.studentTrend=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:sl.map(l=>String(l.date).slice(5)),
+      datasets:[
+        {label:'授業前',data:sl.map(l=>Number(l.preTotal)),borderColor:'#94a3b8',borderDash:[5,3],backgroundColor:'transparent',tension:.3,pointRadius:4},
+        {label:'授業後',data:sl.map(l=>Number(l.postTotal)),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.08)',fill:true,tension:.3,pointRadius:5}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{font:{size:11},boxWidth:14}}},
+      scales:{y:{min:0,max:10,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}}}
+  });
+}
+
+// ── LOGS ──
+function renderLogs(){
+  const s=document.getElementById('l-student')?.value||'';
+  const t=document.getElementById('l-teacher')?.value||'';
+  const fl=logs.filter(l=>(!s||l.student===s)&&(!t||l.teacher===t));
+  const tb=document.getElementById('log-body');
+  if(!fl.length){tb.innerHTML=`<tr><td colspan="10" class="empty-state">ログがありません</td></tr>`;return;}
+  tb.innerHTML=[...fl].reverse().map(l=>{
+    const preTotal  = isNaN(Number(l.preTotal))  ? 0 : Number(l.preTotal);
+    const postTotal = isNaN(Number(l.postTotal)) ? 0 : Number(l.postTotal);
+    const postType  = (l.postType && String(l.postType).trim()) ? String(l.postType).trim() : getType(postTotal);
+    const memo      = l.memo !== undefined && l.memo !== null ? String(l.memo) : '';
+    const daiko     = String(l.daiko||'') === 'yes' || String(l.daiko||'') === '代講';
+    return `<tr>
+      <td style="font-family:var(--mono);white-space:nowrap;font-size:11px;">${l.date||''}</td>
+      <td style="font-weight:500;">${l.student||''}</td>
+      <td style="color:var(--muted);">${l.teacher||''}</td>
+      <td>${l.subject||''}</td>
+      <td class="score-num">${preTotal}</td>
+      <td style="color:var(--hint);font-family:var(--mono);">→</td>
+      <td class="score-num">${postTotal}</td>
+      <td><span class="type-pill t-${postType}" style="font-size:11px;padding:3px 10px;">${postType}</span></td>
+      <td style="font-size:11px;color:${daiko?'var(--amber)':'var(--hint)'};">${daiko?'代講':''}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:12px;">${memo}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── CSV ──
+function exportCSV(){
+  const s=document.getElementById('l-student')?.value||'';
+  const t=document.getElementById('l-teacher')?.value||'';
+  const fl=logs.filter(l=>(!s||l.student===s)&&(!t||l.teacher===t));
+  if(!fl.length){alert('データがありません');return;}
+  const hdr=['日付','生徒','講師','科目','代講','授業内容','前U','前O','前S','前合計','前タイプ','後U','後O','後S','後合計','後タイプ','スコアアップ','メモ'];
+  const rows=fl.map(l=>[l.date,l.student,l.teacher,l.subject||'',l.daiko==='yes'?'代講':'',`"${(l.content||'').replace(/"/g,'""')}"`,l.preU,l.preO,l.preS,l.preTotal,l.preType,l.postU,l.postO,l.postS,l.postTotal,l.postType,Number(l.postTotal)-Number(l.preTotal),`"${(l.memo||'').replace(/"/g,'""')}"`]);
+  const csv='\uFEFF'+[hdr,...rows].map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download=`YCK_授業ログ_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+// ── MASTER ──
+function renderMaster(){
+  // 生徒リスト（編集パネルつき）
+  const ul=document.getElementById('student-list');
+  ul.innerHTML=master.students.length?master.students.map((s,i)=>{
+    const name=s.name||s;
+    const teachers=(s.teachers||[]).join('・')||'担当なし';
+    const subjects=(s.subjects||[]).join('・')||'—';
+    return `<li class="master-item">
+      <div class="master-item-top">
+        <div class="master-item-info">
+          <div class="master-item-name">${name}</div>
+          <div class="master-item-sub">講師：${teachers}　科目：${subjects}</div>
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button class="edit-btn" onclick="toggleEdit(${i})">編集</button>
+          <button class="del-btn" onclick="delStudent(${i})">×</button>
+        </div>
+      </div>
+      <div class="edit-panel" id="edit-panel-${i}">
+        <div class="edit-panel-row">
+          <div class="field">
+            <label>担当講師（最大2名）</label>
+            <div class="check-group" id="edit-teacher-${i}">
+              ${master.teachers.map(t=>`<label class="check-item"><input type="checkbox" name="edit-t-${i}" value="${t}" ${(s.teachers||[]).includes(t)?'checked':''}> ${t}</label>`).join('')}
+            </div>
+          </div>
+          <div class="field">
+            <label>指導科目（最大2科目）</label>
+            <div class="check-group" id="edit-subject-${i}">
+              ${master.subjects.map(sub=>`<label class="check-item"><input type="checkbox" name="edit-s-${i}" value="${sub}" ${(s.subjects||[]).includes(sub)?'checked':''}> ${sub}</label>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="edit-panel-actions">
+          <button class="save-edit-btn" onclick="saveEdit(${i})">保存</button>
+          <button class="cancel-edit-btn" onclick="toggleEdit(${i})">キャンセル</button>
+        </div>
+      </div>
+    </li>`;
+  }).join(''):'<li style="font-size:12px;color:var(--hint);padding:8px;">（未登録）</li>';
+
+  const renderSimple=(id,arr,type)=>{
+    const ul2=document.getElementById(id);
+    ul2.innerHTML=arr.length?arr.map((v,i)=>`<li class="master-item">
+      <div class="master-item-top">
+        <div class="master-item-info"><div class="master-item-name">${v}</div></div>
+        <button class="del-btn" onclick="delMaster('${type}',${i})">×</button>
+      </div></li>`).join(''):'<li style="font-size:12px;color:var(--hint);padding:8px;">（未登録）</li>';
+  };
+  renderSimple('teacher-list',master.teachers,'teacher');
+  renderSimple('subject-list',master.subjects,'subject');
+  buildTeacherChecks();buildSubjectChecks();
+}
+
+function toggleEdit(i){
+  const panel=document.getElementById(`edit-panel-${i}`);
+  panel.classList.toggle('open');
+}
+
+async function saveEdit(i){
+  const teachers=[...document.querySelectorAll(`input[name="edit-t-${i}"]:checked`)].map(b=>b.value).slice(0,2);
+  const subjects=[...document.querySelectorAll(`input[name="edit-s-${i}"]:checked`)].map(b=>b.value).slice(0,2);
+  master.students[i].teachers=teachers;
+  master.students[i].subjects=subjects;
+  await saveMaster();
+  renderMaster();rebuildSelects();
+  toast('✅ 変更を保存しました');
+}
+
+async function saveMaster(){
+  await api('setMaster',{master});
+}
+
+async function addStudent(){
+  const name=document.getElementById('new-student').value.trim();if(!name)return;
+  const teachers=getCheckedValues('assign-teacher',2);
+  const subjects=getCheckedValues('assign-subject',2);
+  if(master.students.some(s=>(s.name||s)===name)){toast('⚠️ すでに登録済みです');return;}
+  master.students.push({name,teachers,subjects});
+  document.getElementById('new-student').value='';
+  document.querySelectorAll('input[name="assign-teacher"],input[name="assign-subject"]').forEach(b=>b.checked=false);
+  await saveMaster();renderMaster();rebuildSelects();toast('✅ 追加しました');
+}
+
+async function bulkImport(){
+  const text=document.getElementById('bulk-input').value.trim();if(!text)return;
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  let count=0;
+  lines.forEach(line=>{
+    const parts=line.split(',').map(p=>p.trim()).filter(Boolean);
+    if(!parts.length)return;
+    const name=parts[0];if(!name)return;
+    if(master.students.some(s=>(s.name||s)===name))return;
+    const rest=parts.slice(1);
+    const teachers=rest.filter(p=>master.teachers.includes(p)).slice(0,2);
+    const subjects=rest.filter(p=>master.subjects.includes(p)).slice(0,2);
+    master.students.push({name,teachers,subjects});
+    count++;
+  });
+  if(!count){toast('⚠️ 新しく追加できる生徒がいませんでした');return;}
+  document.getElementById('bulk-input').value='';
+  await saveMaster();renderMaster();rebuildSelects();
+  toast(`✅ ${count}名を一括登録しました`);
+}
+
+async function delStudent(idx){
+  if(!confirm('削除してよいですか？'))return;
+  master.students.splice(idx,1);
+  await saveMaster();renderMaster();rebuildSelects();toast('削除しました');
+}
+
+async function addMaster(type){
+  const id='new-'+type;const val=document.getElementById(id).value.trim();if(!val)return;
+  if(type==='teacher')master.teachers.push(val);
+  if(type==='subject')master.subjects.push(val);
+  document.getElementById(id).value='';
+  await saveMaster();renderMaster();rebuildSelects();toast('✅ 追加しました');
+}
+async function delMaster(type,idx){
+  if(!confirm('削除してよいですか？'))return;
+  if(type==='teacher')master.teachers.splice(idx,1);
+  if(type==='subject')master.subjects.splice(idx,1);
+  await saveMaster();renderMaster();rebuildSelects();toast('削除しました');
+}
+
+// ── PASSWORD ──
+async function changePw(){
+  const old=document.getElementById('pw-old').value;
+  const nw=document.getElementById('pw-new').value;
+  const cf=document.getElementById('pw-conf').value;
+  const msg=document.getElementById('pw-msg');
+  if(!nw){msg.style.color='var(--red)';msg.textContent='新しいパスワードを入力してください';return;}
+  if(nw!==cf){msg.style.color='var(--red)';msg.textContent='パスワードが一致しません';return;}
+  const res=await api('changePass',{oldPw:old,newPw:nw});
+  if(res.ok){msg.style.color='var(--green)';msg.textContent='✅ 変更しました';['pw-old','pw-new','pw-conf'].forEach(id=>document.getElementById(id).value='');}
+  else{msg.style.color='var(--red)';msg.textContent=res.error||'エラーが発生しました';}
+}
+
+// ── TABS ──
+function showTab(name,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='dashboard')renderDash();
+  if(name==='logs')renderLogs();
+  if(name==='master')renderMaster();
+}
+
+
+// ── 重複削除 ──
+async function dedupMaster(){
+  if(!confirm('マスタシートの重複データを自動削除します。よろしいですか？')) return;
+  const btn = document.querySelector('.dedup-btn');
+  btn.innerHTML = '<span class="loading"></span>削除中...'; btn.disabled = true;
+  try {
+    const res = await api('dedupMaster');
+    if(res.ok){
+      const msg = res.removed > 0 ? `✅ ${res.removed}件の重複を削除しました` : '✅ 重複はありませんでした';
+      // マスタを再取得して画面を更新
+      const mRes = await api('getMaster');
+      master = mRes.master;
+      rebuildSelects(); renderMaster();
+      toast(msg, 3000);
+    } else {
+      alert('削除に失敗しました');
+    }
+  } catch(e){ alert('通信エラーが発生しました'); }
+  btn.innerHTML = '🧹 重複データを自動削除'; btn.disabled = false;
+}
+
+// ポータルから認証済みの場合はそのままアプリを起動
+document.getElementById('login-screen').style.display='none';
+document.getElementById('app').style.display='block';
+initApp();
+</script>
+</body>
+</html>

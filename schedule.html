@@ -139,6 +139,25 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 .tc6{background:#fef3c7;color:#92400e;border-color:#d97706;}
 .tc7{background:#f3e8ff;color:#6b21a8;border-color:#9333ea;}
 
+/* 週表示テーブル */
+.week-table-wrap{overflow-x:auto;}
+.week-table{width:100%;border-collapse:collapse;min-width:600px;}
+.week-table th{padding:8px 6px;text-align:center;font-size:11px;font-weight:700;font-family:var(--mono);border:1px solid var(--border);background:#f8f9ff;white-space:nowrap;}
+.week-table th.today-col{background:var(--blue-l);}
+.week-table th.sun-col{color:var(--red);}
+.week-table th.sat-col{color:var(--blue);}
+.week-table td{padding:4px;border:1px solid var(--border);vertical-align:top;min-width:90px;min-height:60px;}
+.week-table td.time-col{background:#f8f9ff;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);white-space:nowrap;padding:6px 8px;text-align:right;min-width:80px;}
+.week-table td.today-col{background:#eff6ff;}
+.week-table td.holiday-col{background:#fff5f5;}
+.week-slot{border-radius:5px;padding:4px 6px;margin-bottom:3px;border-left:3px solid;font-size:11px;line-height:1.5;cursor:pointer;}
+.week-slot:hover{opacity:.85;}
+.week-slot-teacher{font-weight:700;}
+.week-slot-students{font-size:10px;color:inherit;opacity:.8;margin-top:1px;}
+.week-slot-note{font-size:10px;font-style:italic;opacity:.7;}
+.week-empty{color:var(--hint);font-size:11px;text-align:center;padding:8px 0;}
+.week-event{font-size:10px;border-radius:3px;padding:2px 5px;margin-bottom:2px;border-left:2px solid;}
+
 @media(max-width:900px){
   .campus-grid{grid-template-columns:1fr;}
   .panels{grid-template-columns:1fr;}
@@ -167,15 +186,38 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
     <option value="">全員</option>
   </select>
   <div class="tsep"></div>
-  <button class="tb-btn tb-btn-outline" onclick="goToday()">今月</button>
+  <button class="tb-btn tb-btn-outline" onclick="goToday()">今月/今週</button>
+  <div class="tsep"></div>
+  <button class="tb-btn tb-btn-outline" id="view-month-btn" onclick="setView('month')" style="font-weight:600;">📅 月</button>
+  <button class="tb-btn tb-btn-outline" id="view-week-btn" onclick="setView('week')">📋 週</button>
+  <div class="tsep"></div>
   <button class="tb-btn tb-btn-amber" onclick="openBulkModal()">📋 一括登録</button>
 </div>
 
 <div class="main">
   <div class="legend" id="legend"></div>
 
+  <!-- 週表示 -->
+  <div id="week-view" style="display:none;margin-bottom:1rem;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:.75rem;">
+      <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
+      <div style="font-size:14px;font-weight:700;color:var(--text);font-family:var(--mono);min-width:220px;text-align:center;" id="week-label"></div>
+      <button class="nav-btn" onclick="changeWeek(1)">›</button>
+      <div style="margin-left:8px;display:flex;gap:4px;">
+        <button class="tb-btn tb-btn-primary" id="campus-honko-btn" onclick="setCampus('本校')" style="font-size:11px;padding:5px 12px;">🏫 本校</button>
+        <button class="tb-btn tb-btn-outline" id="campus-nanko-btn" onclick="setCampus('南校')" style="font-size:11px;padding:5px 12px;">🏫 南校</button>
+      </div>
+    </div>
+    <div class="week-table-wrap">
+      <table class="week-table" id="week-table">
+        <thead id="week-thead"></thead>
+        <tbody id="week-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- 2教室カレンダー -->
-  <div class="campus-grid">
+  <div id="month-view"><div class="campus-grid">
     <div class="campus-block campus-honko">
       <div class="campus-header">
         <span style="font-size:16px;">🏫</span>
@@ -200,7 +242,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
       </div>
       <div class="cal-grid" id="cal-nanko"></div>
     </div>
-  </div>
+  </div></div>
 
   <!-- パネル -->
   <div class="panels">
@@ -220,8 +262,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
         <div class="ff"><label>日付</label><input type="date" id="s-date"></div>
         <div class="ff"><label>開始時間</label>
           <select id="s-start">
-            <option>16:00</option><option>16:25</option><option>17:30</option>
-            <option>19:15</option><option>20:45</option><option>10:30</option><option>14:00</option>
+            <option>10:30（午前）</option><option>14:00（午後）</option><option>16:00（0コマ）</option><option>16:25（0コマ）</option><option>17:30（1コマ）</option>
+            <option>19:15（2コマ）</option><option>20:45（3コマ）</option>
           </select>
         </div>
       </div>
@@ -313,8 +355,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
       <div class="fr">
         <div class="ff"><label>開始時間</label>
           <select id="bw-start">
-            <option>16:00</option><option>16:25</option><option>17:30</option>
-            <option>19:15</option><option>20:45</option><option>10:30</option><option>14:00</option>
+            <option>10:30（午前）</option><option>14:00（午後）</option><option>16:00（0コマ）</option><option>16:25（0コマ）</option><option>17:30（1コマ）</option>
+            <option>19:15（2コマ）</option><option>20:45（3コマ）</option>
           </select>
         </div>
         <div class="ff"><label>コマ数</label>
@@ -689,7 +731,7 @@ function openEditModal(id){
     <div class="fr">
       <div class="ff"><label>日付</label><input type="date" id="m-date" value="${s.date}"></div>
       <div class="ff"><label>開始時間</label>
-        <select id="m-start">${['16:00','16:25','17:30','19:15','20:45','10:30','14:00'].map(t=>`<option${t===s.startTime?' selected':''}>${t}</option>`).join('')}</select>
+        <select id="m-start">${['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'].map(t=>`<option${t===s.startTime?' selected':''}>${t}</option>`).join('')}</select>
       </div>
     </div>
     <div class="fr">
@@ -811,6 +853,154 @@ async function execBulkMonth(){
     else alert('登録に失敗しました');
   }catch(e){alert('通信エラー');}
 }
+
+// ── 表示切替 ──
+let currentView='month';
+let currentWeekStart=null;
+let currentCampus='本校';
+
+function setView(view){
+  currentView=view;
+  document.getElementById('month-view').style.display=view==='month'?'block':'none';
+  document.getElementById('week-view').style.display=view==='week'?'block':'none';
+  document.getElementById('view-month-btn').style.fontWeight=view==='month'?'700':'400';
+  document.getElementById('view-week-btn').style.fontWeight=view==='week'?'700':'400';
+  document.getElementById('view-month-btn').className='tb-btn '+(view==='month'?'tb-btn-primary':'tb-btn-outline');
+  document.getElementById('view-week-btn').className='tb-btn '+(view==='week'?'tb-btn-primary':'tb-btn-outline');
+  if(view==='week'){
+    if(!currentWeekStart) currentWeekStart=getWeekStart(new Date());
+    renderWeek();
+  }
+}
+
+function getWeekStart(d){
+  const r=new Date(d);
+  r.setDate(r.getDate()-r.getDay());
+  r.setHours(0,0,0,0);
+  return r;
+}
+
+function changeWeek(d){
+  currentWeekStart=addDays(currentWeekStart,d*7);
+  renderWeek();
+}
+
+function setCampus(c){
+  currentCampus=c;
+  document.getElementById('campus-honko-btn').className='tb-btn '+(c==='本校'?'tb-btn-primary':'tb-btn-outline');
+  document.getElementById('campus-nanko-btn').className='tb-btn '+(c==='南校'?'tb-btn-primary':'tb-btn-outline');
+  document.getElementById('campus-honko-btn').style.fontSize='11px';
+  document.getElementById('campus-honko-btn').style.padding='5px 12px';
+  document.getElementById('campus-nanko-btn').style.fontSize='11px';
+  document.getElementById('campus-nanko-btn').style.padding='5px 12px';
+  renderWeek();
+}
+
+function renderWeek(){
+  if(!currentWeekStart) return;
+  const days=[];
+  for(let i=0;i<7;i++) days.push(addDays(currentWeekStart,i));
+  const today=toDateStr(new Date());
+  const dowNames=['日','月','火','水','木','金','土'];
+  const TIMES=[
+    {key:'10:30（午前）', label:'午前
+10:30'},
+    {key:'14:00（午後）', label:'午後
+14:00'},
+    {key:'16:00（0コマ）',label:'0コマ
+16:00'},
+    {key:'16:25（0コマ）',label:'0コマ
+16:25'},
+    {key:'17:30（1コマ）',label:'1コマ
+17:30'},
+    {key:'19:15（2コマ）',label:'2コマ
+19:15'},
+    {key:'20:45（3コマ）',label:'3コマ
+20:45'},
+  ];
+
+  // 週ラベル
+  const ws=days[0],we=days[6];
+  document.getElementById('week-label').textContent=
+    `${ws.getFullYear()}年${ws.getMonth()+1}月${ws.getDate()}日（${dowNames[ws.getDay()]}）〜 ${we.getMonth()+1}月${we.getDate()}日（${dowNames[we.getDay()]}）`;
+
+  // 月表示も同期
+  curYear=ws.getFullYear();curMonth=ws.getMonth();
+  updateMonthLabel();
+
+  // thead
+  const thead=document.getElementById('week-thead');
+  const theadRow=days.map((d,i)=>{
+    const ds=toDateStr(d);
+    const isToday=ds===today;
+    const isHoliday=HOLIDAYS[ds];
+    let cls='';
+    if(isToday) cls='today-col';
+    else if(isHoliday||i===0) cls='sun-col';
+    else if(i===6) cls='sat-col';
+    return `<th class="${cls}">${d.getMonth()+1}/${d.getDate()}<br>${dowNames[i]}</th>`;
+  }).join('');
+  thead.innerHTML=`<tr><th style="min-width:80px;">時間帯</th>${theadRow}</tr>`;
+
+  // tbody
+  const tbody=document.getElementById('week-tbody');
+  tbody.innerHTML=TIMES.map(time=>{
+    const cells=days.map((d,i)=>{
+      const ds=toDateStr(d);
+      const isToday=ds===today;
+      const isHoliday=HOLIDAYS[ds];
+      let cellCls='';
+      if(isToday) cellCls='today-col';
+      else if(isHoliday||i===0) cellCls='holiday-col';
+
+      // この日・この時間帯・このキャンパスのシフト
+      const dayShifts=shifts.filter(s=>
+        s.date===ds&&
+        s.startTime===time.key&&
+        (s.campus||'本校')===currentCampus
+      );
+
+      // この日の行事
+      const dayEvents=i===0?events.filter(e=>ds>=e.startDate&&ds<=e.endDate):[];
+
+      const eventHtml=dayEvents.map(e=>{
+        const cls=e.type==='school'?'chip-school':e.type==='holiday'?'chip-holiday':'chip-event';
+        return `<div class="week-event ${cls}">${e.content}</div>`;
+      }).join('');
+
+      const shiftHtml=dayShifts.length===0
+        ?'<div class="week-empty">—</div>'
+        :dayShifts.map(s=>{
+          const tc=teacherColorMap[s.teacher]||'tc0';
+          const isMine=s.teacher===currentUser;
+          const canEdit=isAdmin||isMine;
+          const onclick=canEdit?`onclick="openEditModal('${s.id}')"`:'';
+          return `<div class="week-slot ${tc}" ${onclick} title="${s.teacher}${s.students?'
+担当:'+s.students:''}${s.note?'
+'+s.note:''}">
+            <div class="week-slot-teacher">${s.teacher}</div>
+            ${s.students?`<div class="week-slot-students">👤 ${s.students}</div>`:''}
+            ${s.note?`<div class="week-slot-note">📌 ${s.note}</div>`:''}
+          </div>`;
+        }).join('');
+
+      return `<td class="${cellCls}">${i===0?eventHtml:''}${shiftHtml}</td>`;
+    }).join('');
+
+    const timeLabel=time.label.replace('
+','<br>');
+    return `<tr><td class="time-col">${timeLabel}</td>${cells}</tr>`;
+  }).join('');
+}
+
+// goTodayも週表示に対応
+const _origGoToday=goToday;
+goToday=function(){
+  curYear=new Date().getFullYear();curMonth=new Date().getMonth();
+  currentWeekStart=getWeekStart(new Date());
+  renderAll();
+  if(currentView==='week') renderWeek();
+};
 
 // モーダル外クリックで閉じる
 document.getElementById('edit-modal').addEventListener('click',e=>{if(e.target===document.getElementById('edit-modal'))closeModal();});
