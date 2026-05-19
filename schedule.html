@@ -502,14 +502,21 @@ function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
 async function init(){
   const pw=sessionStorage.getItem('yck_pw');
   if(!pw){window.location.href='portal.html';return;}
-  const[mRes,sRes,eRes,nRes,aRes]=await Promise.all([
-    api('getMaster'),api('getShifts'),api('getEvents'),api('getNotices'),api('getAbsences')
-  ]);
-  master=mRes.master||{students:[],teachers:[],subjects:[]};
+  let mRes,sRes,eRes,nRes,aRes;
+  try{
+    [mRes,sRes,eRes,nRes,aRes]=await Promise.all([
+      api('getMaster'),api('getShifts'),api('getEvents'),api('getNotices'),api('getAbsences')
+    ]);
+  }catch(e){
+    alert('データ取得エラー：'+e.message+'\nGASのURLを確認してください。');
+    return;
+  }
+  master=(mRes&&mRes.master)||{students:[],teachers:[],subjects:[]};
   teachers=master.teachers||[];
-  shifts=sRes.shifts||[];
-  events=eRes.events||[];
-  absences=aRes.absences||[];
+  shifts=(sRes&&sRes.shifts)||[];
+  events=(eRes&&eRes.events)||[];
+  absences=(aRes&&aRes.absences)||[];
+  console.log('取得結果 shifts:',shifts.length,'events:',events.length);
   currentUser=sessionStorage.getItem('yck_user')||'';
   isAdmin=!teachers.includes(currentUser)||currentUser==='';
   document.getElementById('header-user').textContent=isAdmin?'👑 塾長':`👤 ${currentUser}`;
