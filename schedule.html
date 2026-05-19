@@ -62,23 +62,23 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 .cal-dow.sun{color:var(--red);}
 .cal-dow.sat{color:var(--blue);}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);}
-.cal-cell{min-height:100px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:2px;position:relative;cursor:pointer;}
+.cal-cell{min-height:52px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:2px;position:relative;cursor:pointer;}
 .cal-cell:nth-child(7n){border-right:none;}
 .cal-cell.other-month{background:#f8f9ff;opacity:.6;}
 .cal-cell.today{background:linear-gradient(180deg,#eff6ff,#fff);}
-.cell-date{font-size:10px;font-weight:600;color:var(--text);width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);margin-bottom:2px;}
+.cell-date{font-size:9px;font-weight:600;color:var(--text);width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);margin-bottom:1px;}
 .cell-date.sun{color:var(--red);}
 .cell-date.sat{color:var(--blue);}
 .today .cell-date{background:var(--blue);color:#fff;border-radius:50%;}
-.chip{font-size:9px;border-radius:3px;padding:1px 3px;margin-bottom:1px;cursor:pointer;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;border-left:2px solid;}
+.chip{font-size:8px;border-radius:2px;padding:1px 2px;margin-bottom:1px;cursor:pointer;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;border-left:2px solid;}
 .chip-event{background:var(--amber-l);color:#92400e;border-color:var(--amber);}
 .chip-school{background:var(--red-l);color:#7f1d1d;border-color:var(--red);}
 .chip-holiday{background:#f3f4f6;color:var(--hint);border-color:#9ca3af;}
 .chip-shift{border-left:2px solid;}
-.campus-divider{font-size:8px;font-weight:700;letter-spacing:.05em;color:var(--hint);padding:1px 2px;margin-top:2px;margin-bottom:1px;display:flex;align-items:center;gap:2px;}
+.campus-divider{font-size:7px;font-weight:700;color:var(--hint);padding:0 1px;margin-top:1px;margin-bottom:0;}
 .campus-divider-honko{color:#1e40af;}
 .campus-divider-nanko{color:#0f766e;}
-.campus-section{min-height:24px;}
+.campus-section{min-height:14px;}
 .chip-mine{outline:1.5px solid rgba(37,99,235,.6);outline-offset:0px;}
 
 /* 週表示 */
@@ -184,7 +184,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 
 /* スマホ最適化 */
 @media(max-width:600px){
-  .cal-cell{min-height:80px;}
+  .cal-cell{min-height:44px;}
   .chip{font-size:8px;padding:1px 2px;}
   .fr{grid-template-columns:1fr;}
   .ff input[type=date]{max-width:100%;}
@@ -485,6 +485,17 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
   </div>
 </div>
 
+<!-- 日付詳細ポップアップ -->
+<div class="day-popup-bg" id="day-popup-bg" style="display:none;" onclick="closeDayPopup()"></div>
+<div class="day-popup" id="day-popup" style="display:none;">
+  <div class="day-popup-title">
+    <span id="day-popup-date"></span>
+    <button class="day-popup-close" onclick="closeDayPopup()">×</button>
+  </div>
+  <div id="day-popup-content"></div>
+  <button class="day-popup-add" onclick="closeDayPopup();openShiftModal()">＋ この日にシフトを登録</button>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -706,9 +717,71 @@ function renderCal(campus,gridId){
 
 function onCellClick(d){
   if(!d)return;
+  // 日付フォームに設定
   document.getElementById('s-date').value=d;
   document.getElementById('e-start').value=d;
   document.getElementById('e-end').value=d;
+  // ポップアップ表示
+  showDayPopup(d);
+}
+
+function showDayPopup(d){
+  const dowNames=['日','月','火','水','木','金','土'];
+  const dt=new Date(d+'T00:00:00');
+  const label=d+' ('+dowNames[dt.getDay()]+')';
+  document.getElementById('day-popup-date').textContent=label;
+
+  const dayShiftsHonko=shifts.filter(s=>s.date===d&&(s.campus||'本校')==='本校');
+  const dayShiftsNanko=shifts.filter(s=>s.date===d&&s.campus==='南校');
+  const dayEvents=events.filter(e=>d>=e.startDate&&d<=e.endDate);
+
+  let html='';
+
+  // 行事
+  if(dayEvents.length){
+    dayEvents.forEach(e=>{
+      html+='<div style="padding:6px 10px;background:var(--amber-l);border-radius:var(--r);margin-bottom:6px;font-size:12px;color:#92400e;">📅 '+e.content+'</div>';
+    });
+  }
+
+  // 本校シフト
+  html+='<div class="day-popup-campus day-popup-honko">🔵 山口本校</div>';
+  if(dayShiftsHonko.length){
+    dayShiftsHonko.forEach(s=>{
+      const canEdit=isAdmin||s.teacher===currentUser;
+      html+='<div class="day-popup-shift">';
+      if(canEdit) html+='<button class="day-popup-edit" data-shift-id="'+s.id+'">編集</button>';
+      html+='<div class="day-popup-shift-name">'+s.teacher+'</div>';
+      html+='<div class="day-popup-shift-detail">'+s.startTime+' / '+s.slots+'コマ'+(s.format?' / '+s.format:'')+(s.students?' / '+s.students:'')+'</div>';
+      html+='</div>';
+    });
+  }else{
+    html+='<div class="day-popup-empty">シフトなし</div>';
+  }
+
+  // 南校シフト
+  html+='<div class="day-popup-campus day-popup-nanko">🟢 山口南校</div>';
+  if(dayShiftsNanko.length){
+    dayShiftsNanko.forEach(s=>{
+      const canEdit=isAdmin||s.teacher===currentUser;
+      html+='<div class="day-popup-shift">';
+      if(canEdit) html+='<button class="day-popup-edit" data-shift-id="'+s.id+'">編集</button>';
+      html+='<div class="day-popup-shift-name">'+s.teacher+'</div>';
+      html+='<div class="day-popup-shift-detail">'+s.startTime+' / '+s.slots+'コマ'+(s.format?' / '+s.format:'')+(s.students?' / '+s.students:'')+'</div>';
+      html+='</div>';
+    });
+  }else{
+    html+='<div class="day-popup-empty">シフトなし</div>';
+  }
+
+  document.getElementById('day-popup-content').innerHTML=html;
+  document.getElementById('day-popup-bg').style.display='block';
+  document.getElementById('day-popup').style.display='block';
+}
+
+function closeDayPopup(){
+  document.getElementById('day-popup-bg').style.display='none';
+  document.getElementById('day-popup').style.display='none';
 }
 
 // ── モーダル開閉 ──
