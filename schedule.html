@@ -548,8 +548,6 @@ async function init(){
 
     // キャッシュに保存
     sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences}));
-    // デバッグ：取得件数を表示
-    toast('取得: shifts='+shifts.length+' events='+events.length, 4000);
 
     isAdmin=!teachers.includes(currentUser)||currentUser==='';
     document.getElementById('header-user').textContent=isAdmin?'👑 塾長':'👤 '+currentUser;
