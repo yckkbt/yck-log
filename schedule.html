@@ -113,13 +113,18 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 /* フォーム */
 .ff{margin-bottom:10px;}
 .ff label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;font-weight:500;}
-.ff input,.ff select,.ff textarea{
+.ff input:not([type=checkbox]):not([type=radio]),.ff select,.ff textarea{
   width:100%;padding:8px 10px;border:1.5px solid var(--border-s);border-radius:var(--r);
   font-size:13px;font-family:var(--sans);background:#f8f9ff;color:var(--text);
   -webkit-appearance:none;appearance:none;
 }
-.ff input:focus,.ff select:focus,.ff textarea:focus{outline:none;border-color:var(--blue);}
+.ff input:not([type=checkbox]):not([type=radio]):focus,.ff select:focus,.ff textarea:focus{outline:none;border-color:var(--blue);}
 .ff input[type=date]{max-width:160px;}
+.ff input[type=checkbox],.ff input[type=radio]{
+  width:15px;height:15px;accent-color:var(--blue);
+  -webkit-appearance:auto;appearance:auto;
+  padding:0;border:none;background:none;
+}
 .ff textarea{min-height:52px;resize:vertical;}
 .fr{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .save-btn{width:100%;padding:10px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;margin-top:4px;}
