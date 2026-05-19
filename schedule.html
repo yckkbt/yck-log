@@ -491,7 +491,12 @@ let absences=[];
 
 function toast(msg,dur=2500){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 async function api(action,body={}){const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,...body})});return res.json();}
-function toDateStr(d){return d.toISOString().slice(0,10);}
+function toDateStr(d){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
 function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
 
 async function init(){
@@ -710,8 +715,8 @@ async function saveShift(){
   try{
     const res=await api('addShift',{shift});
     if(res.ok){shifts.push(shift);toast('✅ シフトを保存しました');closeShiftModal();renderAll();}
-    else alert('保存に失敗しました');
-  }catch(e){alert('通信エラー');}
+    else alert('保存に失敗しました：'+JSON.stringify(res));
+  }catch(e){alert('通信エラー：'+e.message);}
   btn.innerHTML='シフトを保存';btn.disabled=false;
 }
 
@@ -850,8 +855,12 @@ async function execBulkWeekly(){
   const startTime=document.getElementById('bw-start').value;
   const slots=document.getElementById('bw-slots').value;
   const format=document.getElementById('bw-format').value;
-  const from=new Date(document.getElementById('bw-from').value);
-  const to=new Date(document.getElementById('bw-to').value);
+  const fromVal=document.getElementById('bw-from').value;
+  const toVal=document.getElementById('bw-to').value;
+  const [fy,fm,fd]=fromVal.split('-').map(Number);
+  const [ty,tm,td]=toVal.split('-').map(Number);
+  const from=new Date(fy,fm-1,fd);
+  const to=new Date(ty,tm-1,td);
   const students=document.getElementById('bw-students').value.trim();
   const note=document.getElementById('bw-note').value.trim();
   if(!teacher||!dows.length){toast('⚠️ 講師・曜日を入力してください');return;}
@@ -868,8 +877,8 @@ async function execBulkWeekly(){
   if(!confirm(`${newShifts.length}件登録します。よろしいですか？`))return;
   try{
     const res=await api('bulkAddShifts',{shifts:newShifts});
-    if(res.ok){shifts.push(...newShifts);toast(`✅ ${newShifts.length}件を一括登録しました`);closeBulkModal();renderAll();}
-    else alert('登録に失敗しました');
+    if(res.ok){shifts.push(...newShifts);toast('✅ '+newShifts.length+'件を一括登録しました');closeBulkModal();renderAll();}
+    else alert('登録に失敗しました：'+JSON.stringify(res));
   }catch(e){alert('通信エラー');}
 }
 
