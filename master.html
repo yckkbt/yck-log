@@ -295,7 +295,7 @@ async function doAuth(){
       sessionStorage.setItem('yck_pw',pw);
       document.getElementById('auth-screen').style.display='none';
       document.getElementById('app').style.display='block';
-      const sp=getCurrentSalaryPeriod();salaryBaseYear=sp.year;salaryBaseMonth=sp.month-1;
+      const sp=getCurrentSalaryPeriod();salaryBaseYear=sp.year;salaryBaseMonth=sp.month;
       await loadMaster();
     }else{
       document.getElementById('auth-err').style.display='block';
@@ -308,15 +308,27 @@ async function doAuth(){
 let salaryShifts=[], salaryBaseYear=new Date().getFullYear(), salaryBaseMonth=new Date().getMonth();
 
 function getCurrentSalaryPeriod(){
-  const today=new Date();const d=today.getDate();
-  let year=today.getFullYear(),month=today.getMonth()+1;
-  if(d>=26)month+=1;if(month>12){month=1;year++;}
-  return{year,month};
+  // 給与月：26日以降は翌月分（例：5/26〜6/25は6月分）
+  const today=new Date();
+  const d=today.getDate();
+  let year=today.getFullYear();
+  let payMonth=today.getMonth()+1;
+  if(d>=26){payMonth+=1;}
+  if(payMonth>12){payMonth=1;year++;}
+  // salaryBaseMonth = payMonth-1 (0-indexed) で返す
+  return{year,month:payMonth-1};
 }
-function getSalaryPeriod(baseYear,baseMonth){
-  const from=new Date(baseYear,baseMonth-1,26);
-  const to=new Date(baseYear,baseMonth,25);
-  return{fromStr:from.toISOString().slice(0,10),toStr:to.toISOString().slice(0,10)};
+function localDateStr(d){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+function getSalaryPeriod(payYear,payMonth){
+  // payMonth月分 = (payMonth-1)月26日 〜 payMonth月25日
+  const from=new Date(payYear,payMonth-2,26);
+  const to=new Date(payYear,payMonth-1,25);
+  return{fromStr:localDateStr(from),toStr:localDateStr(to)};
 }
 function goSalaryToday(){const p=getCurrentSalaryPeriod();salaryBaseYear=p.year;salaryBaseMonth=p.month-1;renderSalary();}
 function changeSalaryMonth(d){salaryBaseMonth+=d;if(salaryBaseMonth>11){salaryBaseMonth=0;salaryBaseYear++;}else if(salaryBaseMonth<0){salaryBaseMonth=11;salaryBaseYear--;}renderSalary();}
@@ -333,9 +345,11 @@ async function loadSalaryData(){
 }
 
 function renderSalary(){
-  const month=salaryBaseMonth+1;
-  const period=getSalaryPeriod(salaryBaseYear,month);
-  document.getElementById('salary-period-label').textContent=`${period.fromStr} 〜 ${period.toStr}（${salaryBaseYear}年${month}月分）`;
+  // salaryBaseMonth(0-indexed) → payMonth(1-indexed)
+  const payMonth=salaryBaseMonth+1;
+  const payYear=salaryBaseYear;
+  const period=getSalaryPeriod(payYear,payMonth);
+  document.getElementById('salary-period-label').textContent=period.fromStr+' 〜 '+period.toStr+'（'+payYear+'年'+payMonth+'月分）';
   const fl=salaryShifts.filter(s=>s.date>=period.fromStr&&s.date<=period.toStr)
     .sort((a,b)=>a.date.localeCompare(b.date)||a.teacher.localeCompare(b.teacher));
   if(!fl.length){
@@ -556,7 +570,7 @@ async function dedupMaster(){
     const res=await api('dedupMaster');
     if(res.ok){
       const msg=res.removed>0?`✅ ${res.removed}件の重複を削除しました`:'✅ 重複はありませんでした';
-      const sp=getCurrentSalaryPeriod();salaryBaseYear=sp.year;salaryBaseMonth=sp.month-1;
+      const sp=getCurrentSalaryPeriod();salaryBaseYear=sp.year;salaryBaseMonth=sp.month;
       await loadMaster();toast(msg,3000);
     }else alert('削除に失敗しました');
   }catch(e){alert('通信エラーが発生しました');}
