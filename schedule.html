@@ -82,11 +82,14 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 .chip-mine{outline:1.5px solid rgba(37,99,235,.6);outline-offset:0px;}
 
 /* 週表示 */
-.week-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.week-table{width:100%;border-collapse:collapse;min-width:500px;}
-.week-table th{padding:6px 4px;text-align:center;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid var(--border);background:#f8f9ff;white-space:nowrap;}
+.week-table-wrap{overflow-x:auto;overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 180px);}
+.week-table{width:100%;border-collapse:separate;border-spacing:0;min-width:500px;}
+.week-table th{padding:6px 4px;text-align:center;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid var(--border);background:#f8f9ff;white-space:nowrap;
+  position:sticky;top:0;z-index:3;}
+.week-table th:first-child{position:sticky;top:0;left:0;z-index:4;background:#f0f4ff;}
 .week-table td{padding:3px;border:1px solid var(--border);vertical-align:top;min-width:70px;}
-.week-table td.time-col{background:#f8f9ff;font-size:10px;font-weight:700;color:var(--muted);font-family:var(--mono);white-space:nowrap;padding:4px 6px;text-align:right;min-width:60px;}
+.week-table td.time-col{background:#f8f9ff;font-size:10px;font-weight:700;color:var(--muted);font-family:var(--mono);white-space:nowrap;padding:4px 6px;text-align:right;min-width:60px;
+  position:sticky;left:0;z-index:2;}
 .week-table td.today-col{background:#eff6ff;}
 .week-table td.holiday-col{background:#fff5f5;}
 .week-slot{border-radius:4px;padding:3px 5px;margin-bottom:2px;border-left:3px solid;font-size:10px;line-height:1.4;cursor:pointer;}
