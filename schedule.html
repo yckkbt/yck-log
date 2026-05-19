@@ -62,7 +62,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 .cal-dow.sun{color:var(--red);}
 .cal-dow.sat{color:var(--blue);}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);}
-.cal-cell{min-height:70px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:2px;position:relative;cursor:pointer;}
+.cal-cell{min-height:100px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:2px;position:relative;cursor:pointer;}
 .cal-cell:nth-child(7n){border-right:none;}
 .cal-cell.other-month{background:#f8f9ff;opacity:.6;}
 .cal-cell.today{background:linear-gradient(180deg,#eff6ff,#fff);}
@@ -75,6 +75,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 .chip-school{background:var(--red-l);color:#7f1d1d;border-color:var(--red);}
 .chip-holiday{background:#f3f4f6;color:var(--hint);border-color:#9ca3af;}
 .chip-shift{border-left:2px solid;}
+.campus-divider{font-size:8px;font-weight:700;letter-spacing:.05em;color:var(--hint);padding:1px 2px;margin-top:2px;margin-bottom:1px;display:flex;align-items:center;gap:2px;}
+.campus-divider-honko{color:#1e40af;}
+.campus-divider-nanko{color:#0f766e;}
+.campus-section{min-height:24px;}
 .chip-mine{outline:1.5px solid rgba(37,99,235,.6);outline-offset:0px;}
 
 /* 週表示 */
@@ -172,7 +176,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 
 /* スマホ最適化 */
 @media(max-width:600px){
-  .cal-cell{min-height:55px;}
+  .cal-cell{min-height:80px;}
   .chip{font-size:8px;padding:1px 2px;}
   .fr{grid-template-columns:1fr;}
   .ff input[type=date]{max-width:100%;}
@@ -212,27 +216,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 <div class="main">
   <div class="legend" id="legend"></div>
 
-  <!-- 月表示（縦並びカレンダー） -->
+  <!-- 月表示（1カレンダー・上下本校南校） -->
   <div id="month-view">
-    <!-- 本校カレンダー -->
     <div class="cal-container">
-      <div class="cal-campus-label cal-campus-honko">🏫 山口本校</div>
       <div class="cal-dow-row">
         <div class="cal-dow sun">日</div><div class="cal-dow">月</div><div class="cal-dow">火</div>
         <div class="cal-dow">水</div><div class="cal-dow">木</div><div class="cal-dow">金</div>
         <div class="cal-dow sat">土</div>
       </div>
-      <div class="cal-grid" id="cal-honko"></div>
-    </div>
-    <!-- 南校カレンダー -->
-    <div class="cal-container">
-      <div class="cal-campus-label cal-campus-nanko">🏫 山口南校</div>
-      <div class="cal-dow-row">
-        <div class="cal-dow sun">日</div><div class="cal-dow">月</div><div class="cal-dow">火</div>
-        <div class="cal-dow">水</div><div class="cal-dow">木</div><div class="cal-dow">金</div>
-        <div class="cal-dow sat">土</div>
-      </div>
-      <div class="cal-grid" id="cal-nanko"></div>
+      <div class="cal-grid" id="cal-unified"></div>
     </div>
 
     <!-- 今月のシフト一覧 -->
@@ -561,14 +553,63 @@ function rebuildAbsenceSelects(){
 
 function renderAll(){
   updateMonthLabel();
-  renderCal('本校','cal-honko');
-  renderCal('南校','cal-nanko');
+  renderCalUnified();
   renderShiftList();
   renderEventList();
 }
 function updateMonthLabel(){document.getElementById('month-label').textContent=`${curYear}年${curMonth+1}月`;}
 function changeMonth(d){curMonth+=d;if(curMonth>11){curMonth=0;curYear++;}else if(curMonth<0){curMonth=11;curYear--;}renderAll();}
 function goToday(){curYear=new Date().getFullYear();curMonth=new Date().getMonth();currentWeekStart=getWeekStart(new Date());renderAll();if(currentView==='week')renderWeek();}
+
+function renderCalUnified(){
+  const grid=document.getElementById('cal-unified');
+  if(!grid)return;
+  const filter=document.getElementById('teacher-filter').value;
+  const today=toDateStr(new Date());
+  const firstDay=new Date(curYear,curMonth,1).getDay();
+  const daysInMonth=new Date(curYear,curMonth+1,0).getDate();
+  const prevDays=new Date(curYear,curMonth,0).getDate();
+  let cells=[];
+  for(let i=firstDay-1;i>=0;i--) cells.push({date:null,day:prevDays-i,other:true});
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${curYear}-${String(curMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells.push({date:ds,day:d,other:false});
+  }
+  const rem=(7-cells.length%7)%7;
+  for(let i=1;i<=rem;i++) cells.push({date:null,day:i,other:true});
+
+  grid.innerHTML=cells.map((c,idx)=>{
+    const dow=idx%7;
+    const isSun=dow===0,isSat=dow===6;
+    const isHoliday=c.date&&HOLIDAYS[c.date];
+    const isToday=c.date===today;
+    let dc='cell-date';if(isSun||isHoliday)dc+=' sun';else if(isSat)dc+=' sat';
+    let cc='cal-cell';if(c.other)cc+=' other-month';if(isToday)cc+=' today';
+
+    // 行事（本校・南校共通）
+    const dayEvents=c.date?events.filter(e=>c.date>=e.startDate&&c.date<=e.endDate):[];
+    const evChips=dayEvents.map(e=>`<span class="chip ${e.type==='school'?'chip-school':e.type==='holiday'?'chip-holiday':'chip-event'}">${e.content}</span>`).join('');
+
+    // 本校シフト
+    const honkoShifts=c.date?shifts.filter(s=>s.date===c.date&&(s.campus||'本校')==='本校'&&(!filter||s.teacher===filter)):[];
+    // 南校シフト
+    const nankoShifts=c.date?shifts.filter(s=>s.date===c.date&&s.campus==='南校'&&(!filter||s.teacher===filter)):[];
+
+    const makeChips=(arr)=>arr.map(s=>{
+      const tc=teacherColorMap[s.teacher]||'tc0';
+      const canEdit=isAdmin||s.teacher===currentUser;
+      const onclick=canEdit?'onclick="openEditModal('+JSON.stringify(s.id)+')"':'';
+      const lbl=s.teacher+(s.startTime?' '+s.startTime.split('（')[0]:'');
+      const tip=lbl+(s.students?' '+s.students:'');
+      const mine=s.teacher===currentUser?' chip-mine':'';
+      return '<span class="chip chip-shift '+tc+mine+'" '+onclick+' title="'+tip+'">'+lbl+'</span>';
+    }).join('');
+    const honkoSection='<div class="campus-divider campus-divider-honko">🔵本</div><div class="campus-section">'+makeChips(honkoShifts)+'</div>';
+    const nankoSection='<div class="campus-divider campus-divider-nanko">🟢南</div><div class="campus-section">'+makeChips(nankoShifts)+'</div>';
+    const dateStr=c.date||'';
+    return '<div class="'+cc+'" onclick="onCellClick(\''+dateStr+'\')"><div class="'+dc+'">'+c.day+'</div>'+evChips+honkoSection+nankoSection+'</div>';
+  }).join('');
+}
 
 function renderCal(campus,gridId){
   const grid=document.getElementById(gridId);
