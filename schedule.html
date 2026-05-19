@@ -508,34 +508,61 @@ function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
 async function init(){
   const pw=sessionStorage.getItem('yck_pw');
   if(!pw){window.location.href='portal.html';return;}
-  let mRes,sRes,eRes,nRes,aRes;
+
+  currentUser=sessionStorage.getItem('yck_user')||'';
+
+  // キャッシュがあれば即表示
+  const cached=sessionStorage.getItem('yck_schedule_cache');
+  if(cached){
+    try{
+      const c=JSON.parse(cached);
+      master=c.master||{students:[],teachers:[],subjects:[]};
+      teachers=master.teachers||[];
+      shifts=c.shifts||[];
+      events=c.events||[];
+      absences=c.absences||[];
+      isAdmin=!teachers.includes(currentUser)||currentUser==='';
+      document.getElementById('header-user').textContent=isAdmin?'👑 塾長':'👤 '+currentUser;
+      if(!isAdmin) document.getElementById('event-btn').style.display='none';
+      teachers.forEach((t,i)=>teacherColorMap[t]=TEACHER_COLORS[i%TEACHER_COLORS.length]);
+      currentWeekStart=getWeekStart(new Date());
+      rebuildSelects();
+      rebuildAbsenceSelects();
+      setDefaultDates();
+      document.getElementById('loading-overlay').style.display='none';
+      document.getElementById('main-content').style.display='block';
+      renderAll();
+    }catch(e){}
+  }
+
+  // バックグラウンドでGASから最新データを取得
   try{
-    [mRes,sRes,eRes,nRes,aRes]=await Promise.all([
+    const[mRes,sRes,eRes,nRes,aRes]=await Promise.all([
       api('getMaster'),api('getShifts'),api('getEvents'),api('getNotices'),api('getAbsences')
     ]);
+    master=(mRes&&mRes.master)||{students:[],teachers:[],subjects:[]};
+    teachers=master.teachers||[];
+    shifts=(sRes&&sRes.shifts)||[];
+    events=(eRes&&eRes.events)||[];
+    absences=(aRes&&aRes.absences)||[];
+
+    // キャッシュに保存
+    sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences}));
+
+    isAdmin=!teachers.includes(currentUser)||currentUser==='';
+    document.getElementById('header-user').textContent=isAdmin?'👑 塾長':'👤 '+currentUser;
+    if(!isAdmin) document.getElementById('event-btn').style.display='none';
+    teachers.forEach((t,i)=>teacherColorMap[t]=TEACHER_COLORS[i%TEACHER_COLORS.length]);
+    currentWeekStart=currentWeekStart||getWeekStart(new Date());
+    rebuildSelects();
+    rebuildAbsenceSelects();
+    setDefaultDates();
+    document.getElementById('loading-overlay').style.display='none';
+    document.getElementById('main-content').style.display='block';
+    renderAll();
   }catch(e){
-    alert('データ取得エラー：'+e.message+'\nGASのURLを確認してください。');
-    return;
+    if(!cached) alert('データ取得エラー：'+e.message);
   }
-  master=(mRes&&mRes.master)||{students:[],teachers:[],subjects:[]};
-  teachers=master.teachers||[];
-  shifts=(sRes&&sRes.shifts)||[];
-  events=(eRes&&eRes.events)||[];
-  absences=(aRes&&aRes.absences)||[];
-  console.log('取得結果 shifts:',shifts.length,'events:',events.length);
-  currentUser=sessionStorage.getItem('yck_user')||'';
-  isAdmin=!teachers.includes(currentUser)||currentUser==='';
-  document.getElementById('header-user').textContent=isAdmin?'👑 塾長':`👤 ${currentUser}`;
-  if(!isAdmin) document.getElementById('event-btn').style.display='none';
-  teachers.forEach((t,i)=>teacherColorMap[t]=TEACHER_COLORS[i%TEACHER_COLORS.length]);
-  currentWeekStart=getWeekStart(new Date());
-  rebuildSelects();
-  rebuildAbsenceSelects();
-  setDefaultDates();
-  // 先にコンテンツを表示してからレンダリング
-  document.getElementById('loading-overlay').style.display='none';
-  document.getElementById('main-content').style.display='block';
-  renderAll();
 }
 
 function setDefaultDates(){
@@ -732,7 +759,11 @@ async function saveShift(){
   btn.innerHTML='<span class="loading"></span>保存中...';btn.disabled=true;
   try{
     const res=await api('addShift',{shift});
-    if(res.ok){shifts.push(shift);toast('✅ シフトを保存しました');closeShiftModal();renderAll();}
+    if(res.ok){
+      shifts.push(shift);
+      sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences}));
+      toast('✅ シフトを保存しました');closeShiftModal();renderAll();
+    }
     else alert('保存に失敗しました：'+JSON.stringify(res));
   }catch(e){alert('通信エラー：'+e.message);}
   btn.innerHTML='シフトを保存';btn.disabled=false;
@@ -856,7 +887,11 @@ async function saveEditShift(){
   btn.textContent='保存中...';btn.disabled=true;
   try{
     const res=await api('updateShift',{shift:updated});
-    if(res.ok){shifts[idx]=updated;toast('✅ 更新しました');closeModal();renderAll();}
+    if(res.ok){
+      shifts[idx]=updated;
+      sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences}));
+      toast('✅ 更新しました');closeModal();renderAll();
+    }
     else alert('更新に失敗しました');
   }catch(e){alert('通信エラー');}
   btn.textContent='保存';btn.disabled=false;
@@ -895,7 +930,11 @@ async function execBulkWeekly(){
   if(!confirm(`${newShifts.length}件登録します。よろしいですか？`))return;
   try{
     const res=await api('bulkAddShifts',{shifts:newShifts});
-    if(res.ok){shifts.push(...newShifts);toast('✅ '+newShifts.length+'件を一括登録しました');closeBulkModal();renderAll();}
+    if(res.ok){
+      shifts.push(...newShifts);
+      sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences}));
+      toast('✅ '+newShifts.length+'件を一括登録しました');closeBulkModal();renderAll();
+    }
     else alert('登録に失敗しました：'+JSON.stringify(res));
   }catch(e){alert('通信エラー');}
 }
