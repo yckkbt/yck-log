@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>YCK 月次スケジュール</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
 <style>
@@ -17,113 +17,144 @@
   --bg:#f0f2f8;--surface:#fff;--border:#dde2f0;--border-s:#b8c0d8;
   --text:#1a1c2e;--muted:#5a6080;--hint:#9098b8;
   --sans:'Noto Sans JP',sans-serif;--mono:'DM Mono',monospace;
-  --r:8px;--rl:14px;
+  --r:8px;--rl:12px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;}
 
-.header{background:linear-gradient(135deg,var(--navy) 0%,#1e40af 60%,var(--purple) 100%);padding:0 1.5rem;display:flex;align-items:center;gap:1rem;height:56px;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(26,42,108,.25);}
-.back-btn{color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;}
-.back-btn:hover{color:#fff;}
-.header-brand{font-family:var(--mono);font-size:13px;font-weight:500;color:#fff;}
-.header-user{margin-left:auto;font-size:12px;color:rgba(255,255,255,.7);font-family:var(--mono);}
+/* ヘッダー */
+.header{background:linear-gradient(135deg,var(--navy) 0%,#1e40af 60%,var(--purple) 100%);padding:0 1rem;display:flex;align-items:center;gap:.75rem;height:52px;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(26,42,108,.25);}
+.back-btn{color:rgba(255,255,255,.7);text-decoration:none;font-size:12px;white-space:nowrap;}
+.header-brand{font-family:var(--mono);font-size:12px;font-weight:500;color:#fff;white-space:nowrap;}
+.header-user{margin-left:auto;font-size:11px;color:rgba(255,255,255,.7);font-family:var(--mono);white-space:nowrap;}
 
-.toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:.6rem 1rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:56px;z-index:100;box-shadow:0 1px 4px rgba(26,42,108,.06);}
-.month-nav{display:flex;align-items:center;gap:6px;}
-.nav-btn{width:30px;height:30px;border:1.5px solid var(--border-s);background:#fff;border-radius:var(--r);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--muted);}
+/* ツールバー */
+.toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:.5rem .75rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap;position:sticky;top:52px;z-index:100;box-shadow:0 1px 4px rgba(26,42,108,.06);}
+.month-nav{display:flex;align-items:center;gap:4px;}
+.nav-btn{width:28px;height:28px;border:1.5px solid var(--border-s);background:#fff;border-radius:var(--r);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0;}
 .nav-btn:hover{border-color:var(--blue);color:var(--blue);}
-.month-label{font-size:15px;font-weight:700;color:var(--text);min-width:90px;text-align:center;font-family:var(--mono);}
-.tsep{width:1px;height:24px;background:var(--border);}
-.filter-label{font-size:12px;color:var(--muted);font-weight:500;white-space:nowrap;}
-.tb-select{padding:6px 8px;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:12px;background:#f8f9ff;color:var(--text);}
-.tb-select:focus{outline:none;border-color:var(--blue);}
-.tb-btn{padding:6px 14px;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;white-space:nowrap;}
+.month-label{font-size:14px;font-weight:700;color:var(--text);min-width:80px;text-align:center;font-family:var(--mono);}
+.tsep{width:1px;height:22px;background:var(--border);flex-shrink:0;}
+.tb-select{padding:5px 6px;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:12px;background:#f8f9ff;color:var(--text);max-width:100px;}
+.tb-btn{padding:5px 10px;border:none;border-radius:var(--r);font-size:11px;cursor:pointer;font-weight:500;white-space:nowrap;}
 .tb-btn-primary{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;}
 .tb-btn-green{background:linear-gradient(135deg,var(--teal),var(--green));color:#fff;}
 .tb-btn-amber{background:linear-gradient(135deg,var(--amber),var(--orange));color:#fff;}
 .tb-btn-outline{background:#fff;border:1.5px solid var(--border-s);color:var(--muted);}
-.tb-btn-outline:hover{border-color:var(--blue);color:var(--blue);}
+.tb-btn-outline:hover,.tb-btn-outline.active{border-color:var(--blue);color:var(--blue);background:var(--blue-l);}
+.tb-btn-red{background:var(--red);color:#fff;}
 
-.main{padding:.75rem 1rem 3rem;max-width:1200px;margin:0 auto;}
+/* メイン */
+.main{padding:.5rem .75rem 4rem;max-width:900px;margin:0 auto;}
 
-/* 2教室カレンダー */
-.campus-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
-.campus-block{background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);overflow:hidden;box-shadow:0 2px 8px rgba(26,42,108,.06);}
-.campus-header{padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:2px solid var(--border);}
-.campus-name{font-size:14px;font-weight:700;color:#fff;}
-.campus-honko .campus-header{background:linear-gradient(135deg,var(--navy),var(--blue));}
-.campus-nanko .campus-header{background:linear-gradient(135deg,var(--teal),var(--green));}
+/* 凡例 */
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.5rem;align-items:center;}
+.legend-item{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--muted);}
+.legend-dot{width:8px;height:8px;border-radius:2px;}
+
+/* カレンダー（縦並び） */
+.cal-container{background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);overflow:hidden;box-shadow:0 2px 8px rgba(26,42,108,.06);margin-bottom:1rem;}
+.cal-campus-label{padding:6px 12px;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;gap:6px;}
+.cal-campus-honko{background:linear-gradient(135deg,var(--navy),var(--blue));}
+.cal-campus-nanko{background:linear-gradient(135deg,var(--teal),var(--green));}
 .cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border);}
-.cal-dow{padding:5px 2px;text-align:center;font-size:10px;font-weight:700;letter-spacing:.05em;font-family:var(--mono);color:var(--muted);}
+.cal-dow{padding:4px 2px;text-align:center;font-size:10px;font-weight:700;font-family:var(--mono);color:var(--muted);}
 .cal-dow.sun{color:var(--red);}
 .cal-dow.sat{color:var(--blue);}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);}
-.cal-cell{min-height:100px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:3px;position:relative;}
+.cal-cell{min-height:70px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:2px;position:relative;cursor:pointer;}
 .cal-cell:nth-child(7n){border-right:none;}
 .cal-cell.other-month{background:#f8f9ff;opacity:.6;}
 .cal-cell.today{background:linear-gradient(180deg,#eff6ff,#fff);}
-.cell-date{font-size:11px;font-weight:600;color:var(--text);width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);margin-bottom:2px;}
+.cell-date{font-size:10px;font-weight:600;color:var(--text);width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);margin-bottom:2px;}
 .cell-date.sun{color:var(--red);}
 .cell-date.sat{color:var(--blue);}
-.cell-date.holiday-d{color:var(--red);}
 .today .cell-date{background:var(--blue);color:#fff;border-radius:50%;}
-
-.chip{font-size:9px;border-radius:3px;padding:2px 4px;margin-bottom:2px;cursor:pointer;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;border-left:2px solid;}
-.chip:hover{opacity:.8;}
+.chip{font-size:9px;border-radius:3px;padding:1px 3px;margin-bottom:1px;cursor:pointer;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;border-left:2px solid;}
 .chip-event{background:var(--amber-l);color:#92400e;border-color:var(--amber);}
 .chip-school{background:var(--red-l);color:#7f1d1d;border-color:var(--red);}
 .chip-holiday{background:#f3f4f6;color:var(--hint);border-color:#9ca3af;}
 .chip-shift{border-left:2px solid;}
-.chip-mine{box-shadow:0 0 0 1.5px rgba(37,99,235,.5);}
-.chip-locked{opacity:.75;cursor:default;}
+.chip-mine{outline:1.5px solid rgba(37,99,235,.6);outline-offset:0px;}
 
-/* 凡例 */
-.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:.75rem;align-items:center;}
-.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);}
-.legend-dot{width:9px;height:9px;border-radius:2px;}
+/* 週表示 */
+.week-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.week-table{width:100%;border-collapse:collapse;min-width:500px;}
+.week-table th{padding:6px 4px;text-align:center;font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid var(--border);background:#f8f9ff;white-space:nowrap;}
+.week-table td{padding:3px;border:1px solid var(--border);vertical-align:top;min-width:70px;}
+.week-table td.time-col{background:#f8f9ff;font-size:10px;font-weight:700;color:var(--muted);font-family:var(--mono);white-space:nowrap;padding:4px 6px;text-align:right;min-width:60px;}
+.week-table td.today-col{background:#eff6ff;}
+.week-table td.holiday-col{background:#fff5f5;}
+.week-slot{border-radius:4px;padding:3px 5px;margin-bottom:2px;border-left:3px solid;font-size:10px;line-height:1.4;cursor:pointer;}
+.week-slot-teacher{font-weight:700;}
+.week-slot-students{font-size:9px;opacity:.8;margin-top:1px;}
+.week-empty{color:var(--hint);font-size:10px;text-align:center;padding:6px 0;}
+
+/* 振替管理 */
+.ab-status-pending{background:var(--red-l);color:#b91c1c;padding:2px 6px;border-radius:8px;font-size:10px;font-weight:600;}
+.ab-status-scheduled{background:var(--amber-l);color:#92400e;padding:2px 6px;border-radius:8px;font-size:10px;font-weight:600;}
+.ab-status-done{background:var(--green-l);color:#15803d;padding:2px 6px;border-radius:8px;font-size:10px;font-weight:600;}
+.ab-table{width:100%;border-collapse:collapse;font-size:12px;}
+.ab-table th{font-size:10px;font-weight:700;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);background:#f8f9ff;white-space:nowrap;}
+.ab-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.ab-table tr:hover td{background:#f8f9ff;}
+.ab-done-btn{padding:2px 7px;background:var(--green-l);border:1px solid var(--green);border-radius:4px;font-size:10px;cursor:pointer;color:#15803d;font-weight:500;}
+.ab-del-btn{padding:2px 5px;background:none;border:none;font-size:13px;cursor:pointer;color:var(--hint);}
+.ab-del-btn:hover{color:var(--red);}
 
 /* パネル */
-.panels{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:1rem;}
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1rem;box-shadow:0 1px 4px rgba(26,42,108,.06);}
-.panel-title{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;font-family:var(--mono);margin-bottom:.75rem;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(26,42,108,.06);}
+.panel-title{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;font-family:var(--mono);margin-bottom:.75rem;}
 
+/* フォーム */
 .ff{margin-bottom:10px;}
 .ff label{font-size:11px;color:var(--muted);display:block;margin-bottom:3px;font-weight:500;}
-.ff input,.ff select,.ff textarea{width:100%;padding:7px 9px;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:12px;font-family:var(--sans);background:#f8f9ff;color:var(--text);}
+.ff input,.ff select,.ff textarea{
+  width:100%;padding:8px 10px;border:1.5px solid var(--border-s);border-radius:var(--r);
+  font-size:13px;font-family:var(--sans);background:#f8f9ff;color:var(--text);
+  -webkit-appearance:none;appearance:none;
+}
 .ff input:focus,.ff select:focus,.ff textarea:focus{outline:none;border-color:var(--blue);}
+.ff input[type=date]{max-width:160px;}
 .ff textarea{min-height:52px;resize:vertical;}
 .fr{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.save-btn{width:100%;padding:9px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;margin-top:4px;}
-.save-btn:disabled{opacity:.5;cursor:not-allowed;}
+.save-btn{width:100%;padding:10px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;margin-top:4px;}
 .save-btn-green{background:linear-gradient(135deg,var(--teal),var(--green));}
 .save-btn-amber{background:linear-gradient(135deg,var(--amber),var(--orange));}
+.save-btn:disabled{opacity:.5;cursor:not-allowed;}
 
-.slist{list-style:none;max-height:220px;overflow-y:auto;margin-top:.5rem;}
+/* シフト一覧 */
+.slist{list-style:none;max-height:200px;overflow-y:auto;margin-top:.5rem;}
 .sitem{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:4px;background:#f8f9ff;font-size:11px;}
-.sitem-left{flex:1;}
-.sitem-name{font-weight:600;color:var(--text);}
-.sitem-detail{color:var(--muted);font-family:var(--mono);font-size:10px;}
-.sitem-acts{display:flex;gap:3px;}
+.sitem-left{flex:1;min-width:0;}
+.sitem-name{font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sitem-detail{color:var(--muted);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sitem-acts{display:flex;gap:3px;flex-shrink:0;}
 .edit-btn2{padding:2px 7px;border:1px solid var(--border-s);background:#fff;border-radius:4px;font-size:10px;cursor:pointer;color:var(--muted);}
-.edit-btn2:hover{border-color:var(--blue);color:var(--blue);}
 .del-btn2{padding:2px 5px;border:none;background:none;font-size:13px;cursor:pointer;color:var(--hint);}
 .del-btn2:hover{color:var(--red);}
 .locked-badge{font-size:9px;color:var(--hint);padding:2px 5px;background:#f3f4f6;border-radius:3px;}
 
-/* チェックボックスグループ */
+/* 曜日チェック */
 .dow-checks{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
-.dow-check{display:flex;align-items:center;gap:3px;font-size:11px;cursor:pointer;}
-.dow-check input{width:14px;height:14px;accent-color:var(--blue);}
+.dow-check{display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer;}
+.dow-check input{width:15px;height:15px;accent-color:var(--blue);}
 
-/* モーダル */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;display:none;align-items:center;justify-content:center;}
+/* モーダル（登録パネル含む） */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:flex-end;justify-content:center;}
 .modal-bg.open{display:flex;}
-.modal{background:#fff;border-radius:var(--rl);padding:1.5rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto;}
+.modal{background:#fff;border-radius:var(--rl) var(--rl) 0 0;padding:1.25rem;width:100%;max-width:520px;box-shadow:0 -4px 24px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto;}
+.modal-handle{width:40px;height:4px;background:var(--border-s);border-radius:2px;margin:0 auto 1rem;}
 .modal-title{font-size:15px;font-weight:700;margin-bottom:1rem;color:var(--text);}
 .modal-acts{display:flex;gap:8px;margin-top:1rem;justify-content:flex-end;}
-.modal-cancel{padding:7px 14px;border:1.5px solid var(--border-s);background:#fff;border-radius:var(--r);font-size:12px;cursor:pointer;color:var(--muted);}
-.modal-save{padding:7px 14px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;}
-.modal-del{padding:7px 14px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;}
+.modal-cancel{padding:8px 16px;border:1.5px solid var(--border-s);background:#fff;border-radius:var(--r);font-size:13px;cursor:pointer;color:var(--muted);}
+.modal-save{padding:8px 16px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;}
+.modal-del{padding:8px 16px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;}
+
+/* 一括登録タブ */
+.bulk-tab-row{display:flex;gap:6px;margin-bottom:1rem;}
+.bulk-tab{flex:1;padding:8px;border:1.5px solid var(--border-s);background:#fff;border-radius:var(--r);font-size:12px;cursor:pointer;color:var(--muted);font-family:var(--sans);font-weight:500;}
+.bulk-tab.active{background:var(--blue-l);border-color:var(--blue);color:var(--blue);}
 
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:13px;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;}
 .toast.show{opacity:1;}
@@ -139,61 +170,12 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 .tc6{background:#fef3c7;color:#92400e;border-color:#d97706;}
 .tc7{background:#f3e8ff;color:#6b21a8;border-color:#9333ea;}
 
-/* 振替ステータス */
-/* 給与集計 */
-.salary-th{padding:10px 12px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);border-right:1px solid var(--border);background:#f8f9ff;white-space:nowrap;}
-.salary-th-name{text-align:left;min-width:100px;}
-.salary-td{padding:8px 10px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border);font-size:12px;font-family:var(--mono);vertical-align:middle;}
-.salary-td-name{text-align:left;font-weight:600;color:var(--text);font-size:13px;border-right:1px solid var(--border);}
-.salary-cell-1{background:var(--blue-l);color:#1e40af;}
-.salary-cell-2{background:var(--amber-l);color:#92400e;}
-.salary-cell-u{background:var(--purple-l);color:#5b21b6;}
-.salary-cell-0{color:var(--hint);}
-.salary-total-row td{background:#f0f4ff;font-weight:700;border-top:2px solid var(--border);}
-.salary-summary{margin-top:6px;font-size:12px;color:var(--muted);}
-.salary-detail-item{padding:6px 10px;border-bottom:1px solid var(--border);font-size:12px;display:flex;gap:12px;flex-wrap:wrap;}
-.salary-detail-item:last-child{border-bottom:none;}
-.sd-date{font-family:var(--mono);color:var(--muted);min-width:90px;}
-.sd-teacher{font-weight:600;min-width:80px;}
-.sd-slot{color:var(--blue);font-family:var(--mono);min-width:100px;}
-.sd-students{color:var(--muted);}
-.sd-badge-1{background:var(--blue-l);color:#1e40af;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600;}
-.sd-badge-2{background:var(--amber-l);color:#92400e;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600;}
-.sd-badge-u{background:var(--purple-l);color:#5b21b6;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600;}
-
-.ab-status-pending{background:var(--red-l);color:#b91c1c;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;}
-.ab-status-scheduled{background:var(--amber-l);color:#92400e;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;}
-.ab-status-done{background:var(--green-l);color:#15803d;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;}
-.ab-row td{padding:9px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;}
-.ab-row:hover td{background:#f8f9ff;}
-.ab-done-btn{padding:3px 8px;background:var(--green-l);border:1px solid var(--green);border-radius:4px;font-size:10px;cursor:pointer;color:#15803d;font-weight:500;margin-right:3px;}
-.ab-done-btn:hover{background:var(--green);color:#fff;}
-.ab-del-btn{padding:3px 6px;background:none;border:none;font-size:13px;cursor:pointer;color:var(--hint);}
-.ab-del-btn:hover{color:var(--red);}
-
-/* 週表示テーブル */
-.week-table-wrap{overflow-x:auto;}
-.week-table{width:100%;border-collapse:collapse;min-width:600px;}
-.week-table th{padding:8px 6px;text-align:center;font-size:11px;font-weight:700;font-family:var(--mono);border:1px solid var(--border);background:#f8f9ff;white-space:nowrap;}
-.week-table th.today-col{background:var(--blue-l);}
-.week-table th.sun-col{color:var(--red);}
-.week-table th.sat-col{color:var(--blue);}
-.week-table td{padding:4px;border:1px solid var(--border);vertical-align:top;min-width:90px;min-height:60px;}
-.week-table td.time-col{background:#f8f9ff;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);white-space:nowrap;padding:6px 8px;text-align:right;min-width:80px;}
-.week-table td.today-col{background:#eff6ff;}
-.week-table td.holiday-col{background:#fff5f5;}
-.week-slot{border-radius:5px;padding:4px 6px;margin-bottom:3px;border-left:3px solid;font-size:11px;line-height:1.5;cursor:pointer;}
-.week-slot:hover{opacity:.85;}
-.week-slot-teacher{font-weight:700;}
-.week-slot-students{font-size:10px;color:inherit;opacity:.8;margin-top:1px;}
-.week-slot-note{font-size:10px;font-style:italic;opacity:.7;}
-.week-empty{color:var(--hint);font-size:11px;text-align:center;padding:8px 0;}
-.week-event{font-size:10px;border-radius:3px;padding:2px 5px;margin-bottom:2px;border-left:2px solid;}
-
-@media(max-width:900px){
-  .campus-grid{grid-template-columns:1fr;}
-  .panels{grid-template-columns:1fr;}
-  .cal-cell{min-height:70px;}
+/* スマホ最適化 */
+@media(max-width:600px){
+  .cal-cell{min-height:55px;}
+  .chip{font-size:8px;padding:1px 2px;}
+  .fr{grid-template-columns:1fr;}
+  .ff input[type=date]{max-width:100%;}
 }
 </style>
 </head>
@@ -201,8 +183,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 
 <div class="header">
   <a class="back-btn" href="portal.html">← ポータル</a>
-  <div style="width:1px;height:20px;background:rgba(255,255,255,.2);"></div>
-  <div class="header-brand">YCK 月次スケジュール</div>
+  <div style="width:1px;height:18px;background:rgba(255,255,255,.2);"></div>
+  <div class="header-brand">YCK スケジュール</div>
   <div class="header-user" id="header-user"></div>
 </div>
 
@@ -213,172 +195,28 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
     <button class="nav-btn" onclick="changeMonth(1)">›</button>
   </div>
   <div class="tsep"></div>
-  <span class="filter-label">講師：</span>
   <select class="tb-select" id="teacher-filter" onchange="renderAll()">
     <option value="">全員</option>
   </select>
   <div class="tsep"></div>
-  <button class="tb-btn tb-btn-outline" onclick="goToday()">今月/今週</button>
+  <button class="tb-btn tb-btn-outline" onclick="goToday()">今日</button>
+  <button class="tb-btn tb-btn-outline" id="view-month-btn" onclick="setView('month')">📅月</button>
+  <button class="tb-btn tb-btn-outline" id="view-week-btn" onclick="setView('week')">📋週</button>
+  <button class="tb-btn tb-btn-outline" id="view-absence-btn" onclick="setView('absence')">🔄振替</button>
   <div class="tsep"></div>
-  <button class="tb-btn tb-btn-outline" id="view-month-btn" onclick="setView('month')">📅 月</button>
-  <button class="tb-btn tb-btn-outline" id="view-week-btn" onclick="setView('week')">📋 週</button>
-  <button class="tb-btn tb-btn-outline" id="view-absence-btn" onclick="setView('absence')">🔄 振替</button>
-  <button class="tb-btn tb-btn-outline" id="view-salary-btn" onclick="setView('salary')">💴 給与集計</button>
-  <div class="tsep"></div>
-  <button class="tb-btn tb-btn-amber" onclick="openBulkModal()">📋 一括登録</button>
+  <button class="tb-btn tb-btn-primary" onclick="openShiftModal()">＋シフト</button>
+  <button class="tb-btn tb-btn-green" id="event-btn" onclick="openEventModal()">＋行事</button>
+  <button class="tb-btn tb-btn-amber" onclick="openBulkModal()">一括</button>
 </div>
 
 <div class="main">
   <div class="legend" id="legend"></div>
 
-  <!-- 週表示 -->
-  <div id="week-view" style="display:none;margin-bottom:1rem;">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:.75rem;">
-      <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
-      <div style="font-size:14px;font-weight:700;color:var(--text);font-family:var(--mono);min-width:220px;text-align:center;" id="week-label"></div>
-      <button class="nav-btn" onclick="changeWeek(1)">›</button>
-      <div style="margin-left:8px;display:flex;gap:4px;">
-        <button class="tb-btn tb-btn-primary" id="campus-honko-btn" onclick="setCampus('本校')" style="font-size:11px;padding:5px 12px;">🏫 本校</button>
-        <button class="tb-btn tb-btn-outline" id="campus-nanko-btn" onclick="setCampus('南校')" style="font-size:11px;padding:5px 12px;">🏫 南校</button>
-      </div>
-    </div>
-    <div class="week-table-wrap">
-      <table class="week-table" id="week-table">
-        <thead id="week-thead"></thead>
-        <tbody id="week-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- 振替管理 -->
-  <div id="absence-view" style="display:none;margin-bottom:1rem;">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-
-      <!-- 振替入力フォーム -->
-      <div class="panel">
-        <div class="panel-title">🔄 欠席・振替を登録</div>
-        <div class="fr">
-          <div class="ff"><label>生徒名</label><select id="ab-student"></select></div>
-          <div class="ff"><label>担当講師</label><select id="ab-teacher"></select></div>
-        </div>
-        <div class="fr">
-          <div class="ff"><label>欠席日</label><input type="date" id="ab-absent"></div>
-          <div class="ff"><label>欠席コマ</label>
-            <select id="ab-slot">
-              <option>10:30（午前）</option><option>14:00（午後）</option>
-              <option>16:00（0コマ）</option><option>16:25（0コマ）</option>
-              <option>17:30（1コマ）</option><option>19:15（2コマ）</option>
-              <option>20:45（3コマ）</option>
-            </select>
-          </div>
-        </div>
-        <div class="ff"><label>欠席理由</label>
-          <select id="ab-reason">
-            <option value="体調不良">体調不良</option>
-            <option value="学校行事">学校行事</option>
-            <option value="部活">部活</option>
-            <option value="修学旅行">修学旅行</option>
-            <option value="その他">その他</option>
-          </select>
-        </div>
-        <div class="fr">
-          <div class="ff"><label>振替日（未定の場合は空欄）</label><input type="date" id="ab-makeup"></div>
-          <div class="ff"><label>振替コマ</label>
-            <select id="ab-makeup-slot">
-              <option value="">未定</option>
-              <option>10:30（午前）</option><option>14:00（午後）</option>
-              <option>16:00（0コマ）</option><option>16:25（0コマ）</option>
-              <option>17:30（1コマ）</option><option>19:15（2コマ）</option>
-              <option>20:45（3コマ）</option>
-            </select>
-          </div>
-        </div>
-        <div class="ff"><label>備考</label><input type="text" id="ab-note" placeholder="連絡内容など"></div>
-        <button class="save-btn" id="ab-save-btn" onclick="saveAbsence()">登録する</button>
-      </div>
-
-      <!-- フィルタ -->
-      <div class="panel">
-        <div class="panel-title">🔍 絞り込み</div>
-        <div class="ff"><label>生徒</label><select id="ab-filter-student" onchange="renderAbsenceList()"></select></div>
-        <div class="ff"><label>講師</label><select id="ab-filter-teacher" onchange="renderAbsenceList()"></select></div>
-        <div class="ff"><label>状態</label>
-          <select id="ab-filter-status" onchange="renderAbsenceList()">
-            <option value="">すべて</option>
-            <option value="pending">振替未定</option>
-            <option value="scheduled">振替予定あり</option>
-            <option value="done">振替完了</option>
-          </select>
-        </div>
-        <div style="margin-top:1rem;padding:12px;background:var(--amber-l);border-radius:var(--r);font-size:12px;color:#92400e;">
-          <div style="font-weight:700;margin-bottom:4px;">📊 サマリー</div>
-          <div id="ab-summary"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 振替一覧テーブル -->
-    <div class="panel" style="margin-top:1rem;padding:0;overflow:hidden;">
-      <table class="week-table" style="min-width:auto;">
-        <thead>
-          <tr style="background:#f8f9ff;">
-            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);">生徒</th>
-            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);">担当</th>
-            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);">欠席日・コマ</th>
-            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);">理由</th>
-            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);">振替日・コマ</th>
-            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);">状態</th>
-            <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);">備考</th>
-            <th style="padding:10px 12px;border-bottom:2px solid var(--border);"></th>
-          </tr>
-        </thead>
-        <tbody id="ab-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- 給与集計 -->
-  <div id="salary-view" style="display:none;margin-bottom:1rem;">
-
-    <!-- 集計期間ナビ -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap;">
-      <button class="nav-btn" onclick="changeSalaryMonth(-1)">‹</button>
-      <div style="font-size:15px;font-weight:700;color:var(--text);font-family:var(--mono);min-width:200px;text-align:center;" id="salary-period-label"></div>
-      <button class="nav-btn" onclick="changeSalaryMonth(1)">›</button>
-      <button class="tb-btn tb-btn-outline" onclick="goSalaryToday()">今期</button>
-      <button class="tb-btn tb-btn-green" onclick="exportSalaryCSV()">📥 CSVダウンロード</button>
-    </div>
-
-    <!-- 凡例 -->
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1rem;font-size:12px;color:var(--muted);align-items:center;">
-      <span style="display:flex;align-items:center;gap:4px;"><span style="width:14px;height:14px;background:var(--blue-l);border:1.5px solid var(--blue);border-radius:3px;display:inline-block;"></span>生徒1名（通常）</span>
-      <span style="display:flex;align-items:center;gap:4px;"><span style="width:14px;height:14px;background:var(--amber-l);border:1.5px solid var(--amber);border-radius:3px;display:inline-block;"></span>生徒2名（割増）</span>
-      <span style="display:flex;align-items:center;gap:4px;"><span style="width:14px;height:14px;background:var(--purple-l);border:1.5px solid var(--purple);border-radius:3px;display:inline-block;"></span>担当不明（要確認）</span>
-    </div>
-
-    <!-- 集計テーブル -->
-    <div class="panel" style="padding:0;overflow:hidden;">
-      <table style="width:100%;border-collapse:collapse;font-size:13px;" id="salary-table">
-        <thead id="salary-thead"></thead>
-        <tbody id="salary-tbody"></tbody>
-        <tfoot id="salary-tfoot"></tfoot>
-      </table>
-    </div>
-
-    <!-- 詳細ログ -->
-    <div class="panel" style="margin-top:1rem;">
-      <div class="panel-title">📋 期間内シフト詳細</div>
-      <div id="salary-detail"></div>
-    </div>
-  </div>
-
-  <!-- 2教室カレンダー -->
-  <div id="month-view"><div class="campus-grid">
-    <div class="campus-block campus-honko">
-      <div class="campus-header">
-        <span style="font-size:16px;">🏫</span>
-        <span class="campus-name">山口本校</span>
-      </div>
+  <!-- 月表示（縦並びカレンダー） -->
+  <div id="month-view">
+    <!-- 本校カレンダー -->
+    <div class="cal-container">
+      <div class="cal-campus-label cal-campus-honko">🏫 山口本校</div>
       <div class="cal-dow-row">
         <div class="cal-dow sun">日</div><div class="cal-dow">月</div><div class="cal-dow">火</div>
         <div class="cal-dow">水</div><div class="cal-dow">木</div><div class="cal-dow">金</div>
@@ -386,11 +224,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
       </div>
       <div class="cal-grid" id="cal-honko"></div>
     </div>
-    <div class="campus-block campus-nanko">
-      <div class="campus-header">
-        <span style="font-size:16px;">🏫</span>
-        <span class="campus-name">山口南校</span>
-      </div>
+    <!-- 南校カレンダー -->
+    <div class="cal-container">
+      <div class="cal-campus-label cal-campus-nanko">🏫 山口南校</div>
       <div class="cal-dow-row">
         <div class="cal-dow sun">日</div><div class="cal-dow">月</div><div class="cal-dow">火</div>
         <div class="cal-dow">水</div><div class="cal-dow">木</div><div class="cal-dow">金</div>
@@ -398,106 +234,136 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
       </div>
       <div class="cal-grid" id="cal-nanko"></div>
     </div>
-  </div></div>
 
-  <!-- パネル -->
-  <div class="panels">
-    <!-- シフト個別登録 -->
+    <!-- 今月のシフト一覧 -->
     <div class="panel">
-      <div class="panel-title">📅 シフト登録</div>
-      <div class="fr">
-        <div class="ff"><label>講師名</label><select id="s-teacher"></select></div>
-        <div class="ff"><label>教室</label>
-          <select id="s-campus">
-            <option value="本校">山口本校</option>
-            <option value="南校">山口南校</option>
-          </select>
-        </div>
-      </div>
-      <div class="fr">
-        <div class="ff"><label>日付</label><input type="date" id="s-date"></div>
-        <div class="ff"><label>開始時間</label>
-          <select id="s-start">
-            <option>10:30（午前）</option><option>14:00（午後）</option><option>16:00（0コマ）</option><option>16:25（0コマ）</option><option>17:30（1コマ）</option>
-            <option>19:15（2コマ）</option><option>20:45（3コマ）</option>
-          </select>
-        </div>
-      </div>
-      <div class="fr">
-        <div class="ff"><label>コマ数</label>
-          <select id="s-slots"><option value="1">1コマ</option><option value="2">2コマ</option><option value="3">3コマ</option></select>
-        </div>
-        <div class="ff"><label>授業形式</label>
-          <select id="s-format">
-            <option value="1対1">1対1（通常）</option>
-            <option value="1対2">1対2（割増）</option>
-            <option value="1対3">1対3</option>
-          </select>
-        </div>
-      </div>
-      <div class="ff"><label>担当生徒</label>
-        <input type="text" id="s-students" placeholder="例：田中 花子、山本 太郎">
-      </div>
-      <div class="ff"><label>備考</label><input type="text" id="s-note" placeholder="代講・テスト前など"></div>
-      <button class="save-btn" id="shift-save-btn" onclick="saveShift()">シフトを保存</button>
-      <div style="margin-top:.75rem;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">今月のシフト</div>
+      <div class="panel-title">今月のシフト一覧</div>
       <ul class="slist" id="shift-list"></ul>
     </div>
+  </div>
 
-    <!-- 行事登録 -->
-    <div class="panel">
-      <div class="panel-title">🏫 行事・予定登録（塾長）</div>
-      <div class="fr">
-        <div class="ff"><label>開始日</label><input type="date" id="e-start"></div>
-        <div class="ff"><label>終了日</label><input type="date" id="e-end"></div>
+  <!-- 週表示 -->
+  <div id="week-view" style="display:none;">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:.75rem;flex-wrap:wrap;">
+      <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
+      <div style="font-size:12px;font-weight:700;color:var(--text);font-family:var(--mono);min-width:180px;text-align:center;" id="week-label"></div>
+      <button class="nav-btn" onclick="changeWeek(1)">›</button>
+      <div style="display:flex;gap:4px;margin-left:auto;">
+        <button class="tb-btn tb-btn-primary" id="campus-honko-btn" onclick="setCampus('本校')" style="font-size:11px;">🏫本校</button>
+        <button class="tb-btn tb-btn-outline" id="campus-nanko-btn" onclick="setCampus('南校')" style="font-size:11px;">🏫南校</button>
       </div>
-      <div class="ff"><label>種別</label>
-        <select id="e-type">
-          <option value="event">塾行事</option>
-          <option value="school">学校行事（定期テスト等）</option>
-          <option value="holiday">休講日</option>
-        </select>
-      </div>
-      <div class="ff"><label>内容</label><input type="text" id="e-content" placeholder="例：山口中央 中間テスト"></div>
-      <div class="ff"><label>対象校</label><input type="text" id="e-school" placeholder="例：山口中央、鴻南"></div>
-      <button class="save-btn save-btn-green" id="event-save-btn" onclick="saveEvent()">行事を保存</button>
-      <div style="margin-top:.75rem;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">今月の行事</div>
-      <ul class="slist" id="event-list"></ul>
     </div>
+    <div class="week-table-wrap">
+      <table class="week-table"><thead id="week-thead"></thead><tbody id="week-tbody"></tbody></table>
+    </div>
+  </div>
 
-    <!-- お知らせ -->
-    <div class="panel" id="notice-panel">
-      <div class="panel-title">📢 お知らせ（塾長）</div>
-      <div class="ff"><label>お知らせ内容</label><textarea id="notice-text" placeholder="全講師に表示するお知らせを入力"></textarea></div>
-      <button class="save-btn save-btn-amber" onclick="saveNotice()">お知らせを更新</button>
-      <div style="margin-top:.75rem;font-size:11px;color:var(--muted);line-height:1.7;" id="notice-preview"></div>
+  <!-- 振替管理 -->
+  <div id="absence-view" style="display:none;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem;">
+      <div class="panel" style="margin-bottom:0;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:.5rem;font-family:var(--mono);">絞り込み</div>
+        <div class="ff"><label>生徒</label><select id="ab-filter-student" onchange="renderAbsenceList()"></select></div>
+        <div class="ff"><label>状態</label>
+          <select id="ab-filter-status" onchange="renderAbsenceList()">
+            <option value="">すべて</option>
+            <option value="pending">振替未定</option>
+            <option value="scheduled">振替予定</option>
+            <option value="done">完了</option>
+          </select>
+        </div>
+      </div>
+      <div class="panel" style="margin-bottom:0;background:var(--amber-l);border-color:#fcd34d;">
+        <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:.5rem;">📊 サマリー</div>
+        <div id="ab-summary" style="font-size:12px;color:#92400e;"></div>
+      </div>
+    </div>
+    <button class="save-btn" onclick="openAbsenceModal()" style="margin-bottom:.75rem;">＋ 欠席・振替を登録</button>
+    <div class="panel" style="padding:0;overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table class="ab-table">
+          <thead><tr>
+            <th>生徒</th><th>担当</th><th>欠席日</th><th>理由</th><th>振替日</th><th>状態</th><th>備考</th><th></th>
+          </tr></thead>
+          <tbody id="ab-tbody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- 編集モーダル -->
-<div class="modal-bg" id="edit-modal">
+<!-- シフト登録モーダル -->
+<div class="modal-bg" id="shift-modal">
   <div class="modal">
-    <div class="modal-title" id="modal-title">シフトを編集</div>
-    <div id="modal-body"></div>
-    <div class="modal-acts">
-      <button class="modal-cancel" onclick="closeModal()">キャンセル</button>
-      <button class="modal-del" id="modal-del-btn" style="display:none;" onclick="deleteFromModal()">削除</button>
-      <button class="modal-save" id="modal-save-btn">保存</button>
+    <div class="modal-handle"></div>
+    <div class="modal-title">📅 シフト登録</div>
+    <div class="fr">
+      <div class="ff"><label>講師名</label><select id="s-teacher"></select></div>
+      <div class="ff"><label>教室</label>
+        <select id="s-campus"><option value="本校">山口本校</option><option value="南校">山口南校</option></select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="ff"><label>日付</label><input type="date" id="s-date"></div>
+      <div class="ff"><label>開始時間</label>
+        <select id="s-start">
+          <option>10:30（午前）</option><option>14:00（午後）</option>
+          <option>16:00（0コマ）</option><option>16:25（0コマ）</option>
+          <option>17:30（1コマ）</option><option>19:15（2コマ）</option><option>20:45（3コマ）</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="ff"><label>コマ数</label>
+        <select id="s-slots"><option value="1">1コマ</option><option value="2">2コマ</option><option value="3">3コマ</option></select>
+      </div>
+      <div class="ff"><label>授業形式</label>
+        <select id="s-format"><option value="1対1">1対1</option><option value="1対2">1対2</option><option value="1対3">1対3</option></select>
+      </div>
+    </div>
+    <div class="ff"><label>担当生徒</label><input type="text" id="s-students" placeholder="例：田中 花子、山本 太郎"></div>
+    <div class="ff"><label>備考</label><input type="text" id="s-note" placeholder="代講・テスト前など"></div>
+    <button class="save-btn" id="shift-save-btn" onclick="saveShift()">シフトを保存</button>
+    <button class="modal-cancel" style="width:100%;margin-top:8px;" onclick="closeShiftModal()">キャンセル</button>
+  </div>
+</div>
+
+<!-- 行事登録モーダル -->
+<div class="modal-bg" id="event-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🏫 行事・予定登録</div>
+    <div class="fr">
+      <div class="ff"><label>開始日</label><input type="date" id="e-start"></div>
+      <div class="ff"><label>終了日</label><input type="date" id="e-end"></div>
+    </div>
+    <div class="ff"><label>種別</label>
+      <select id="e-type">
+        <option value="event">塾行事</option>
+        <option value="school">学校行事（定期テスト等）</option>
+        <option value="holiday">休講日</option>
+      </select>
+    </div>
+    <div class="ff"><label>内容</label><input type="text" id="e-content" placeholder="例：山口中央 中間テスト"></div>
+    <div class="ff"><label>対象校</label><input type="text" id="e-school" placeholder="例：山口中央、鴻南"></div>
+    <button class="save-btn save-btn-green" id="event-save-btn" onclick="saveEvent()">行事を保存</button>
+    <button class="modal-cancel" style="width:100%;margin-top:8px;" onclick="closeEventModal()">キャンセル</button>
+    <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:.75rem;">
+      <div class="panel-title">今月の行事</div>
+      <ul class="slist" id="event-list"></ul>
     </div>
   </div>
 </div>
 
 <!-- 一括登録モーダル -->
 <div class="modal-bg" id="bulk-modal">
-  <div class="modal" style="max-width:500px;">
+  <div class="modal">
+    <div class="modal-handle"></div>
     <div class="modal-title">📋 一括登録</div>
-    <div style="display:flex;gap:8px;margin-bottom:1rem;">
-      <button class="tb-btn tb-btn-primary" id="bulk-tab-weekly" onclick="switchBulkTab('weekly')" style="flex:1;">毎週繰り返し</button>
-      <button class="tb-btn tb-btn-outline" id="bulk-tab-month" onclick="switchBulkTab('month')" style="flex:1;">1ヶ月分まとめて</button>
+    <div class="bulk-tab-row">
+      <button class="bulk-tab active" id="bulk-tab-weekly" onclick="switchBulkTab('weekly')">毎週繰り返し</button>
+      <button class="bulk-tab" id="bulk-tab-month" onclick="switchBulkTab('month')">1ヶ月まとめて</button>
     </div>
-
-    <!-- 毎週繰り返しタブ -->
     <div id="bulk-weekly">
       <div class="fr">
         <div class="ff"><label>講師名</label><select id="bw-teacher"></select></div>
@@ -506,7 +372,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
         </div>
       </div>
       <div class="ff">
-        <label>曜日（複数選択可）</label>
+        <label>曜日</label>
         <div class="dow-checks">
           <label class="dow-check"><input type="checkbox" name="bw-dow" value="0"> 日</label>
           <label class="dow-check"><input type="checkbox" name="bw-dow" value="1"> 月</label>
@@ -520,8 +386,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
       <div class="fr">
         <div class="ff"><label>開始時間</label>
           <select id="bw-start">
-            <option>10:30（午前）</option><option>14:00（午後）</option><option>16:00（0コマ）</option><option>16:25（0コマ）</option><option>17:30（1コマ）</option>
-            <option>19:15（2コマ）</option><option>20:45（3コマ）</option>
+            <option>10:30（午前）</option><option>14:00（午後）</option>
+            <option>16:00（0コマ）</option><option>16:25（0コマ）</option>
+            <option>17:30（1コマ）</option><option>19:15（2コマ）</option><option>20:45（3コマ）</option>
           </select>
         </div>
         <div class="ff"><label>コマ数</label>
@@ -533,37 +400,81 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
         <div class="ff"><label>期間（終了日）</label><input type="date" id="bw-to"></div>
       </div>
       <div class="ff"><label>授業形式</label>
-        <select id="bw-format">
-          <option value="1対1">1対1（通常）</option>
-          <option value="1対2">1対2（割増）</option>
-          <option value="1対3">1対3</option>
-        </select>
+        <select id="bw-format"><option value="1対1">1対1</option><option value="1対2">1対2</option><option value="1対3">1対3</option></select>
       </div>
-      <div class="ff"><label>担当生徒</label>
-        <input type="text" id="bw-students" placeholder="例：田中 花子、山本 太郎">
-      </div>
+      <div class="ff"><label>担当生徒</label><input type="text" id="bw-students" placeholder="例：田中 花子、山本 太郎"></div>
       <div class="ff"><label>備考</label><input type="text" id="bw-note"></div>
-      <button class="save-btn" onclick="execBulkWeekly()">この曜日・時間で一括登録</button>
+      <button class="save-btn" onclick="execBulkWeekly()">一括登録する</button>
     </div>
-
-    <!-- 1ヶ月分タブ -->
     <div id="bulk-month" style="display:none;">
-      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.7;">1行に1コマのシフトを入力してください。<br>形式：<span style="font-family:var(--mono);background:#f3f4f6;padding:1px 5px;border-radius:3px;">講師名,教室,日付,開始時間,コマ数,生徒,備考</span></p>
       <div class="ff">
-        <label>登録済み講師名（コピーして使用してください）</label>
-        <div id="bm-teacher-hint" style="font-size:11px;font-family:var(--mono);background:#f3f4f6;border-radius:var(--r);padding:6px 10px;color:var(--muted);margin-bottom:6px;line-height:1.8;"></div>
+        <label>講師名（クリックで挿入）</label>
+        <div id="bm-teacher-hint" style="font-size:11px;font-family:var(--mono);background:#f3f4f6;border-radius:var(--r);padding:6px 10px;color:var(--muted);margin-bottom:6px;line-height:2;"></div>
       </div>
-      <div class="ff"><label>テキスト入力（1行1コマ）</label>
-        <textarea id="bm-text" style="min-height:140px;font-family:var(--mono);font-size:11px;" placeholder="例：
-中村 先生,本校,2026-06-02,16:00（0コマ）,2,田中 花子,
-渡辺 先生,南校,2026-06-02,17:30（1コマ）,1,山本 太郎,テスト前
-小林 先生,本校,2026-06-03,16:25（0コマ）,1,,"></textarea>
+      <div class="ff">
+        <label>形式：講師名,教室,日付,開始時間,コマ数,授業形式,生徒,備考</label>
+        <textarea id="bm-text" style="min-height:120px;font-family:var(--mono);font-size:11px;" placeholder="例：
+中村 先生,本校,2026-06-02,17:30（1コマ）,1,1対1,田中 花子,
+渡辺 先生,南校,2026-06-03,16:00（0コマ）,2,1対2,山本・鈴木,テスト前"></textarea>
       </div>
       <button class="save-btn save-btn-green" onclick="execBulkMonth()">一括登録する</button>
     </div>
+    <button class="modal-cancel" style="width:100%;margin-top:8px;" onclick="closeBulkModal()">閉じる</button>
+  </div>
+</div>
 
-    <div class="modal-acts" style="margin-top:.5rem;">
-      <button class="modal-cancel" onclick="closeBulkModal()">閉じる</button>
+<!-- 欠席・振替登録モーダル -->
+<div class="modal-bg" id="absence-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔄 欠席・振替を登録</div>
+    <div class="fr">
+      <div class="ff"><label>生徒名</label><select id="ab-student"></select></div>
+      <div class="ff"><label>担当講師</label><select id="ab-teacher"></select></div>
+    </div>
+    <div class="fr">
+      <div class="ff"><label>欠席日</label><input type="date" id="ab-absent"></div>
+      <div class="ff"><label>欠席コマ</label>
+        <select id="ab-slot">
+          <option>10:30（午前）</option><option>14:00（午後）</option>
+          <option>16:00（0コマ）</option><option>16:25（0コマ）</option>
+          <option>17:30（1コマ）</option><option>19:15（2コマ）</option><option>20:45（3コマ）</option>
+        </select>
+      </div>
+    </div>
+    <div class="ff"><label>欠席理由</label>
+      <select id="ab-reason">
+        <option value="体調不良">体調不良</option><option value="学校行事">学校行事</option>
+        <option value="部活">部活</option><option value="修学旅行">修学旅行</option><option value="その他">その他</option>
+      </select>
+    </div>
+    <div class="fr">
+      <div class="ff"><label>振替日</label><input type="date" id="ab-makeup"></div>
+      <div class="ff"><label>振替コマ</label>
+        <select id="ab-makeup-slot">
+          <option value="">未定</option>
+          <option>10:30（午前）</option><option>14:00（午後）</option>
+          <option>16:00（0コマ）</option><option>16:25（0コマ）</option>
+          <option>17:30（1コマ）</option><option>19:15（2コマ）</option><option>20:45（3コマ）</option>
+        </select>
+      </div>
+    </div>
+    <div class="ff"><label>備考</label><input type="text" id="ab-note" placeholder="連絡内容など"></div>
+    <button class="save-btn" id="ab-save-btn" onclick="saveAbsence()">登録する</button>
+    <button class="modal-cancel" style="width:100%;margin-top:8px;" onclick="closeAbsenceModal()">キャンセル</button>
+  </div>
+</div>
+
+<!-- 編集モーダル -->
+<div class="modal-bg" id="edit-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">シフトを編集</div>
+    <div id="modal-body"></div>
+    <div class="modal-acts">
+      <button class="modal-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="modal-del" id="modal-del-btn" style="display:none;" onclick="deleteFromModal()">削除</button>
+      <button class="modal-save" id="modal-save-btn">保存</button>
     </div>
   </div>
 </div>
@@ -575,71 +486,34 @@ const GAS_URL='https://script.google.com/macros/s/AKfycbz8k41UXf6w3mkSQ3ARc4ReQ_
 const TEACHER_COLORS=['tc0','tc1','tc2','tc3','tc4','tc5','tc6','tc7'];
 const HOLIDAYS={'2026-01-01':1,'2026-01-12':1,'2026-02-11':1,'2026-02-23':1,'2026-03-20':1,'2026-04-29':1,'2026-05-03':1,'2026-05-04':1,'2026-05-05':1,'2026-05-06':1,'2026-07-20':1,'2026-08-11':1,'2026-09-21':1,'2026-09-23':1,'2026-10-12':1,'2026-11-03':1,'2026-11-23':1};
 
-let curYear=new Date().getFullYear();
-let curMonth=new Date().getMonth();
-let shifts=[], events=[], teachers=[], teacherColorMap={}, master={};
-let currentUser=''; // ログイン中の講師名（塾長は空）
-let isAdmin=false;
-let editTarget=null;
+let curYear=new Date().getFullYear(), curMonth=new Date().getMonth();
+let shifts=[], events=[], teachers=[], master={}, teacherColorMap={};
+let currentUser='', isAdmin=false, editTarget=null;
+let currentView='month', currentWeekStart=null, currentCampus='本校';
+let absences=[];
 
-// ── UTILS ──
-function toast(msg,dur=2500){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),dur);
-}
-async function api(action,body={}){
-  const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,...body})});
-  return res.json();
-}
+function toast(msg,dur=2500){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+async function api(action,body={}){const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,...body})});return res.json();}
 function toDateStr(d){return d.toISOString().slice(0,10);}
 function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
 
-// ── INIT ──
 async function init(){
   const pw=sessionStorage.getItem('yck_pw');
   if(!pw){window.location.href='portal.html';return;}
-
-  // 塾長判定（マスタから判定、または設定パスワードと一致なら管理者）
-  const[mRes,sRes,eRes,nRes]=await Promise.all([
-    api('getMaster'),api('getShifts'),api('getEvents'),api('getNotices')
+  const[mRes,sRes,eRes,nRes,aRes]=await Promise.all([
+    api('getMaster'),api('getShifts'),api('getEvents'),api('getNotices'),api('getAbsences')
   ]);
-
   master=mRes.master||{students:[],teachers:[],subjects:[]};
   teachers=master.teachers||[];
   shifts=sRes.shifts||[];
   events=eRes.events||[];
-
-  // ログインユーザー特定
-  const savedUser=sessionStorage.getItem('yck_user')||'';
-  currentUser=savedUser;
-
-  // 塾長かどうか：マスタの講師リストにない → 塾長扱い
+  absences=aRes.absences||[];
+  currentUser=sessionStorage.getItem('yck_user')||'';
   isAdmin=!teachers.includes(currentUser)||currentUser==='';
-
-  document.getElementById('header-user').textContent=
-    isAdmin?'👑 塾長モード':`👤 ${currentUser}`;
-
-  // お知らせ
-  const notices=(nRes.notices||[]);
-  if(notices.length){
-    document.getElementById('notice-preview').innerHTML=
-      notices.map(n=>n.content.replace(/\n/g,'<br>')).join('<hr style="margin:6px 0;border-color:var(--border);">');
-    document.getElementById('notice-text').value=notices.map(n=>n.content).join('\n');
-  }
-
-  // 塾長以外はお知らせパネルと行事パネルを読み取り専用に
-  if(!isAdmin){
-    document.getElementById('notice-panel').style.display='none';
-    document.getElementById('event-save-btn').disabled=true;
-    document.getElementById('event-save-btn').textContent='塾長のみ登録可';
-  }
-
+  document.getElementById('header-user').textContent=isAdmin?'👑 塾長':`👤 ${currentUser}`;
+  if(!isAdmin) document.getElementById('event-btn').style.display='none';
   teachers.forEach((t,i)=>teacherColorMap[t]=TEACHER_COLORS[i%TEACHER_COLORS.length]);
   currentWeekStart=getWeekStart(new Date());
-  const sp=getCurrentSalaryPeriod();
-  salaryBaseYear=sp.year; salaryBaseMonth=sp.month-1;
-  await loadAbsences();
   rebuildSelects();
   rebuildAbsenceSelects();
   setDefaultDates();
@@ -652,10 +526,8 @@ function setDefaultDates(){
   document.getElementById('e-start').value=today;
   document.getElementById('e-end').value=today;
   document.getElementById('ab-absent').value=today;
-  const first=`${curYear}-${String(curMonth+1).padStart(2,'0')}-01`;
-  const last=toDateStr(new Date(curYear,curMonth+1,0));
-  document.getElementById('bw-from').value=first;
-  document.getElementById('bw-to').value=last;
+  document.getElementById('bw-from').value=`${curYear}-${String(curMonth+1).padStart(2,'0')}-01`;
+  document.getElementById('bw-to').value=toDateStr(new Date(curYear,curMonth+1,0));
 }
 
 function rebuildSelects(){
@@ -667,26 +539,26 @@ function rebuildSelects(){
     el.value=cur;
   };
   pop('teacher-filter',teachers,true);
-  // 講師選択は自分の名前を初期値に
   const sTeacher=document.getElementById('s-teacher');
   sTeacher.innerHTML='';
-  if(isAdmin){
-    teachers.forEach(t=>{const o=document.createElement('option');o.value=o.textContent=t;sTeacher.appendChild(o);});
-  }else{
-    const o=document.createElement('option');o.value=o.textContent=currentUser;sTeacher.appendChild(o);
-  }
+  (isAdmin?teachers:[currentUser]).forEach(t=>{const o=document.createElement('option');o.value=o.textContent=t;sTeacher.appendChild(o);});
   pop('bw-teacher',isAdmin?teachers:[currentUser],false);
-
-  // 凡例
   const leg=document.getElementById('legend');
   leg.innerHTML=
-    `<span class="legend-item"><span class="legend-dot" style="background:var(--amber-l);border:1px solid var(--amber);"></span>塾行事</span>
-     <span class="legend-item"><span class="legend-dot" style="background:var(--red-l);border:1px solid var(--red);"></span>学校行事</span>
-     <span class="legend-item"><span class="legend-dot" style="background:#f3f4f6;border:1px solid #9ca3af;"></span>休講</span>`+
+    '<span class="legend-item"><span class="legend-dot" style="background:var(--amber-l);border:1px solid var(--amber);"></span>塾行事</span>'+
+    '<span class="legend-item"><span class="legend-dot" style="background:var(--red-l);border:1px solid var(--red);"></span>学校行事</span>'+
+    '<span class="legend-item"><span class="legend-dot" style="background:#f3f4f6;border:1px solid #9ca3af;"></span>休講</span>'+
     teachers.map(t=>`<span class="legend-item"><span class="legend-dot ${teacherColorMap[t]}"></span>${t}</span>`).join('');
 }
 
-// ── RENDER ──
+function rebuildAbsenceSelects(){
+  const sNames=(master.students||[]).map(s=>s.name||s);
+  const popAll=(id,arr)=>{const el=document.getElementById(id);if(!el)return;el.innerHTML='<option value="">すべて</option>';arr.forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;el.appendChild(o);});};
+  const popReq=(id,arr)=>{const el=document.getElementById(id);if(!el)return;el.innerHTML='<option value="">選択</option>';arr.forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;el.appendChild(o);});};
+  popReq('ab-student',sNames);popReq('ab-teacher',teachers);
+  popAll('ab-filter-student',sNames);
+}
+
 function renderAll(){
   updateMonthLabel();
   renderCal('本校','cal-honko');
@@ -694,30 +566,17 @@ function renderAll(){
   renderShiftList();
   renderEventList();
 }
-function updateMonthLabel(){
-  document.getElementById('month-label').textContent=`${curYear}年${curMonth+1}月`;
-}
-function changeMonth(d){
-  curMonth+=d;
-  if(curMonth>11){curMonth=0;curYear++;}
-  else if(curMonth<0){curMonth=11;curYear--;}
-  renderAll();
-}
-function goToday(){
-  curYear=new Date().getFullYear();curMonth=new Date().getMonth();
-  currentWeekStart=getWeekStart(new Date());
-  renderAll();
-  if(currentView==='week') renderWeek();
-}
+function updateMonthLabel(){document.getElementById('month-label').textContent=`${curYear}年${curMonth+1}月`;}
+function changeMonth(d){curMonth+=d;if(curMonth>11){curMonth=0;curYear++;}else if(curMonth<0){curMonth=11;curYear--;}renderAll();}
+function goToday(){curYear=new Date().getFullYear();curMonth=new Date().getMonth();currentWeekStart=getWeekStart(new Date());renderAll();if(currentView==='week')renderWeek();}
 
-function renderCal(campus, gridId){
+function renderCal(campus,gridId){
   const grid=document.getElementById(gridId);
   const filter=document.getElementById('teacher-filter').value;
   const today=toDateStr(new Date());
   const firstDay=new Date(curYear,curMonth,1).getDay();
   const daysInMonth=new Date(curYear,curMonth+1,0).getDate();
   const prevDays=new Date(curYear,curMonth,0).getDate();
-
   let cells=[];
   for(let i=firstDay-1;i>=0;i--) cells.push({date:null,day:prevDays-i,other:true});
   for(let d=1;d<=daysInMonth;d++){
@@ -726,48 +585,23 @@ function renderCal(campus, gridId){
   }
   const rem=(7-cells.length%7)%7;
   for(let i=1;i<=rem;i++) cells.push({date:null,day:i,other:true});
-
   grid.innerHTML=cells.map((c,idx)=>{
     const dow=idx%7;
     const isSun=dow===0,isSat=dow===6;
     const isHoliday=c.date&&HOLIDAYS[c.date];
     const isToday=c.date===today;
-
-    let dc='cell-date';
-    if(isSun||isHoliday) dc+=' sun';
-    else if(isSat) dc+=' sat';
-
-    let cc='cal-cell';
-    if(c.other) cc+=' other-month';
-    if(isToday) cc+=' today';
-
+    let dc='cell-date';if(isSun||isHoliday)dc+=' sun';else if(isSat)dc+=' sat';
+    let cc='cal-cell';if(c.other)cc+=' other-month';if(isToday)cc+=' today';
     const dayEvents=c.date?events.filter(e=>c.date>=e.startDate&&c.date<=e.endDate):[];
-    const dayShifts=c.date?shifts.filter(s=>
-      s.date===c.date&&
-      (s.campus||'本校')===campus&&
-      (!filter||s.teacher===filter)
-    ):[];
-
-    const evChips=dayEvents.map(e=>{
-      const cls=e.type==='school'?'chip-school':e.type==='holiday'?'chip-holiday':'chip-event';
-      return `<span class="chip ${cls}" title="${e.content}">${e.content}</span>`;
-    }).join('');
-
+    const dayShifts=c.date?shifts.filter(s=>s.date===c.date&&(s.campus||'本校')===campus&&(!filter||s.teacher===filter)):[];
+    const evChips=dayEvents.map(e=>`<span class="chip ${e.type==='school'?'chip-school':e.type==='holiday'?'chip-holiday':'chip-event'}">${e.content}</span>`).join('');
     const shiftChips=dayShifts.map(s=>{
       const tc=teacherColorMap[s.teacher]||'tc0';
-      const isMine=s.teacher===currentUser;
-      const canEdit=isAdmin||isMine;
-      const mineClass=isMine?' chip-mine':'';
-      const lockedClass=canEdit?'':' chip-locked';
+      const canEdit=isAdmin||s.teacher===currentUser;
       const onclick=canEdit?`onclick="openEditModal('${s.id}')"`:'';
-      const label=`${s.teacher} ${s.startTime}〜${s.slots}コマ`;
-      return `<span class="chip chip-shift ${tc}${mineClass}${lockedClass}" ${onclick} title="${label}${s.students?'\n担当:'+s.students:''}">${label}</span>`;
+      return `<span class="chip chip-shift ${tc}${s.teacher===currentUser?' chip-mine':''}" ${onclick}>${s.teacher} ${s.startTime.split('（')[0]}</span>`;
     }).join('');
-
-    return `<div class="${cc}" onclick="onCellClick('${c.date||''}')">
-      <div class="${dc}">${c.day}</div>
-      ${evChips}${shiftChips}
-    </div>`;
+    return `<div class="${cc}" onclick="onCellClick('${c.date||''}')"><div class="${dc}">${c.day}</div>${evChips}${shiftChips}</div>`;
   }).join('');
 }
 
@@ -778,6 +612,40 @@ function onCellClick(d){
   document.getElementById('e-end').value=d;
 }
 
+// ── モーダル開閉 ──
+function openShiftModal(){document.getElementById('shift-modal').classList.add('open');}
+function closeShiftModal(){document.getElementById('shift-modal').classList.remove('open');}
+function openEventModal(){document.getElementById('event-modal').classList.add('open');}
+function closeEventModal(){document.getElementById('event-modal').classList.remove('open');}
+function openBulkModal(){
+  const first=`${curYear}-${String(curMonth+1).padStart(2,'0')}-01`;
+  const last=toDateStr(new Date(curYear,curMonth+1,0));
+  document.getElementById('bw-from').value=first;
+  document.getElementById('bw-to').value=last;
+  const hint=document.getElementById('bm-teacher-hint');
+  if(hint){
+    const list=isAdmin?teachers:[currentUser];
+    hint.innerHTML=list.map(t=>`<span style="background:#fff;border:1px solid var(--border);border-radius:3px;padding:1px 6px;margin-right:4px;cursor:pointer;" onclick="insertTeacherName('${t}')">${t}</span>`).join('');
+  }
+  document.getElementById('bulk-modal').classList.add('open');
+}
+function closeBulkModal(){document.getElementById('bulk-modal').classList.remove('open');}
+function openAbsenceModal(){document.getElementById('absence-modal').classList.add('open');}
+function closeAbsenceModal(){document.getElementById('absence-modal').classList.remove('open');}
+
+function insertTeacherName(name){
+  const ta=document.getElementById('bm-text');
+  const pos=ta.selectionStart;
+  ta.value=ta.value.substring(0,pos)+name+ta.value.substring(pos);
+  ta.focus();ta.selectionStart=ta.selectionEnd=pos+name.length;
+}
+function switchBulkTab(tab){
+  document.getElementById('bulk-weekly').style.display=tab==='weekly'?'block':'none';
+  document.getElementById('bulk-month').style.display=tab==='month'?'block':'none';
+  document.getElementById('bulk-tab-weekly').className='bulk-tab'+(tab==='weekly'?' active':'');
+  document.getElementById('bulk-tab-month').className='bulk-tab'+(tab==='month'?' active':'');
+}
+
 // ── シフト保存 ──
 async function saveShift(){
   const teacher=document.getElementById('s-teacher').value;
@@ -785,18 +653,17 @@ async function saveShift(){
   const date=document.getElementById('s-date').value;
   const startTime=document.getElementById('s-start').value;
   const slots=document.getElementById('s-slots').value;
-  if(!teacher||!date){toast('⚠️ 講師・日付は必須です');return;}
-  // 権限チェック
-  if(!isAdmin&&teacher!==currentUser){toast('⚠️ 自分のシフトのみ登録できます');return;}
+  const format=document.getElementById('s-format').value;
   const students=document.getElementById('s-students').value.trim();
-  const format=document.getElementById('s-format')?.value||'1対1';
   const note=document.getElementById('s-note').value.trim();
+  if(!teacher||!date){toast('⚠️ 講師・日付は必須です');return;}
+  if(!isAdmin&&teacher!==currentUser){toast('⚠️ 自分のシフトのみ登録できます');return;}
   const shift={id:'s'+Date.now(),teacher,campus,date,startTime,slots,format,students,note};
   const btn=document.getElementById('shift-save-btn');
   btn.innerHTML='<span class="loading"></span>保存中...';btn.disabled=true;
   try{
     const res=await api('addShift',{shift});
-    if(res.ok){shifts.push(shift);toast('✅ シフトを保存しました');renderAll();}
+    if(res.ok){shifts.push(shift);toast('✅ シフトを保存しました');closeShiftModal();renderAll();}
     else alert('保存に失敗しました');
   }catch(e){alert('通信エラー');}
   btn.innerHTML='シフトを保存';btn.disabled=false;
@@ -804,23 +671,18 @@ async function saveShift(){
 
 function renderShiftList(){
   const ul=document.getElementById('shift-list');
-  const ms=shifts
-    .filter(s=>s.date&&s.date.startsWith(`${curYear}-${String(curMonth+1).padStart(2,'0')}`))
+  const ms=shifts.filter(s=>s.date&&s.date.startsWith(`${curYear}-${String(curMonth+1).padStart(2,'0')}`))
     .sort((a,b)=>a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime));
   if(!ms.length){ul.innerHTML='<li style="font-size:11px;color:var(--hint);padding:6px;">シフトなし</li>';return;}
   ul.innerHTML=ms.map(s=>{
-    const isMine=s.teacher===currentUser;
-    const canEdit=isAdmin||isMine;
+    const canEdit=isAdmin||s.teacher===currentUser;
     return `<li class="sitem">
       <div class="sitem-left">
         <div class="sitem-name">${s.date.slice(5)} ${s.teacher}（${s.campus||'本校'}）</div>
-        <div class="sitem-detail">${s.startTime}〜 ${s.slots}コマ${s.students?' / '+s.students:''}${s.note?' 【'+s.note+'】':''}</div>
+        <div class="sitem-detail">${s.startTime} ${s.slots}コマ ${s.format||''} ${s.students?'/ '+s.students:''}</div>
       </div>
       <div class="sitem-acts">
-        ${canEdit
-          ?`<button class="edit-btn2" onclick="openEditModal('${s.id}')">編集</button>
-            <button class="del-btn2" onclick="deleteShift('${s.id}')">×</button>`
-          :`<span class="locked-badge">閲覧のみ</span>`}
+        ${canEdit?`<button class="edit-btn2" onclick="openEditModal('${s.id}')">編集</button><button class="del-btn2" onclick="deleteShift('${s.id}')">×</button>`:'<span class="locked-badge">閲覧</span>'}
       </div>
     </li>`;
   }).join('');
@@ -838,7 +700,7 @@ async function saveEvent(){
   btn.innerHTML='<span class="loading"></span>保存中...';btn.disabled=true;
   try{
     const res=await api('addEvent',{event:ev});
-    if(res.ok){events.push(ev);toast('✅ 行事を保存しました');renderAll();}
+    if(res.ok){events.push(ev);toast('✅ 行事を保存しました');renderAll();renderEventList();}
     else alert('保存に失敗しました');
   }catch(e){alert('通信エラー');}
   btn.innerHTML='行事を保存';btn.disabled=false;
@@ -846,120 +708,79 @@ async function saveEvent(){
 
 function renderEventList(){
   const ul=document.getElementById('event-list');
-  const me=events
-    .filter(e=>e.startDate&&(e.startDate.startsWith(`${curYear}-${String(curMonth+1).padStart(2,'0')}`)||e.endDate?.startsWith(`${curYear}-${String(curMonth+1).padStart(2,'0')}`)))
+  const me=events.filter(e=>e.startDate&&e.startDate.startsWith(`${curYear}-${String(curMonth+1).padStart(2,'0')}`))
     .sort((a,b)=>a.startDate.localeCompare(b.startDate));
   if(!me.length){ul.innerHTML='<li style="font-size:11px;color:var(--hint);padding:6px;">行事なし</li>';return;}
   const tl={event:'塾行事',school:'学校行事',holiday:'休講'};
-  ul.innerHTML=me.map(e=>`
-    <li class="sitem">
-      <div class="sitem-left">
-        <div class="sitem-name">${e.startDate.slice(5)}${e.endDate&&e.endDate!==e.startDate?'〜'+e.endDate.slice(5):''} ${e.content}</div>
-        <div class="sitem-detail">${tl[e.type]||e.type}${e.school?' / '+e.school:''}</div>
-      </div>
-      <div class="sitem-acts">
-        ${isAdmin?`<button class="del-btn2" onclick="deleteEvent('${e.id}')">×</button>`:''}
-      </div>
-    </li>`).join('');
-}
-
-// ── お知らせ ──
-async function saveNotice(){
-  if(!isAdmin){toast('⚠️ 塾長のみ変更できます');return;}
-  const content=document.getElementById('notice-text').value.trim();
-  try{
-    const res=await api('setNotice',{content});
-    if(res.ok){
-      document.getElementById('notice-preview').innerHTML=content.replace(/\n/g,'<br>');
-      toast('✅ お知らせを更新しました');
-    }
-  }catch(e){alert('通信エラー');}
+  ul.innerHTML=me.map(e=>`<li class="sitem">
+    <div class="sitem-left">
+      <div class="sitem-name">${e.startDate.slice(5)}${e.endDate&&e.endDate!==e.startDate?'〜'+e.endDate.slice(5):''} ${e.content}</div>
+      <div class="sitem-detail">${tl[e.type]||e.type}${e.school?' / '+e.school:''}</div>
+    </div>
+    <div class="sitem-acts">${isAdmin?`<button class="del-btn2" onclick="deleteEvent('${e.id}')">×</button>`:''}</div>
+  </li>`).join('');
 }
 
 // ── 削除 ──
 async function deleteShift(id){
-  const s=shifts.find(x=>x.id===id);
-  if(!s)return;
+  const s=shifts.find(x=>x.id===id);if(!s)return;
   if(!isAdmin&&s.teacher!==currentUser){toast('⚠️ 自分のシフトのみ削除できます');return;}
-  if(!confirm('このシフトを削除しますか？'))return;
-  try{
-    const res=await api('deleteShift',{id});
-    if(res.ok){shifts=shifts.filter(x=>x.id!==id);toast('削除しました');renderAll();}
-  }catch(e){alert('通信エラー');}
+  if(!confirm('削除しますか？'))return;
+  try{const res=await api('deleteShift',{id});if(res.ok){shifts=shifts.filter(x=>x.id!==id);toast('削除しました');renderAll();}}catch(e){alert('通信エラー');}
 }
 async function deleteEvent(id){
-  if(!isAdmin){toast('⚠️ 塾長のみ削除できます');return;}
-  if(!confirm('この行事を削除しますか？'))return;
-  try{
-    const res=await api('deleteEvent',{id});
-    if(res.ok){events=events.filter(x=>x.id!==id);toast('削除しました');renderAll();}
-  }catch(e){alert('通信エラー');}
+  if(!isAdmin||!confirm('削除しますか？'))return;
+  try{const res=await api('deleteEvent',{id});if(res.ok){events=events.filter(x=>x.id!==id);toast('削除しました');renderAll();renderEventList();}}catch(e){alert('通信エラー');}
 }
 
 // ── 編集モーダル ──
 function openEditModal(id){
   const s=shifts.find(x=>x.id===id);if(!s)return;
-  const canEdit=isAdmin||s.teacher===currentUser;
-  if(!canEdit){toast('⚠️ 自分のシフトのみ編集できます');return;}
+  if(!isAdmin&&s.teacher!==currentUser){toast('⚠️ 自分のシフトのみ編集できます');return;}
   editTarget=id;
   document.getElementById('modal-title').textContent='シフトを編集';
   document.getElementById('modal-del-btn').style.display='inline-block';
-
-  const teacherOpts=isAdmin
-    ?teachers.map(t=>`<option${t===s.teacher?' selected':''}>${t}</option>`).join('')
-    :`<option selected>${s.teacher}</option>`;
-
+  const teacherOpts=isAdmin?teachers.map(t=>`<option${t===s.teacher?' selected':''}>${t}</option>`).join(''):`<option selected>${s.teacher}</option>`;
   document.getElementById('modal-body').innerHTML=`
     <div class="fr">
       <div class="ff"><label>講師名</label><select id="m-teacher">${teacherOpts}</select></div>
-      <div class="ff"><label>教室</label>
-        <select id="m-campus">
-          <option value="本校"${(s.campus||'本校')==='本校'?' selected':''}>山口本校</option>
-          <option value="南校"${s.campus==='南校'?' selected':''}>山口南校</option>
-        </select>
-      </div>
+      <div class="ff"><label>教室</label><select id="m-campus">
+        <option value="本校"${(s.campus||'本校')==='本校'?' selected':''}>山口本校</option>
+        <option value="南校"${s.campus==='南校'?' selected':''}>山口南校</option>
+      </select></div>
     </div>
     <div class="fr">
       <div class="ff"><label>日付</label><input type="date" id="m-date" value="${s.date}"></div>
-      <div class="ff"><label>開始時間</label>
-        <select id="m-start">${['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'].map(t=>`<option${t===s.startTime?' selected':''}>${t}</option>`).join('')}</select>
-      </div>
+      <div class="ff"><label>開始時間</label><select id="m-start">
+        ${['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'].map(t=>`<option${t===s.startTime?' selected':''}>${t}</option>`).join('')}
+      </select></div>
     </div>
     <div class="fr">
-      <div class="ff"><label>コマ数</label>
-        <select id="m-slots">${[1,2,3].map(n=>`<option value="${n}"${String(n)===String(s.slots)?' selected':''}>${n}コマ</option>`).join('')}</select>
-      </div>
-      <div class="ff"><label>授業形式</label>
-        <select id="m-format">
-          <option value="1対1"${(s.format||'1対1')==='1対1'?' selected':''}>1対1（通常）</option>
-          <option value="1対2"${s.format==='1対2'?' selected':''}>1対2（割増）</option>
-          <option value="1対3"${s.format==='1対3'?' selected':''}>1対3</option>
-        </select>
-      </div>
+      <div class="ff"><label>コマ数</label><select id="m-slots">
+        ${[1,2,3].map(n=>`<option value="${n}"${String(n)===String(s.slots)?' selected':''}>${n}コマ</option>`).join('')}
+      </select></div>
+      <div class="ff"><label>授業形式</label><select id="m-format">
+        <option value="1対1"${(s.format||'1対1')==='1対1'?' selected':''}>1対1</option>
+        <option value="1対2"${s.format==='1対2'?' selected':''}>1対2</option>
+        <option value="1対3"${s.format==='1対3'?' selected':''}>1対3</option>
+      </select></div>
     </div>
-    <div class="ff"><label>担当生徒</label>
-      <input type="text" id="m-students" value="${s.students||''}" placeholder="例：田中 花子、山本 太郎">
-    </div>
-
-
-
-    <div class="ff"><label>備考</label><input type="text" id="m-note" value="${s.note||''}" ></div>`;
-
+    <div class="ff"><label>担当生徒</label><input type="text" id="m-students" value="${s.students||''}" placeholder="例：田中 花子、山本 太郎"></div>
+    <div class="ff"><label>備考</label><input type="text" id="m-note" value="${s.note||''}"></div>`;
   document.getElementById('modal-save-btn').onclick=saveEditShift;
   document.getElementById('edit-modal').classList.add('open');
 }
 
 async function saveEditShift(){
   const idx=shifts.findIndex(s=>s.id===editTarget);if(idx<0)return;
-  const mStudents=document.getElementById('m-students').value.trim();
   const updated={...shifts[idx],
     teacher:document.getElementById('m-teacher').value,
     campus:document.getElementById('m-campus').value,
     date:document.getElementById('m-date').value,
     startTime:document.getElementById('m-start').value,
     slots:document.getElementById('m-slots').value,
-    format:document.getElementById('m-format')?.value||'1対1',
-    students:mStudents,
+    format:document.getElementById('m-format').value,
+    students:document.getElementById('m-students').value.trim(),
     note:document.getElementById('m-note').value.trim()};
   if(!isAdmin&&updated.teacher!==currentUser){toast('⚠️ 自分のシフトのみ編集できます');return;}
   const btn=document.getElementById('modal-save-btn');
@@ -972,81 +793,33 @@ async function saveEditShift(){
   btn.textContent='保存';btn.disabled=false;
 }
 
-async function deleteFromModal(){
-  if(!editTarget)return;
-  await deleteShift(editTarget);
-  closeModal();
-}
+async function deleteFromModal(){if(!editTarget)return;await deleteShift(editTarget);closeModal();}
+function closeModal(){document.getElementById('edit-modal').classList.remove('open');editTarget=null;}
 
-function closeModal(){
-  document.getElementById('edit-modal').classList.remove('open');
-  editTarget=null;
-}
-
-// ── 一括登録モーダル ──
-function openBulkModal(){
-  const first=`${curYear}-${String(curMonth+1).padStart(2,'0')}-01`;
-  const last=toDateStr(new Date(curYear,curMonth+1,0));
-  document.getElementById('bw-from').value=first;
-  document.getElementById('bw-to').value=last;
-
-  // 講師名ヒントを更新
-  const hint=document.getElementById('bm-teacher-hint');
-  if(hint){
-    if(isAdmin){
-      hint.innerHTML='<strong>全講師：</strong> '+teachers.map(t=>'<span style="background:#fff;border:1px solid var(--border);border-radius:3px;padding:1px 6px;margin-right:4px;cursor:pointer;" onclick="insertTeacherName(\'' +t+ '\')">' +t+ '</span>').join('');
-    }else{
-      hint.innerHTML='<strong>あなたの名前：</strong> <span style="background:#dbeafe;border:1px solid #2563eb;border-radius:3px;padding:1px 6px;cursor:pointer;" onclick="insertTeacherName(\'' +currentUser+ '\')">'+currentUser+'</span>';
-    }
-  }
-  document.getElementById('bulk-modal').classList.add('open');
-}
-
-function insertTeacherName(name){
-  const ta=document.getElementById('bm-text');
-  const pos=ta.selectionStart;
-  const before=ta.value.substring(0,pos);
-  const after=ta.value.substring(pos);
-  ta.value=before+name+after;
-  ta.focus();
-  ta.selectionStart=ta.selectionEnd=pos+name.length;
-}
-function closeBulkModal(){document.getElementById('bulk-modal').classList.remove('open');}
-function switchBulkTab(tab){
-  document.getElementById('bulk-weekly').style.display=tab==='weekly'?'block':'none';
-  document.getElementById('bulk-month').style.display=tab==='month'?'block':'none';
-  document.getElementById('bulk-tab-weekly').className='tb-btn '+(tab==='weekly'?'tb-btn-primary':'tb-btn-outline');
-  document.getElementById('bulk-tab-month').className='tb-btn '+(tab==='month'?'tb-btn-primary':'tb-btn-outline');
-}
-
-// 毎週繰り返し一括登録
+// ── 一括登録 ──
 async function execBulkWeekly(){
   const teacher=document.getElementById('bw-teacher').value;
   const campus=document.getElementById('bw-campus').value;
   const dows=[...document.querySelectorAll('input[name="bw-dow"]:checked')].map(b=>parseInt(b.value));
   const startTime=document.getElementById('bw-start').value;
   const slots=document.getElementById('bw-slots').value;
+  const format=document.getElementById('bw-format').value;
   const from=new Date(document.getElementById('bw-from').value);
   const to=new Date(document.getElementById('bw-to').value);
   const students=document.getElementById('bw-students').value.trim();
-  const format=document.getElementById('bw-format')?.value||'1対1';
   const note=document.getElementById('bw-note').value.trim();
-
-  if(!teacher||!dows.length||!startTime){toast('⚠️ 講師・曜日・開始時間を入力してください');return;}
+  if(!teacher||!dows.length){toast('⚠️ 講師・曜日を入力してください');return;}
   if(!isAdmin&&teacher!==currentUser){toast('⚠️ 自分のシフトのみ登録できます');return;}
-
   const newShifts=[];
   for(let d=new Date(from);d<=to;d=addDays(d,1)){
     if(dows.includes(d.getDay())){
       const ds=toDateStr(d);
-      // 重複チェック
       const dup=shifts.some(s=>s.teacher===teacher&&s.date===ds&&s.startTime===startTime&&(s.campus||'本校')===campus);
-      if(!dup) newShifts.push({id:'s'+Date.now()+Math.random(),teacher,campus,date:ds,startTime,slots,students,note});
+      if(!dup) newShifts.push({id:'s'+Date.now()+Math.random(),teacher,campus,date:ds,startTime,slots,format,students,note});
     }
   }
-  if(!newShifts.length){toast('⚠️ 登録できる日がありません（重複または期間外）');return;}
-  if(!confirm(`${newShifts.length}件のシフトを登録します。よろしいですか？`))return;
-
+  if(!newShifts.length){toast('⚠️ 登録できる日がありません');return;}
+  if(!confirm(`${newShifts.length}件登録します。よろしいですか？`))return;
   try{
     const res=await api('bulkAddShifts',{shifts:newShifts});
     if(res.ok){shifts.push(...newShifts);toast(`✅ ${newShifts.length}件を一括登録しました`);closeBulkModal();renderAll();}
@@ -1054,27 +827,23 @@ async function execBulkWeekly(){
   }catch(e){alert('通信エラー');}
 }
 
-// 1ヶ月分テキスト一括登録
 async function execBulkMonth(){
   const text=document.getElementById('bm-text').value.trim();
   if(!text){toast('⚠️ テキストを入力してください');return;}
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
-  const newShifts=[];
-  const errors=[];
+  const newShifts=[];const errors=[];
   lines.forEach((line,i)=>{
     const parts=line.split(',').map(p=>p.trim());
     if(parts.length<4){errors.push(`行${i+1}: 列が不足`);return;}
-    const [teacher,campus,date,startTime,slots='1',students='',note=''] = parts;
+    // 形式: 講師名,教室,日付,開始時間,コマ数,授業形式,生徒,備考
+    const[teacher,campus,date,startTime,slots='1',format='1対1',students='',note='']=parts;
     if(!teacher||!date||!startTime){errors.push(`行${i+1}: 必須項目不足`);return;}
-    // 権限チェック：講師は自分のシフトのみ。塾長は全員OK
-    if(!isAdmin && currentUser && teacher!==currentUser){
-      errors.push(`行${i+1}: "${teacher}" は自分以外のシフトのため登録できません`);return;
-    }
-    newShifts.push({id:'s'+Date.now()+Math.random(),teacher,campus:campus||'本校',date,startTime,slots,students,note});
+    if(!isAdmin&&currentUser&&teacher!==currentUser){errors.push(`行${i+1}: 自分以外のシフトは登録不可`);return;}
+    newShifts.push({id:'s'+Date.now()+Math.random(),teacher,campus:campus||'本校',date,startTime,slots,format,students,note});
   });
-  if(errors.length){alert('以下の行にエラーがあります：\n'+errors.join('\n'));return;}
+  if(errors.length){alert('エラー：\n'+errors.join('\n'));return;}
   if(!newShifts.length){toast('⚠️ 登録できる行がありません');return;}
-  if(!confirm(`${newShifts.length}件のシフトを登録します。よろしいですか？`))return;
+  if(!confirm(`${newShifts.length}件登録します。よろしいですか？`))return;
   try{
     const res=await api('bulkAddShifts',{shifts:newShifts});
     if(res.ok){shifts.push(...newShifts);toast(`✅ ${newShifts.length}件を登録しました`);closeBulkModal();renderAll();}
@@ -1082,491 +851,146 @@ async function execBulkMonth(){
   }catch(e){alert('通信エラー');}
 }
 
-// ── 給与集計 ──
-let salaryBaseYear = new Date().getFullYear();
-let salaryBaseMonth = new Date().getMonth(); // 0-indexed
-
-function getSalaryPeriod(baseYear, baseMonth){
-  // 締め日：26日〜翌25日
-  // baseMonthの給与期間 = (baseMonth-1)月26日 〜 baseMonth月25日
-  const from = new Date(baseYear, baseMonth - 1, 26);
-  const to   = new Date(baseYear, baseMonth, 25);
-  return { from, to,
-    fromStr: toDateStr(from),
-    toStr:   toDateStr(to)
-  };
-}
-
-function getCurrentSalaryPeriod(){
-  // 今日がどの締め期間か判定
-  const today = new Date();
-  const d = today.getDate();
-  // 26日以降は翌月分の集計期間
-  let year = today.getFullYear();
-  let month = today.getMonth() + 1; // 1-indexed
-  if(d >= 26) month += 1;
-  if(month > 12){ month = 1; year++; }
-  return { year, month };
-}
-
-function goSalaryToday(){
-  const p = getCurrentSalaryPeriod();
-  salaryBaseYear = p.year;
-  salaryBaseMonth = p.month - 1;
-  renderSalary();
-}
-
-function changeSalaryMonth(d){
-  salaryBaseMonth += d;
-  if(salaryBaseMonth > 11){ salaryBaseMonth = 0; salaryBaseYear++; }
-  else if(salaryBaseMonth < 0){ salaryBaseMonth = 11; salaryBaseYear--; }
-  renderSalary();
-}
-
-function countStudents(studentsStr){
-  if(!studentsStr || !studentsStr.trim()) return 0;
-  // カンマ・読点・スペースで区切って数える
-  const parts = studentsStr.split(/[,、・\s]+/).filter(s=>s.trim());
-  return parts.length;
-}
-
-function renderSalary(){
-  const year = salaryBaseYear;
-  const month = salaryBaseMonth + 1; // 1-indexed
-  const period = getSalaryPeriod(year, month);
-
-  // ラベル
-  document.getElementById('salary-period-label').textContent =
-    `${period.fromStr} 〜 ${period.toStr}（${year}年${month}月分）`;
-
-  // 期間内シフトを抽出
-  const periodShifts = shifts.filter(s =>
-    s.date >= period.fromStr && s.date <= period.toStr
-  ).sort((a,b) => a.date.localeCompare(b.date) || a.teacher.localeCompare(b.teacher));
-
-  if(!periodShifts.length){
-    document.getElementById('salary-thead').innerHTML = '';
-    document.getElementById('salary-tbody').innerHTML =
-      '<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--hint);">この期間のシフトがありません</td></tr>';
-    document.getElementById('salary-tfoot').innerHTML = '';
-    document.getElementById('salary-detail').innerHTML = '<div style="color:var(--hint);font-size:13px;padding:1rem;">データなし</div>';
-    return;
-  }
-
-  // 日付一覧（列）
-  const dates = [...new Set(periodShifts.map(s=>s.date))].sort();
-
-  // 講師ごとに集計
-  const teacherData = {}; // { teacher: { date: [{slots,students}] } }
-  periodShifts.forEach(s => {
-    if(!teacherData[s.teacher]) teacherData[s.teacher] = {};
-    if(!teacherData[s.teacher][s.date]) teacherData[s.teacher][s.date] = [];
-    teacherData[s.teacher][s.date].push(s);
-  });
-
-  // thead
-  const thead = document.getElementById('salary-thead');
-  const dateHeaders = dates.map(d => {
-    const dt = new Date(d+'T00:00:00');
-    const dow = ['日','月','火','水','木','金','土'][dt.getDay()];
-    return `<th class="salary-th">${d.slice(5)}<br><span style="font-weight:400;">${dow}</span></th>`;
-  }).join('');
-  thead.innerHTML = `<tr>
-    <th class="salary-th salary-th-name">講師</th>
-    ${dateHeaders}
-    <th class="salary-th">1名<br>計</th>
-    <th class="salary-th">2名<br>計</th>
-    <th class="salary-th">合計<br>コマ</th>
-  </tr>`;
-
-  // tbody
-  const tbody = document.getElementById('salary-tbody');
-  let totalByDate = {}; dates.forEach(d=>totalByDate[d]={c1:0,c2:0,cu:0});
-  let grandTotal1=0, grandTotal2=0;
-
-  const rows = Object.keys(teacherData).sort().map(teacher => {
-    let total1=0, total2=0;
-    const cells = dates.map(d => {
-      const dayShifts = teacherData[teacher][d] || [];
-      if(!dayShifts.length) return '<td class="salary-td salary-cell-0">—</td>';
-
-      const cellParts = dayShifts.map(s => {
-        const slots = Number(s.slots) || 1;
-        const sc = countStudents(s.students);
-        let cls, badge;
-        if(sc === 0){
-          cls='salary-cell-u'; badge='?名'; totalByDate[d].cu += slots;
-        } else if(sc >= 2){
-          cls='salary-cell-2'; badge='2名'; total2+=slots; totalByDate[d].c2+=slots;
-        } else {
-          cls='salary-cell-1'; badge='1名'; total1+=slots; totalByDate[d].c1+=slots;
-        }
-        return `<span class="${cls}" style="display:inline-block;border-radius:4px;padding:2px 5px;font-size:11px;margin:1px;" title="${s.startTime} ${s.students||'生徒未入力'}">${slots}コマ(${badge})</span>`;
-      }).join('');
-
-      return `<td class="salary-td">${cellParts}</td>`;
-    }).join('');
-
-    grandTotal1+=total1; grandTotal2+=total2;
-    const total=total1+total2;
-    return `<tr>
-      <td class="salary-td salary-td-name">${teacher}</td>
-      ${cells}
-      <td class="salary-td salary-cell-1"><strong>${total1||'—'}</strong></td>
-      <td class="salary-td salary-cell-2"><strong>${total2||'—'}</strong></td>
-      <td class="salary-td" style="font-weight:700;color:var(--text);font-size:14px;">${total}</td>
-    </tr>`;
-  }).join('');
-  tbody.innerHTML = rows;
-
-  // tfoot（合計行）
-  const tfoot = document.getElementById('salary-tfoot');
-  const dateTotals = dates.map(d => {
-    const t = totalByDate[d];
-    const parts = [];
-    if(t.c1) parts.push(`<span class="salary-cell-1" style="display:inline-block;border-radius:3px;padding:1px 4px;font-size:10px;">${t.c1}</span>`);
-    if(t.c2) parts.push(`<span class="salary-cell-2" style="display:inline-block;border-radius:3px;padding:1px 4px;font-size:10px;">${t.c2}</span>`);
-    if(t.cu) parts.push(`<span class="salary-cell-u" style="display:inline-block;border-radius:3px;padding:1px 4px;font-size:10px;">?${t.cu}</span>`);
-    return `<td class="salary-td">${parts.join(' ')}</td>`;
-  }).join('');
-  tfoot.innerHTML = `<tr class="salary-total-row">
-    <td class="salary-td salary-td-name">合計</td>
-    ${dateTotals}
-    <td class="salary-td salary-cell-1"><strong>${grandTotal1}</strong></td>
-    <td class="salary-td salary-cell-2"><strong>${grandTotal2}</strong></td>
-    <td class="salary-td" style="font-weight:700;font-size:14px;">${grandTotal1+grandTotal2}</td>
-  </tr>`;
-
-  // 詳細ログ
-  const detail = document.getElementById('salary-detail');
-  detail.innerHTML = periodShifts.map(s => {
-    const sc = countStudents(s.students);
-    const badge = sc===0
-      ? '<span class="sd-badge-u">生徒未入力</span>'
-      : sc>=2
-        ? '<span class="sd-badge-2">2名指導</span>'
-        : '<span class="sd-badge-1">1名指導</span>';
-    return `<div class="salary-detail-item">
-      <span class="sd-date">${s.date}</span>
-      <span class="sd-teacher">${s.teacher}</span>
-      <span class="sd-slot">${s.startTime} ${s.slots}コマ</span>
-      <span class="sd-students">${s.students||'（生徒未入力）'}</span>
-      ${badge}
-      ${s.campus?`<span style="font-size:11px;color:var(--hint);">${s.campus}</span>`:''}
-      ${s.note?`<span style="font-size:11px;color:var(--hint);">📌${s.note}</span>`:''}
-    </div>`;
-  }).join('');
-}
-
-function exportSalaryCSV(){
-  const year = salaryBaseYear;
-  const month = salaryBaseMonth + 1;
-  const period = getSalaryPeriod(year, month);
-  const periodShifts = shifts.filter(s =>
-    s.date >= period.fromStr && s.date <= period.toStr
-  ).sort((a,b) => a.date.localeCompare(b.date));
-
-  if(!periodShifts.length){ toast('⚠️ この期間のシフトがありません'); return; }
-
-  const hdr = ['日付','講師','教室','開始時間','コマ数','生徒','生徒人数','指導区分','備考'];
-  const rows = periodShifts.map(s => {
-    const sc = countStudents(s.students);
-    const kubun = sc===0 ? '要確認' : sc>=2 ? '2名指導' : '1名指導';
-    return [s.date, s.teacher, s.campus||'本校', s.startTime, s.slots,
-      '"'+(s.students||'').replace(/"/g,'""')+'"', sc, kubun,
-      '"'+(s.note||'').replace(/"/g,'""')+'"'];
-  });
-  const csv = '\uFEFF' + [hdr, ...rows].map(r=>r.join(',')).join('\r\n');
-
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}));
-  a.download = `YCK_給与集計_${year}年${month}月分.csv`;
-  a.click();
-  toast('✅ CSVをダウンロードしました');
-}
-
 // ── 振替管理 ──
-let absences = [];
-
-async function loadAbsences(){
-  try{
-    const res = await api('getAbsences');
-    absences = res.absences || [];
-  }catch(e){ absences=[]; }
-}
-
-function rebuildAbsenceSelects(){
-  const popWithAll = (id, arr) => {
-    const el = document.getElementById(id); if(!el) return;
-    el.innerHTML = '<option value="">すべて</option>';
-    arr.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; el.appendChild(o); });
-  };
-  const popNoAll = (id, arr) => {
-    const el = document.getElementById(id); if(!el) return;
-    const cur = el.value;
-    el.innerHTML = '<option value="">選択してください</option>';
-    arr.forEach(v=>{ const o=document.createElement('option'); o.value=o.textContent=v; el.appendChild(o); });
-    el.value = cur;
-  };
-  const studentNames = master ? (master.students||[]).map(s=>s.name||s) : [];
-  popNoAll('ab-student', studentNames);
-  popNoAll('ab-teacher', teachers);
-  popWithAll('ab-filter-student', studentNames);
-  popWithAll('ab-filter-teacher', teachers);
-}
-
 async function saveAbsence(){
-  const student = document.getElementById('ab-student').value;
-  const teacher = document.getElementById('ab-teacher').value;
-  const absentDate = document.getElementById('ab-absent').value;
-  const absentSlot = document.getElementById('ab-slot').value;
-  const reason = document.getElementById('ab-reason').value;
-  const makeupDate = document.getElementById('ab-makeup').value;
-  const makeupSlot = document.getElementById('ab-makeup-slot').value;
-  const note = document.getElementById('ab-note').value.trim();
-
-  if(!student || !absentDate){ toast('⚠️ 生徒名と欠席日は必須です'); return; }
-
-  const status = makeupDate ? 'scheduled' : 'pending';
-  const ab = {
-    id: 'ab'+Date.now(), student, teacher, absentDate, absentSlot,
-    reason, makeupDate: makeupDate||'', makeupSlot: makeupSlot||'',
-    note, status
+  const student=document.getElementById('ab-student').value;
+  const absentDate=document.getElementById('ab-absent').value;
+  if(!student||!absentDate){toast('⚠️ 生徒名と欠席日は必須です');return;}
+  const ab={
+    id:'ab'+Date.now(),student,
+    teacher:document.getElementById('ab-teacher').value,
+    absentDate,absentSlot:document.getElementById('ab-slot').value,
+    reason:document.getElementById('ab-reason').value,
+    makeupDate:document.getElementById('ab-makeup').value||'',
+    makeupSlot:document.getElementById('ab-makeup-slot').value||'',
+    note:document.getElementById('ab-note').value.trim(),
+    status:document.getElementById('ab-makeup').value?'scheduled':'pending'
   };
-
-  const btn = document.getElementById('ab-save-btn');
-  btn.innerHTML = '<span class="loading"></span>登録中...'; btn.disabled = true;
+  const btn=document.getElementById('ab-save-btn');
+  btn.innerHTML='<span class="loading"></span>登録中...';btn.disabled=true;
   try{
-    const res = await api('addAbsence', {absence: ab});
-    if(res.ok){
-      absences.push(ab);
-      toast('✅ 振替を登録しました');
-      document.getElementById('ab-absent').value = '';
-      document.getElementById('ab-makeup').value = '';
-      document.getElementById('ab-makeup-slot').value = '';
-      document.getElementById('ab-note').value = '';
-      renderAbsenceList();
-    }
-  }catch(e){ alert('通信エラー'); }
-  btn.innerHTML = '登録する'; btn.disabled = false;
+    const res=await api('addAbsence',{absence:ab});
+    if(res.ok){absences.push(ab);toast('✅ 振替を登録しました');closeAbsenceModal();renderAbsenceList();}
+  }catch(e){alert('通信エラー');}
+  btn.innerHTML='登録する';btn.disabled=false;
 }
 
 async function markAbsenceDone(id){
-  const idx = absences.findIndex(a=>a.id===id);
-  if(idx<0) return;
-  absences[idx].status = 'done';
-  try{
-    await api('updateAbsence', {absence: absences[idx]});
-    toast('✅ 振替完了にしました');
-    renderAbsenceList();
-  }catch(e){ alert('通信エラー'); }
+  const idx=absences.findIndex(a=>a.id===id);if(idx<0)return;
+  absences[idx].status='done';
+  try{await api('updateAbsence',{absence:absences[idx]});toast('✅ 振替完了');renderAbsenceList();}catch(e){alert('通信エラー');}
 }
 
 async function deleteAbsence(id){
-  if(!confirm('この記録を削除しますか？')) return;
-  try{
-    const res = await api('deleteAbsence', {id});
-    if(res.ok){
-      absences = absences.filter(a=>a.id!==id);
-      toast('削除しました');
-      renderAbsenceList();
-    }
-  }catch(e){ alert('通信エラー'); }
+  if(!confirm('削除しますか？'))return;
+  try{const res=await api('deleteAbsence',{id});if(res.ok){absences=absences.filter(a=>a.id!==id);toast('削除しました');renderAbsenceList();}}catch(e){alert('通信エラー');}
 }
 
 function renderAbsenceList(){
-  const fs = document.getElementById('ab-filter-student')?.value || '';
-  const ft = document.getElementById('ab-filter-teacher')?.value || '';
-  const fst = document.getElementById('ab-filter-status')?.value || '';
-
-  let fl = absences.filter(a =>
-    (!fs || a.student===fs) &&
-    (!ft || a.teacher===ft) &&
-    (!fst || a.status===fst)
-  ).sort((a,b) => b.absentDate.localeCompare(a.absentDate));
-
-  // サマリー
-  const pending = absences.filter(a=>a.status==='pending').length;
-  const scheduled = absences.filter(a=>a.status==='scheduled').length;
-  const done = absences.filter(a=>a.status==='done').length;
-  const sum = document.getElementById('ab-summary');
-  if(sum) sum.innerHTML =
-    `振替未定：<strong>${pending}件</strong>　振替予定：<strong>${scheduled}件</strong>　完了：<strong>${done}件</strong>`;
-
-  const tbody = document.getElementById('ab-tbody');
-  if(!fl.length){
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--hint);font-size:13px;">記録がありません</td></tr>';
-    return;
-  }
-
-  const statusLabel = {
-    pending: '<span class="ab-status-pending">振替未定</span>',
-    scheduled: '<span class="ab-status-scheduled">振替予定</span>',
-    done: '<span class="ab-status-done">振替完了</span>'
-  };
-
-  tbody.innerHTML = fl.map(a => `
-    <tr class="ab-row">
-      <td style="font-weight:600;">${a.student}</td>
-      <td style="color:var(--muted);">${a.teacher||''}</td>
-      <td style="font-family:var(--mono);font-size:11px;">${a.absentDate}<br><span style="color:var(--muted);">${a.absentSlot}</span></td>
-      <td>${a.reason||''}</td>
-      <td style="font-family:var(--mono);font-size:11px;">
-        ${a.makeupDate
-          ? a.makeupDate+'<br><span style="color:var(--muted);">'+(a.makeupSlot||'未定')+'</span>'
-          : '<span style="color:var(--hint);">未定</span>'}
-      </td>
-      <td>${statusLabel[a.status]||a.status}</td>
-      <td style="color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.note||''}</td>
-      <td style="white-space:nowrap;">
-        ${a.status!=='done'?`<button class="ab-done-btn" onclick="markAbsenceDone('${a.id}')">完了</button>`:''}
-        <button class="ab-del-btn" onclick="deleteAbsence('${a.id}')">×</button>
-      </td>
-    </tr>`).join('');
+  const fs=document.getElementById('ab-filter-student')?.value||'';
+  const fst=document.getElementById('ab-filter-status')?.value||'';
+  const fl=absences.filter(a=>(!fs||a.student===fs)&&(!fst||a.status===fst)).sort((a,b)=>b.absentDate.localeCompare(a.absentDate));
+  const pending=absences.filter(a=>a.status==='pending').length;
+  const scheduled=absences.filter(a=>a.status==='scheduled').length;
+  const done=absences.filter(a=>a.status==='done').length;
+  const sum=document.getElementById('ab-summary');
+  if(sum) sum.innerHTML=`振替未定：<strong>${pending}</strong>件　振替予定：<strong>${scheduled}</strong>件　完了：<strong>${done}</strong>件`;
+  const tbody=document.getElementById('ab-tbody');
+  if(!fl.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--hint);">記録がありません</td></tr>';return;}
+  const sl={pending:'<span class="ab-status-pending">未定</span>',scheduled:'<span class="ab-status-scheduled">予定</span>',done:'<span class="ab-status-done">完了</span>'};
+  tbody.innerHTML=fl.map(a=>`<tr>
+    <td style="font-weight:600;">${a.student}</td>
+    <td style="color:var(--muted);">${a.teacher||''}</td>
+    <td style="font-size:11px;">${a.absentDate}<br><span style="color:var(--muted);">${a.absentSlot}</span></td>
+    <td>${a.reason||''}</td>
+    <td style="font-size:11px;">${a.makeupDate?a.makeupDate+'<br>'+(a.makeupSlot||'未定'):'<span style="color:var(--hint);">未定</span>'}</td>
+    <td>${sl[a.status]||a.status}</td>
+    <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;">${a.note||''}</td>
+    <td style="white-space:nowrap;">
+      ${a.status!=='done'?`<button class="ab-done-btn" onclick="markAbsenceDone('${a.id}')">完了</button>`:''}
+      <button class="ab-del-btn" onclick="deleteAbsence('${a.id}')">×</button>
+    </td>
+  </tr>`).join('');
 }
 
 // ── 表示切替 ──
-let currentView='month';
-let currentWeekStart=null;
-let currentCampus='本校';
-
 function setView(view){
   currentView=view;
   document.getElementById('month-view').style.display=view==='month'?'block':'none';
   document.getElementById('week-view').style.display=view==='week'?'block':'none';
   document.getElementById('absence-view').style.display=view==='absence'?'block':'none';
-  document.getElementById('salary-view').style.display=view==='salary'?'block':'none';
-  document.getElementById('view-month-btn').className='tb-btn '+(view==='month'?'tb-btn-primary':'tb-btn-outline');
-  document.getElementById('view-week-btn').className='tb-btn '+(view==='week'?'tb-btn-primary':'tb-btn-outline');
-  document.getElementById('view-absence-btn').className='tb-btn '+(view==='absence'?'tb-btn-primary':'tb-btn-outline');
-  document.getElementById('view-salary-btn').className='tb-btn '+(view==='salary'?'tb-btn-primary':'tb-btn-outline');
-  if(view==='week'){
-    if(!currentWeekStart) currentWeekStart=getWeekStart(new Date());
-    renderWeek();
-  }
-  if(view==='absence'){
-    rebuildAbsenceSelects();
-    renderAbsenceList();
-  }
-  if(view==='salary'){
-    renderSalary();
-  }
+  ['month','week','absence'].forEach(v=>{
+    document.getElementById('view-'+v+'-btn').className='tb-btn tb-btn-outline'+(v===view?' active':'');
+  });
+  if(view==='week'){if(!currentWeekStart)currentWeekStart=getWeekStart(new Date());renderWeek();}
+  if(view==='absence'){rebuildAbsenceSelects();renderAbsenceList();}
 }
 
-function getWeekStart(d){
-  const r=new Date(d);
-  r.setDate(r.getDate()-r.getDay());
-  r.setHours(0,0,0,0);
-  return r;
-}
-
-function changeWeek(d){
-  currentWeekStart=addDays(currentWeekStart,d*7);
-  renderWeek();
-}
-
+// ── 週表示 ──
+function getWeekStart(d){const r=new Date(d);r.setDate(r.getDate()-r.getDay());r.setHours(0,0,0,0);return r;}
+function changeWeek(d){currentWeekStart=addDays(currentWeekStart,d*7);renderWeek();}
 function setCampus(c){
   currentCampus=c;
   document.getElementById('campus-honko-btn').className='tb-btn '+(c==='本校'?'tb-btn-primary':'tb-btn-outline');
   document.getElementById('campus-nanko-btn').className='tb-btn '+(c==='南校'?'tb-btn-primary':'tb-btn-outline');
-  document.getElementById('campus-honko-btn').style.fontSize='11px';
-  document.getElementById('campus-honko-btn').style.padding='5px 12px';
-  document.getElementById('campus-nanko-btn').style.fontSize='11px';
-  document.getElementById('campus-nanko-btn').style.padding='5px 12px';
   renderWeek();
 }
 
 function renderWeek(){
-  if(!currentWeekStart) return;
-  const days=[];
-  for(let i=0;i<7;i++) days.push(addDays(currentWeekStart,i));
+  if(!currentWeekStart)return;
+  const days=[];for(let i=0;i<7;i++) days.push(addDays(currentWeekStart,i));
   const today=toDateStr(new Date());
   const dowNames=['日','月','火','水','木','金','土'];
-  const TIMES=[
-    {key:'10:30（午前）', label:'午前<br>10:30'},
-    {key:'14:00（午後）', label:'午後<br>14:00'},
-    {key:'16:00（0コマ）',label:'0コマ<br>16:00'},
-    {key:'16:25（0コマ）',label:'0コマ<br>16:25'},
-    {key:'17:30（1コマ）',label:'1コマ<br>17:30'},
-    {key:'19:15（2コマ）',label:'2コマ<br>19:15'},
-    {key:'20:45（3コマ）',label:'3コマ<br>20:45'},
-  ];
-
-  // 週ラベル
   const ws=days[0],we=days[6];
-  document.getElementById('week-label').textContent=
-    `${ws.getFullYear()}年${ws.getMonth()+1}月${ws.getDate()}日（${dowNames[ws.getDay()]}）〜 ${we.getMonth()+1}月${we.getDate()}日（${dowNames[we.getDay()]}）`;
-
-  // 月表示も同期
-  curYear=ws.getFullYear();curMonth=ws.getMonth();
-  updateMonthLabel();
-
-  // thead
+  document.getElementById('week-label').textContent=`${ws.getMonth()+1}/${ws.getDate()}（${dowNames[ws.getDay()]}）〜 ${we.getMonth()+1}/${we.getDate()}（${dowNames[we.getDay()]}）`;
+  curYear=ws.getFullYear();curMonth=ws.getMonth();updateMonthLabel();
+  const TIMES=[
+    {key:'10:30（午前）',label:'午前'},
+    {key:'14:00（午後）',label:'午後'},
+    {key:'16:00（0コマ）',label:'0コマ'},
+    {key:'16:25（0コマ）',label:'0コマ'},
+    {key:'17:30（1コマ）',label:'1コマ'},
+    {key:'19:15（2コマ）',label:'2コマ'},
+    {key:'20:45（3コマ）',label:'3コマ'},
+  ];
   const thead=document.getElementById('week-thead');
-  const theadRow=days.map((d,i)=>{
-    const ds=toDateStr(d);
-    const isToday=ds===today;
-    const isHoliday=HOLIDAYS[ds];
-    let cls='';
-    if(isToday) cls='today-col';
-    else if(isHoliday||i===0) cls='sun-col';
-    else if(i===6) cls='sat-col';
+  thead.innerHTML='<tr><th style="min-width:50px;">時間</th>'+days.map((d,i)=>{
+    const ds=toDateStr(d);const isToday=ds===today;const isHol=HOLIDAYS[ds];
+    let cls=isToday?'today-col':isHol||i===0?'sun-col':i===6?'sat-col':'';
     return `<th class="${cls}">${d.getMonth()+1}/${d.getDate()}<br>${dowNames[i]}</th>`;
-  }).join('');
-  thead.innerHTML=`<tr><th style="min-width:80px;">時間帯</th>${theadRow}</tr>`;
-
-  // tbody
+  }).join('')+'</tr>';
   const tbody=document.getElementById('week-tbody');
   tbody.innerHTML=TIMES.map(time=>{
     const cells=days.map((d,i)=>{
       const ds=toDateStr(d);
-      const isToday=ds===today;
-      const isHoliday=HOLIDAYS[ds];
-      let cellCls='';
-      if(isToday) cellCls='today-col';
-      else if(isHoliday||i===0) cellCls='holiday-col';
-
-      // この日・この時間帯・このキャンパスのシフト
-      const dayShifts=shifts.filter(s=>
-        s.date===ds&&
-        s.startTime===time.key&&
-        (s.campus||'本校')===currentCampus
-      );
-
-      // この日の行事
-      const dayEvents=i===0?events.filter(e=>ds>=e.startDate&&ds<=e.endDate):[];
-
-      const eventHtml=dayEvents.map(e=>{
-        const cls=e.type==='school'?'chip-school':e.type==='holiday'?'chip-holiday':'chip-event';
-        return `<div class="week-event ${cls}">${e.content}</div>`;
+      const isToday=ds===today;const isHol=HOLIDAYS[ds];
+      let cellCls=isToday?'today-col':isHol||i===0?'holiday-col':'';
+      const dayShifts=shifts.filter(s=>s.date===ds&&s.startTime===time.key&&(s.campus||'本校')===currentCampus);
+      const shiftHtml=dayShifts.length===0?'<div class="week-empty">—</div>':dayShifts.map(s=>{
+        const tc=teacherColorMap[s.teacher]||'tc0';
+        const canEdit=isAdmin||s.teacher===currentUser;
+        const onclick=canEdit?`onclick="openEditModal('${s.id}')"`:'';
+        return `<div class="week-slot ${tc}" ${onclick}>
+          <div class="week-slot-teacher">${s.teacher}</div>
+          ${s.students?`<div class="week-slot-students">👤 ${s.students}</div>`:''}
+          ${s.format&&s.format!=='1対1'?`<div class="week-slot-students">${s.format}</div>`:''}
+        </div>`;
       }).join('');
-
-      const shiftHtml=dayShifts.length===0
-        ?'<div class="week-empty">—</div>'
-        :dayShifts.map(s=>{
-          const tc=teacherColorMap[s.teacher]||'tc0';
-          const isMine=s.teacher===currentUser;
-          const canEdit=isAdmin||isMine;
-          const onclick=canEdit?`onclick="openEditModal('${s.id}')"`:'';
-          const t2=s.teacher+(s.students?' 担当:'+s.students:'')+(s.note?' '+s.note:'');
-          const inner='<div class="week-slot-teacher">'+s.teacher+'</div>'
-            +(s.students?'<div class="week-slot-students">👤 '+s.students+'</div>':'')
-            +(s.note?'<div class="week-slot-note">📌 '+s.note+'</div>':'');
-          return '<div class="week-slot '+tc+'" '+onclick+' title="'+t2+'">'+inner+'</div>';
-        }).join('');
-
-      return `<td class="${cellCls}">${i===0?eventHtml:''}${shiftHtml}</td>`;
+      return `<td class="${cellCls}">${shiftHtml}</td>`;
     }).join('');
-
-    const timeLabel=time.label;
-
-    return `<tr><td class="time-col">${timeLabel}</td>${cells}</tr>`;
+    return `<tr><td class="time-col">${time.label}<br><span style="font-size:9px;">${time.key.split('（')[0]}</span></td>${cells}</tr>`;
   }).join('');
 }
 
 // モーダル外クリックで閉じる
-document.getElementById('edit-modal').addEventListener('click',e=>{if(e.target===document.getElementById('edit-modal'))closeModal();});
-document.getElementById('bulk-modal').addEventListener('click',e=>{if(e.target===document.getElementById('bulk-modal'))closeBulkModal();});
+['shift-modal','event-modal','bulk-modal','absence-modal','edit-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{
+    if(e.target===document.getElementById(id)){
+      document.getElementById(id).classList.remove('open');
+      if(id==='edit-modal') editTarget=null;
+    }
+  });
+});
 
 init();
 </script>

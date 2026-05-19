@@ -98,8 +98,32 @@ textarea{resize:vertical;min-height:60px;}
 .dedup-btn{padding:8px 18px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-weight:500;}
 .section-sep{font-size:11px;font-weight:700;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;font-family:var(--mono);margin:1.25rem 0 .75rem;display:flex;align-items:center;gap:8px;}
 .section-sep::after{content:'';flex:1;height:1px;background:var(--border);}
+.nav-btn{width:30px;height:30px;border:1.5px solid var(--border-s);background:#fff;border-radius:var(--r);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--muted);}
+.nav-btn:hover{border-color:var(--blue);color:var(--blue);}
 .pw-msg{font-size:12px;margin-top:6px;}
 
+.mtab{padding:0 20px;height:44px;font-size:13px;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;font-family:var(--sans);white-space:nowrap;}
+.mtab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:500;}
+.msection{display:none;}.msection.active{display:block;}
+/* 給与集計 */
+.salary-th{padding:8px 10px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);border-right:1px solid var(--border);background:#f8f9ff;white-space:nowrap;}
+.salary-th-name{text-align:left;min-width:90px;}
+.salary-td{padding:7px 8px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border);font-size:12px;font-family:var(--mono);vertical-align:middle;}
+.salary-td-name{text-align:left;font-weight:600;font-size:13px;}
+.salary-cell-1{background:var(--blue-l);color:#1e40af;}
+.salary-cell-2{background:var(--amber-l);color:#92400e;}
+.salary-cell-3{background:var(--purple-l);color:#5b21b6;}
+.salary-cell-u{background:#f3f4f6;color:var(--hint);}
+.salary-total-row td{background:#f0f4ff;font-weight:700;border-top:2px solid var(--border);}
+.salary-detail-item{padding:6px 10px;border-bottom:1px solid var(--border);font-size:12px;display:flex;gap:12px;flex-wrap:wrap;}
+.sd-date{font-family:var(--mono);color:var(--muted);min-width:90px;}
+.sd-teacher{font-weight:600;min-width:80px;}
+.sd-slot{color:var(--blue);font-family:var(--mono);}
+.sd-students{color:var(--muted);}
+.sd-badge-1{background:var(--blue-l);color:#1e40af;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600;}
+.sd-badge-2{background:var(--amber-l);color:#92400e;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600;}
+.sd-badge-3{background:var(--purple-l);color:#5b21b6;padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600;}
+.sd-badge-u{background:#f3f4f6;color:var(--hint);padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600;}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:13px;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;}
 .toast.show{opacity:1;}
 .loading{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle;}
@@ -141,8 +165,15 @@ textarea{resize:vertical;min-height:60px;}
     <div class="admin-badge">👑 塾長</div>
   </div>
 
+  <!-- タブ -->
+  <div style="background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;gap:0;">
+    <button class="mtab active" id="mtab-master" onclick="showMTab('master',this)">マスタ管理</button>
+    <button class="mtab" id="mtab-salary" onclick="showMTab('salary',this)">💴 給与集計</button>
+  </div>
+
   <div class="main">
 
+    <div id="msection-master" class="msection active">
     <!-- 生徒マスタ -->
     <div class="card">
       <div class="card-head"><div class="card-icon" style="background:var(--sky-l);">👤</div><span class="card-label">生徒マスタ</span></div>
@@ -201,6 +232,37 @@ textarea{resize:vertical;min-height:60px;}
       <button class="add-btn" style="width:100%;padding:10px;" onclick="changePw()">変更する</button>
       <div class="pw-msg" id="pw-msg"></div>
     </div>
+    </div><!-- /msection-master -->
+
+    <!-- 給与集計セクション -->
+    <div id="msection-salary" class="msection">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap;">
+        <button class="nav-btn" onclick="changeSalaryMonth(-1)">‹</button>
+        <div style="font-size:15px;font-weight:700;color:var(--text);font-family:var(--mono);min-width:200px;text-align:center;" id="salary-period-label"></div>
+        <button class="nav-btn" onclick="changeSalaryMonth(1)">›</button>
+        <button class="add-btn" onclick="goSalaryToday()">今期</button>
+        <button class="add-btn" onclick="exportSalaryCSV()">📥 CSVダウンロード</button>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1rem;font-size:12px;color:var(--muted);align-items:center;">
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:14px;height:14px;background:var(--blue-l);border:1.5px solid var(--blue);border-radius:3px;display:inline-block;"></span>1対1</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:14px;height:14px;background:var(--amber-l);border:1.5px solid var(--amber);border-radius:3px;display:inline-block;"></span>1対2</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:14px;height:14px;background:var(--purple-l);border:1.5px solid var(--purple);border-radius:3px;display:inline-block;"></span>1対3</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:14px;height:14px;background:#f3f4f6;border:1.5px solid #9ca3af;border-radius:3px;display:inline-block;"></span>要確認</span>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead id="salary-thead"></thead>
+            <tbody id="salary-tbody"></tbody>
+            <tfoot id="salary-tfoot"></tfoot>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="margin-top:1rem;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;font-family:var(--mono);margin-bottom:.75rem;">期間内シフト詳細</div>
+        <div id="salary-detail"></div>
+      </div>
+    </div><!-- /msection-salary -->
 
   </div>
 </div>
@@ -233,12 +295,125 @@ async function doAuth(){
       sessionStorage.setItem('yck_pw',pw);
       document.getElementById('auth-screen').style.display='none';
       document.getElementById('app').style.display='block';
+      const sp=getCurrentSalaryPeriod();salaryBaseYear=sp.year;salaryBaseMonth=sp.month-1;
       await loadMaster();
     }else{
       document.getElementById('auth-err').style.display='block';
     }
   }catch(e){alert('接続に失敗しました');}
   btn.innerHTML='ログイン';btn.disabled=false;
+}
+
+// ── 給与集計 ──
+let salaryShifts=[], salaryBaseYear=new Date().getFullYear(), salaryBaseMonth=new Date().getMonth();
+
+function getCurrentSalaryPeriod(){
+  const today=new Date();const d=today.getDate();
+  let year=today.getFullYear(),month=today.getMonth()+1;
+  if(d>=26)month+=1;if(month>12){month=1;year++;}
+  return{year,month};
+}
+function getSalaryPeriod(baseYear,baseMonth){
+  const from=new Date(baseYear,baseMonth-1,26);
+  const to=new Date(baseYear,baseMonth,25);
+  return{fromStr:from.toISOString().slice(0,10),toStr:to.toISOString().slice(0,10)};
+}
+function goSalaryToday(){const p=getCurrentSalaryPeriod();salaryBaseYear=p.year;salaryBaseMonth=p.month-1;renderSalary();}
+function changeSalaryMonth(d){salaryBaseMonth+=d;if(salaryBaseMonth>11){salaryBaseMonth=0;salaryBaseYear++;}else if(salaryBaseMonth<0){salaryBaseMonth=11;salaryBaseYear--;}renderSalary();}
+
+function getFormatInfo(format){
+  if(format==='1対1') return{cls:'salary-cell-1',label:'1対1',badge:'sd-badge-1',group:1};
+  if(format==='1対2') return{cls:'salary-cell-2',label:'1対2',badge:'sd-badge-2',group:2};
+  if(format==='1対3') return{cls:'salary-cell-3',label:'1対3',badge:'sd-badge-3',group:3};
+  return{cls:'salary-cell-u',label:'?',badge:'sd-badge-u',group:0};
+}
+
+async function loadSalaryData(){
+  try{const res=await api('getShifts');salaryShifts=res.shifts||[];}catch(e){salaryShifts=[];}
+}
+
+function renderSalary(){
+  const month=salaryBaseMonth+1;
+  const period=getSalaryPeriod(salaryBaseYear,month);
+  document.getElementById('salary-period-label').textContent=`${period.fromStr} 〜 ${period.toStr}（${salaryBaseYear}年${month}月分）`;
+  const fl=salaryShifts.filter(s=>s.date>=period.fromStr&&s.date<=period.toStr)
+    .sort((a,b)=>a.date.localeCompare(b.date)||a.teacher.localeCompare(b.teacher));
+  if(!fl.length){
+    document.getElementById('salary-thead').innerHTML='';
+    document.getElementById('salary-tbody').innerHTML='<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--hint);">この期間のシフトがありません</td></tr>';
+    document.getElementById('salary-tfoot').innerHTML='';
+    document.getElementById('salary-detail').innerHTML='';
+    return;
+  }
+  const dates=[...new Set(fl.map(s=>s.date))].sort();
+  const teacherData={};
+  fl.forEach(s=>{
+    if(!teacherData[s.teacher])teacherData[s.teacher]={};
+    if(!teacherData[s.teacher][s.date])teacherData[s.teacher][s.date]=[];
+    teacherData[s.teacher][s.date].push(s);
+  });
+  const dowNames=['日','月','火','水','木','金','土'];
+  document.getElementById('salary-thead').innerHTML='<tr>'+
+    '<th class="salary-th salary-th-name">講師</th>'+
+    dates.map(d=>{const dt=new Date(d+'T00:00:00');return`<th class="salary-th">${d.slice(5)}<br><span style="font-weight:400;">${dowNames[dt.getDay()]}</span></th>`;}).join('')+
+    '<th class="salary-th">1対1<br>計</th><th class="salary-th">1対2<br>計</th><th class="salary-th">1対3<br>計</th><th class="salary-th">合計</th></tr>';
+  let g1tot=0,g2tot=0,g3tot=0;
+  const totalByDate={};dates.forEach(d=>totalByDate[d]={g1:0,g2:0,g3:0,gu:0});
+  const rows=Object.keys(teacherData).sort().map(teacher=>{
+    let g1=0,g2=0,g3=0;
+    const cells=dates.map(d=>{
+      const ds=teacherData[teacher][d]||[];
+      if(!ds.length)return'<td class="salary-td" style="color:var(--hint);">—</td>';
+      const parts=ds.map(s=>{
+        const slots=Number(s.slots)||1;
+        const fi=getFormatInfo(s.format);
+        if(fi.group===1){g1+=slots;totalByDate[d].g1+=slots;}
+        else if(fi.group===2){g2+=slots;totalByDate[d].g2+=slots;}
+        else if(fi.group===3){g3+=slots;totalByDate[d].g3+=slots;}
+        else totalByDate[d].gu+=slots;
+        return`<span class="${fi.cls}" style="display:inline-block;border-radius:4px;padding:2px 5px;font-size:11px;margin:1px;" title="${s.startTime} ${s.students||''}">${slots}コマ(${fi.label})</span>`;
+      }).join('');
+      return`<td class="salary-td">${parts}</td>`;
+    }).join('');
+    const total=g1+g2+g3;g1tot+=g1;g2tot+=g2;g3tot+=g3;
+    return`<tr><td class="salary-td salary-td-name">${teacher}</td>${cells}<td class="salary-td salary-cell-1"><strong>${g1||'—'}</strong></td><td class="salary-td salary-cell-2"><strong>${g2||'—'}</strong></td><td class="salary-td salary-cell-3"><strong>${g3||'—'}</strong></td><td class="salary-td" style="font-weight:700;font-size:14px;">${total}</td></tr>`;
+  }).join('');
+  document.getElementById('salary-tbody').innerHTML=rows;
+  const dateTotals=dates.map(d=>{
+    const t=totalByDate[d];const parts=[];
+    if(t.g1)parts.push(`<span class="salary-cell-1" style="display:inline-block;border-radius:3px;padding:1px 4px;font-size:10px;">${t.g1}</span>`);
+    if(t.g2)parts.push(`<span class="salary-cell-2" style="display:inline-block;border-radius:3px;padding:1px 4px;font-size:10px;">${t.g2}</span>`);
+    if(t.g3)parts.push(`<span class="salary-cell-3" style="display:inline-block;border-radius:3px;padding:1px 4px;font-size:10px;">${t.g3}</span>`);
+    return`<td class="salary-td">${parts.join(' ')}</td>`;
+  }).join('');
+  document.getElementById('salary-tfoot').innerHTML=`<tr class="salary-total-row"><td class="salary-td salary-th-name">合計</td>${dateTotals}<td class="salary-td salary-cell-1"><strong>${g1tot}</strong></td><td class="salary-td salary-cell-2"><strong>${g2tot}</strong></td><td class="salary-td salary-cell-3"><strong>${g3tot}</strong></td><td class="salary-td" style="font-weight:700;font-size:14px;">${g1tot+g2tot+g3tot}</td></tr>`;
+  document.getElementById('salary-detail').innerHTML=fl.map(s=>{
+    const fi=getFormatInfo(s.format);
+    return`<div class="salary-detail-item"><span class="sd-date">${s.date}</span><span class="sd-teacher">${s.teacher}</span><span class="sd-slot">${s.startTime} ${s.slots}コマ</span><span class="sd-students">${s.students||'—'}</span><span class="${fi.badge}">${fi.label}</span>${s.campus?`<span style="font-size:11px;color:var(--hint);">${s.campus}</span>`:''}</div>`;
+  }).join('');
+}
+
+function exportSalaryCSV(){
+  const month=salaryBaseMonth+1;
+  const period=getSalaryPeriod(salaryBaseYear,month);
+  const fl=salaryShifts.filter(s=>s.date>=period.fromStr&&s.date<=period.toStr).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!fl.length){toast('⚠️ データがありません');return;}
+  const hdr=['日付','講師','教室','開始時間','コマ数','授業形式','生徒','備考'];
+  const rows=fl.map(s=>[s.date,s.teacher,s.campus||'本校',s.startTime,s.slots,s.format||'1対1','"'+(s.students||'').replace(/"/g,'""')+'"','"'+(s.note||'').replace(/"/g,'""')+'"']);
+  const csv='\uFEFF'+[hdr,...rows].map(r=>r.join(',')).join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download=`YCK_給与集計_${salaryBaseYear}年${month}月分.csv`;a.click();
+  toast('✅ CSVをダウンロードしました');
+}
+
+function showMTab(name,btn){
+  document.querySelectorAll('.msection').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('msection-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='salary'&&salaryShifts.length===0){loadSalaryData().then(renderSalary);}
+  if(name==='salary'&&salaryShifts.length>0)renderSalary();
 }
 
 async function loadMaster(){
@@ -381,6 +556,7 @@ async function dedupMaster(){
     const res=await api('dedupMaster');
     if(res.ok){
       const msg=res.removed>0?`✅ ${res.removed}件の重複を削除しました`:'✅ 重複はありませんでした';
+      const sp=getCurrentSalaryPeriod();salaryBaseYear=sp.year;salaryBaseMonth=sp.month-1;
       await loadMaster();toast(msg,3000);
     }else alert('削除に失敗しました');
   }catch(e){alert('通信エラーが発生しました');}
