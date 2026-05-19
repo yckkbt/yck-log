@@ -532,10 +532,10 @@ async function init(){
   rebuildSelects();
   rebuildAbsenceSelects();
   setDefaultDates();
-  renderAll();
-  // ローディング非表示・コンテンツ表示
+  // 先にコンテンツを表示してからレンダリング
   document.getElementById('loading-overlay').style.display='none';
   document.getElementById('main-content').style.display='block';
+  renderAll();
 }
 
 function setDefaultDates(){
@@ -624,11 +624,11 @@ function renderCalUnified(){
     const makeChips=(arr)=>arr.map(s=>{
       const tc=teacherColorMap[s.teacher]||'tc0';
       const canEdit=isAdmin||s.teacher===currentUser;
-      const onclick=canEdit?'onclick="openEditModal('+JSON.stringify(s.id)+')"':'';
       const lbl=s.teacher+(s.startTime?' '+s.startTime.split('（')[0]:'');
       const tip=lbl+(s.students?' '+s.students:'');
       const mine=s.teacher===currentUser?' chip-mine':'';
-      return '<span class="chip chip-shift '+tc+mine+'" '+onclick+' title="'+tip+'">'+lbl+'</span>';
+      const editAttr=canEdit?' data-shift-id="'+s.id+'"':'';
+      return '<span class="chip chip-shift '+tc+mine+'"'+editAttr+' title="'+tip+'">'+lbl+'</span>';
     }).join('');
     const honkoSection='<div class="campus-divider campus-divider-honko">🔵本</div><div class="campus-section">'+makeChips(honkoShifts)+'</div>';
     const nankoSection='<div class="campus-divider campus-divider-nanko">🟢南</div><div class="campus-section">'+makeChips(nankoShifts)+'</div>';
@@ -665,8 +665,10 @@ function renderCal(campus,gridId){
     const shiftChips=dayShifts.map(s=>{
       const tc=teacherColorMap[s.teacher]||'tc0';
       const canEdit=isAdmin||s.teacher===currentUser;
-      const onclick=canEdit?`onclick="openEditModal('${s.id}')"`:'';
-      return `<span class="chip chip-shift ${tc}${s.teacher===currentUser?' chip-mine':''}" ${onclick}>${s.teacher} ${s.startTime.split('（')[0]}</span>`;
+      const editAttr=canEdit?' data-shift-id="'+s.id+'"':'';
+      const mine=s.teacher===currentUser?' chip-mine':'';
+      const lbl=s.teacher+' '+s.startTime.split('（')[0];
+      return '<span class="chip chip-shift '+tc+mine+'"'+editAttr+'>'+lbl+'</span>';
     }).join('');
     return `<div class="${cc}" onclick="onCellClick('${c.date||''}')"><div class="${dc}">${c.day}</div>${evChips}${shiftChips}</div>`;
   }).join('');
@@ -1040,7 +1042,7 @@ function renderWeek(){
       const shiftHtml=dayShifts.length===0?'<div class="week-empty">—</div>':dayShifts.map(s=>{
         const tc=teacherColorMap[s.teacher]||'tc0';
         const canEdit=isAdmin||s.teacher===currentUser;
-        const onclick=canEdit?`onclick="openEditModal('${s.id}')"`:'';
+        const onclick=canEdit?'onclick="openEditModal(\'' +s.id+ '\')'  :'';
         return `<div class="week-slot ${tc}" ${onclick}>
           <div class="week-slot-teacher">${s.teacher}</div>
           ${s.students?`<div class="week-slot-students">👤 ${s.students}</div>`:''}
@@ -1052,6 +1054,15 @@ function renderWeek(){
     return `<tr><td class="time-col">${time.label}<br><span style="font-size:9px;">${time.key.split('（')[0]}</span></td>${cells}</tr>`;
   }).join('');
 }
+
+// カレンダー・週表示のシフトチップクリックをイベント委任で処理
+document.addEventListener('click', function(e){
+  const chip = e.target.closest('[data-shift-id]');
+  if(chip){
+    const id = chip.getAttribute('data-shift-id');
+    if(id) openEditModal(id);
+  }
+});
 
 // モーダル外クリック（背景）で閉じる
 ['shift-modal','event-modal','bulk-modal','absence-modal','edit-modal'].forEach(id=>{
