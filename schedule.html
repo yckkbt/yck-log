@@ -211,7 +211,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
     <option value="">全員</option>
   </select>
   <div class="tsep"></div>
-  <button class="tb-btn tb-btn-outline" onclick="goToday()">今日</button>
+  <button class="tb-btn tb-btn-outline" onclick="goTodayWithPopup()">今日</button>
   <button class="tb-btn tb-btn-outline" id="view-month-btn" onclick="setView('month')">📅月</button>
   <button class="tb-btn tb-btn-outline" id="view-week-btn" onclick="setView('week')">📋週</button>
   <button class="tb-btn tb-btn-outline" id="view-absence-btn" onclick="setView('absence')">🔄振替</button>
@@ -628,6 +628,12 @@ function updateMonthLabel(){document.getElementById('month-label').textContent=`
 function changeMonth(d){curMonth+=d;if(curMonth>11){curMonth=0;curYear++;}else if(curMonth<0){curMonth=11;curYear--;}renderAll();}
 function goToday(){curYear=new Date().getFullYear();curMonth=new Date().getMonth();currentWeekStart=getWeekStart(new Date());renderAll();if(currentView==='week')renderWeek();}
 
+function goTodayWithPopup(){
+  goToday();
+  const today=toDateStr(new Date());
+  showDayPopup(today);
+}
+
 function renderCalUnified(){
   const grid=document.getElementById('cal-unified');
   if(!grid)return;
@@ -717,12 +723,9 @@ function renderCal(campus,gridId){
 
 function onCellClick(d){
   if(!d)return;
-  // 日付フォームに設定
   document.getElementById('s-date').value=d;
   document.getElementById('e-start').value=d;
   document.getElementById('e-end').value=d;
-  // ポップアップ表示
-  showDayPopup(d);
 }
 
 function showDayPopup(d){
@@ -1153,7 +1156,8 @@ function renderWeek(){
       const ds=toDateStr(d);
       const isToday=ds===today;const isHol=HOLIDAYS[ds];
       let cellCls=isToday?'today-col':isHol||i===0?'holiday-col':'';
-      const dayShifts=shifts.filter(s=>s.date===ds&&s.startTime===time.key&&(s.campus||'本校')===currentCampus);
+      const wFilter=document.getElementById('teacher-filter').value;
+      const dayShifts=shifts.filter(s=>s.date===ds&&s.startTime===time.key&&(s.campus||'本校')===currentCampus&&(!wFilter||s.teacher===wFilter));
       const shiftHtml=dayShifts.length===0?'<div class="week-empty">—</div>':dayShifts.map(s=>{
         const tc=teacherColorMap[s.teacher]||'tc0';
         const canEdit=isAdmin||s.teacher===currentUser;
