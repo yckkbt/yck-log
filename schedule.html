@@ -917,7 +917,12 @@ function openBulkModal(){
 }
 function closeBulkModal(){document.getElementById('bulk-modal').classList.remove('open');}
 function openAbsenceModal(){document.getElementById('absence-modal').classList.add('open');}
-function closeAbsenceModal(){document.getElementById('absence-modal').classList.remove('open');}
+function closeAbsenceModal(){
+  document.getElementById('absence-modal').classList.remove('open');
+  // ボタンを登録モードに戻す
+  const btn=document.getElementById('ab-save-btn');
+  if(btn){btn.textContent='登録する';btn.onclick=saveAbsence;}
+}
 
 function insertTeacherName(name){
   const ta=document.getElementById('bm-text');
@@ -1177,6 +1182,57 @@ async function saveAbsence(){
   btn.innerHTML='登録する';btn.disabled=false;
 }
 
+function openEditAbsence(id){
+  const a=absences.find(x=>x.id===id);
+  if(!a)return;
+  // 欠席モーダルに値をセット
+  document.getElementById('ab-student').value=a.student||'';
+  document.getElementById('ab-teacher').value=a.teacher||'';
+  document.getElementById('ab-absent').value=a.absentDate||'';
+  document.getElementById('ab-slot').value=a.absentSlot||'';
+  document.getElementById('ab-reason').value=a.reason||'体調不良';
+  document.getElementById('ab-makeup').value=a.makeupDate||'';
+  document.getElementById('ab-makeup-slot').value=a.makeupSlot||'';
+  document.getElementById('ab-note').value=a.note||'';
+  // 保存ボタンを「更新」モードに切り替え
+  const btn=document.getElementById('ab-save-btn');
+  btn.textContent='更新する';
+  btn.onclick=function(){updateAbsence(id);};
+  openAbsenceModal();
+}
+
+async function updateAbsence(id){
+  const idx=absences.findIndex(a=>a.id===id);if(idx<0)return;
+  const makeupDate=document.getElementById('ab-makeup').value||'';
+  const updated={
+    ...absences[idx],
+    student:document.getElementById('ab-student').value,
+    teacher:document.getElementById('ab-teacher').value,
+    absentDate:document.getElementById('ab-absent').value,
+    absentSlot:document.getElementById('ab-slot').value,
+    reason:document.getElementById('ab-reason').value,
+    makeupDate,
+    makeupSlot:document.getElementById('ab-makeup-slot').value||'',
+    note:document.getElementById('ab-note').value.trim(),
+    status:makeupDate?'scheduled':absences[idx].status==='done'?'done':'pending'
+  };
+  const btn=document.getElementById('ab-save-btn');
+  btn.innerHTML='<span class="loading"></span>更新中...';btn.disabled=true;
+  try{
+    const res=await api('updateAbsence',{absence:updated});
+    if(res.ok){
+      absences[idx]=updated;
+      toast('✅ 更新しました');
+      closeAbsenceModal();
+      // ボタンを登録モードに戻す
+      btn.textContent='登録する';
+      btn.onclick=saveAbsence;
+      renderAbsenceList();
+    }
+  }catch(e){alert('通信エラー');}
+  btn.innerHTML=btn.textContent;btn.disabled=false;
+}
+
 async function markAbsenceDone(id){
   const idx=absences.findIndex(a=>a.id===id);if(idx<0)return;
   absences[idx].status='done';
@@ -1200,19 +1256,22 @@ function renderAbsenceList(){
   const tbody=document.getElementById('ab-tbody');
   if(!fl.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--hint);">記録がありません</td></tr>';return;}
   const sl={pending:'<span class="ab-status-pending">未定</span>',scheduled:'<span class="ab-status-scheduled">予定</span>',done:'<span class="ab-status-done">完了</span>'};
-  tbody.innerHTML=fl.map(a=>`<tr>
-    <td style="font-weight:600;">${a.student}</td>
-    <td style="color:var(--muted);">${a.teacher||''}</td>
-    <td style="font-size:11px;">${a.absentDate}<br><span style="color:var(--muted);">${a.absentSlot}</span></td>
-    <td>${a.reason||''}</td>
-    <td style="font-size:11px;">${a.makeupDate?a.makeupDate+'<br>'+(a.makeupSlot||'未定'):'<span style="color:var(--hint);">未定</span>'}</td>
-    <td>${sl[a.status]||a.status}</td>
-    <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;">${a.note||''}</td>
-    <td style="white-space:nowrap;">
-      ${a.status!=='done'?`<button class="ab-done-btn" onclick="markAbsenceDone('${a.id}')">完了</button>`:''}
-      <button class="ab-del-btn" onclick="deleteAbsence('${a.id}')">×</button>
-    </td>
-  </tr>`).join('');
+  tbody.innerHTML=fl.map(a=>{
+    const editBtn=a.status!=='done'?'<button class="ab-done-btn" style="background:var(--blue-l);border-color:var(--blue);color:var(--blue);" onclick="openEditAbsence(\''+a.id+'\')">編集</button>':'';
+    const doneBtn=a.status!=='done'?'<button class="ab-done-btn" onclick="markAbsenceDone(\''+a.id+'\')">完了</button>':'';
+    const delBtn='<button class="ab-del-btn" onclick="deleteAbsence(\''+a.id+'\')">×</button>';
+    const makeupCell=a.makeupDate?a.makeupDate+'<br><span style="color:var(--muted);">'+(a.makeupSlot||'未定')+'</span>':'<span style="color:var(--hint);">未定</span>';
+    return '<tr>'
+      +'<td style="font-weight:600;">'+a.student+'</td>'
+      +'<td style="color:var(--muted);">'+( a.teacher||'')+'</td>'
+      +'<td style="font-size:11px;">'+a.absentDate+'<br><span style="color:var(--muted);">'+a.absentSlot+'</span></td>'
+      +'<td>'+(a.reason||'')+'</td>'
+      +'<td style="font-size:11px;">'+makeupCell+'</td>'
+      +'<td>'+(sl[a.status]||a.status)+'</td>'
+      +'<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;">'+(a.note||'')+'</td>'
+      +'<td style="white-space:nowrap;">'+editBtn+doneBtn+delBtn+'</td>'
+      +'</tr>';
+  }).join('');
 }
 
 // ── 表示切替 ──
