@@ -100,6 +100,12 @@ textarea{resize:vertical;min-height:60px;}
 .section-sep::after{content:'';flex:1;height:1px;background:var(--border);}
 .nav-btn{width:30px;height:30px;border:1.5px solid var(--border-s);background:#fff;border-radius:var(--r);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--muted);}
 .nav-btn:hover{border-color:var(--blue);color:var(--blue);}
+.times-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;background:#f8f9ff;font-size:13px;font-family:var(--mono);}
+.times-item-label{flex:1;color:var(--text);}
+.times-move{background:none;border:1px solid var(--border-s);border-radius:4px;padding:2px 7px;cursor:pointer;color:var(--muted);font-size:12px;margin-left:4px;}
+.times-move:hover{border-color:var(--blue);color:var(--blue);}
+.times-del{background:none;border:none;color:var(--hint);cursor:pointer;font-size:16px;margin-left:6px;}
+.times-del:hover{color:var(--red);}
 .pw-msg{font-size:12px;margin-top:6px;}
 
 .mtab{padding:0 20px;height:44px;font-size:13px;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;font-family:var(--sans);white-space:nowrap;}
@@ -169,6 +175,7 @@ textarea{resize:vertical;min-height:60px;}
   <div style="background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;gap:0;">
     <button class="mtab active" id="mtab-master" onclick="showMTab('master',this)">マスタ管理</button>
     <button class="mtab" id="mtab-salary" onclick="showMTab('salary',this)">💴 給与集計</button>
+    <button class="mtab" id="mtab-times" onclick="showMTab('times',this)">⏰ 授業時間</button>
   </div>
 
   <div class="main">
@@ -263,6 +270,39 @@ textarea{resize:vertical;min-height:60px;}
         <div id="salary-detail"></div>
       </div>
     </div><!-- /msection-salary -->
+
+    <!-- 授業時間設定 -->
+    <div id="msection-times" class="msection">
+      <div class="card">
+        <div class="card-head"><div class="card-icon" style="background:var(--sky-l);">⏰</div><span class="card-label">授業開始時間の設定</span></div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:1rem;line-height:1.7;">スケジュール・授業ログの開始時間プルダウンに表示する時間帯を管理します。<br>時期により変更した場合はここで追加・削除してください。</p>
+
+        <!-- 現在の時間一覧 -->
+        <div style="margin-bottom:1rem;">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.1em;margin-bottom:8px;">現在の設定</div>
+          <ul id="times-list" style="list-style:none;"></ul>
+        </div>
+
+        <!-- 新規追加 -->
+        <div class="section-sep">時間帯を追加</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div class="field">
+            <label>開始時刻</label>
+            <input type="time" id="new-time-hm" value="17:30">
+          </div>
+          <div class="field">
+            <label>ラベル（例：1コマ、午前）</label>
+            <input type="text" id="new-time-label" placeholder="例：1コマ">
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--hint);margin-bottom:10px;">表示形式：<span id="new-time-preview" style="font-family:var(--mono);background:#f3f4f6;padding:2px 6px;border-radius:3px;"></span></div>
+        <button class="add-btn" onclick="addStartTime()">＋ 追加する</button>
+
+        <div style="margin-top:1.5rem;padding:12px;background:var(--amber-l);border-radius:var(--r);font-size:12px;color:#92400e;">
+          <strong>⚠️ 注意：</strong>変更後は講師にページの再読み込みを促してください。
+        </div>
+      </div>
+    </div><!-- /msection-times -->
 
   </div>
 </div>
@@ -428,6 +468,7 @@ function showMTab(name,btn){
   if(btn)btn.classList.add('active');
   if(name==='salary'&&salaryShifts.length===0){loadSalaryData().then(renderSalary);}
   if(name==='salary'&&salaryShifts.length>0)renderSalary();
+  if(name==='times') loadStartTimes();
 }
 
 async function loadMaster(){
@@ -576,6 +617,93 @@ async function dedupMaster(){
   }catch(e){alert('通信エラーが発生しました');}
   btn.innerHTML='🧹 重複データを自動削除';btn.disabled=false;
 }
+
+// ── 授業時間管理 ──
+let startTimes = [];
+
+async function loadStartTimes(){
+  try{
+    const res = await api('getStartTimes');
+    startTimes = res.startTimes || [];
+    renderTimesList();
+    updateTimePreview();
+  }catch(e){ console.log('startTimes load error', e); }
+}
+
+function renderTimesList(){
+  const ul = document.getElementById('times-list');
+  if(!ul) return;
+  if(!startTimes.length){
+    ul.innerHTML='<li style="font-size:12px;color:var(--hint);padding:8px;">（未設定）</li>';
+    return;
+  }
+  ul.innerHTML = startTimes.map((t,i)=>`
+    <li class="times-item">
+      <span class="times-item-label">${t}</span>
+      <div style="display:flex;align-items:center;">
+        ${i>0?`<button class="times-move" onclick="moveTime(${i},-1)">↑</button>`:'<span style="width:30px;"></span>'}
+        ${i<startTimes.length-1?`<button class="times-move" onclick="moveTime(${i},1)">↓</button>`:'<span style="width:30px;"></span>'}
+        <button class="times-del" onclick="deleteTime(${i})">×</button>
+      </div>
+    </li>`).join('');
+}
+
+function updateTimePreview(){
+  const hm = document.getElementById('new-time-hm')?.value || '';
+  const label = document.getElementById('new-time-label')?.value || '';
+  const preview = document.getElementById('new-time-preview');
+  if(!preview) return;
+  if(hm && label){
+    preview.textContent = hm+'（'+label+'）';
+  } else if(hm){
+    preview.textContent = hm;
+  } else {
+    preview.textContent = '';
+  }
+}
+
+async function addStartTime(){
+  const hm = document.getElementById('new-time-hm').value;
+  const label = document.getElementById('new-time-label').value.trim();
+  if(!hm){ toast('⚠️ 時刻を入力してください'); return; }
+  const newVal = label ? hm+'（'+label+'）' : hm;
+  if(startTimes.includes(newVal)){ toast('⚠️ すでに登録済みです'); return; }
+  startTimes.push(newVal);
+  await saveStartTimes();
+  renderTimesList();
+  document.getElementById('new-time-label').value = '';
+  updateTimePreview();
+  toast('✅ 追加しました');
+}
+
+async function deleteTime(idx){
+  if(!confirm('「'+startTimes[idx]+'」を削除しますか？')) return;
+  startTimes.splice(idx, 1);
+  await saveStartTimes();
+  renderTimesList();
+  toast('削除しました');
+}
+
+async function moveTime(idx, dir){
+  const newIdx = idx + dir;
+  if(newIdx < 0 || newIdx >= startTimes.length) return;
+  const tmp = startTimes[idx];
+  startTimes[idx] = startTimes[newIdx];
+  startTimes[newIdx] = tmp;
+  await saveStartTimes();
+  renderTimesList();
+}
+
+async function saveStartTimes(){
+  try{
+    await api('setStartTimes', {startTimes});
+  }catch(e){ alert('保存エラー：'+e.message); }
+}
+
+// プレビュー更新
+document.addEventListener('input', function(e){
+  if(e.target.id==='new-time-hm'||e.target.id==='new-time-label') updateTimePreview();
+});
 
 async function changePw(){
   const old=document.getElementById('pw-old').value;

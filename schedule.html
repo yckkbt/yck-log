@@ -505,6 +505,7 @@ const HOLIDAYS={'2026-01-01':1,'2026-01-12':1,'2026-02-11':1,'2026-02-23':1,'202
 
 let curYear=new Date().getFullYear(), curMonth=new Date().getMonth();
 let shifts=[], events=[], teachers=[], master={}, teacherColorMap={};
+let startTimes=[];
 let currentUser='', isAdmin=false, editTarget=null;
 let currentView='month', currentWeekStart=null, currentCampus='本校';
 let absences=[];
@@ -535,6 +536,7 @@ async function init(){
       shifts=c.shifts||[];
       events=c.events||[];
       absences=c.absences||[];
+      startTimes=c.startTimes||['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'];
       isAdmin=!teachers.includes(currentUser)||currentUser==='';
       document.getElementById('header-user').textContent=isAdmin?'👑 塾長':'👤 '+currentUser;
       if(!isAdmin) document.getElementById('event-btn').style.display='none';
@@ -551,17 +553,18 @@ async function init(){
 
   // バックグラウンドでGASから最新データを取得
   try{
-    const[mRes,sRes,eRes,nRes,aRes]=await Promise.all([
-      api('getMaster'),api('getShifts'),api('getEvents'),api('getNotices'),api('getAbsences')
+    const[mRes,sRes,eRes,nRes,aRes,stRes]=await Promise.all([
+      api('getMaster'),api('getShifts'),api('getEvents'),api('getNotices'),api('getAbsences'),api('getStartTimes')
     ]);
     master=(mRes&&mRes.master)||{students:[],teachers:[],subjects:[]};
     teachers=master.teachers||[];
     shifts=(sRes&&sRes.shifts)||[];
     events=(eRes&&eRes.events)||[];
     absences=(aRes&&aRes.absences)||[];
+    startTimes=(stRes&&stRes.startTimes)||['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'];
 
     // キャッシュに保存
-    sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences}));
+    sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences,startTimes}));
 
     isAdmin=!teachers.includes(currentUser)||currentUser==='';
     document.getElementById('header-user').textContent=isAdmin?'👑 塾長':'👤 '+currentUser;
@@ -589,6 +592,18 @@ function setDefaultDates(){
   document.getElementById('bw-to').value=toDateStr(new Date(curYear,curMonth+1,0));
 }
 
+function rebuildStartTimesSelects(){
+  // 全ての開始時間プルダウンを更新
+  ['s-start','bw-start'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    const cur=el.value;
+    el.innerHTML=startTimes.map(t=>'<option value="'+t+'">'+t+'</option>').join('');
+    // 現在の値が存在すれば保持
+    if(startTimes.includes(cur)) el.value=cur;
+  });
+}
+
 function rebuildSelects(){
   const pop=(id,arr,addAll)=>{
     const el=document.getElementById(id);if(!el)return;
@@ -602,6 +617,7 @@ function rebuildSelects(){
   sTeacher.innerHTML='';
   (isAdmin?teachers:[currentUser]).forEach(t=>{const o=document.createElement('option');o.value=o.textContent=t;sTeacher.appendChild(o);});
   pop('bw-teacher',isAdmin?teachers:[currentUser],false);
+  rebuildStartTimesSelects();
   const leg=document.getElementById('legend');
   leg.innerHTML=
     '<span class="legend-item"><span class="legend-dot" style="background:var(--amber-l);border:1px solid var(--amber);"></span>塾行事</span>'+
