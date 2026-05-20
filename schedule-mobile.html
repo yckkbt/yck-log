@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>YCK スケジュール</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1a2a6c;--blue:#2563eb;--blue-l:#dbeafe;
+  --purple:#7c3aed;--purple-l:#ede9fe;
+  --teal:#0d9488;--teal-l:#ccfbf1;
+  --green:#16a34a;--green-l:#dcfce7;
+  --amber:#d97706;--amber-l:#fef3c7;
+  --orange:#ea580c;
+  --red:#dc2626;--red-l:#fee2e2;
+  --bg:#f0f2f8;--surface:#fff;--border:#dde2f0;--border-s:#b8c0d8;
+  --text:#1a1c2e;--muted:#5a6080;--hint:#9098b8;
+  --sans:'Noto Sans JP',sans-serif;--mono:'DM Mono',monospace;
+  --r:10px;--rl:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;padding-bottom:80px;}
+
+/* ヘッダー */
+.header{background:linear-gradient(135deg,var(--navy),#1e40af,var(--purple));padding:0 1rem;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(26,42,108,.3);}
+.header-left{display:flex;align-items:center;gap:8px;}
+.header-brand{font-family:var(--mono);font-size:14px;font-weight:700;color:#fff;}
+.header-user{font-size:11px;color:rgba(255,255,255,.75);font-family:var(--mono);}
+.back-btn{color:rgba(255,255,255,.7);text-decoration:none;font-size:12px;padding:4px 8px;border:1px solid rgba(255,255,255,.3);border-radius:6px;}
+
+/* ナビゲーションバー（下部固定）*/
+.nav-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 10px rgba(0,0,0,.08);}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;font-size:10px;color:var(--hint);cursor:pointer;border:none;background:none;font-family:var(--sans);gap:3px;transition:color .15s;}
+.nav-item.active{color:var(--blue);}
+.nav-item .nav-icon{font-size:20px;line-height:1;}
+
+/* メイン */
+.main{padding:.75rem .75rem 1rem;}
+
+/* 期間ナビ */
+.period-nav{background:var(--surface);border-radius:var(--rl);padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;box-shadow:0 1px 4px rgba(26,42,108,.06);border:1px solid var(--border);}
+.period-label{font-size:13px;font-weight:700;color:var(--text);font-family:var(--mono);text-align:center;flex:1;}
+.nav-btn{width:36px;height:36px;border:1.5px solid var(--border-s);background:#fff;border-radius:var(--r);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0;}
+.nav-btn:active{background:var(--blue-l);border-color:var(--blue);}
+
+/* 今日ボタン */
+.today-btn{display:block;width:100%;padding:10px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:.75rem;text-align:center;}
+
+/* 日付カード */
+.day-card{background:var(--surface);border-radius:var(--rl);margin-bottom:.75rem;box-shadow:0 1px 4px rgba(26,42,108,.06);border:1px solid var(--border);overflow:hidden;}
+.day-header{padding:8px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+.day-date{font-size:14px;font-weight:700;font-family:var(--mono);color:var(--text);}
+.day-dow{font-size:12px;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.day-dow.sun{background:var(--red-l);color:var(--red);}
+.day-dow.sat{background:var(--blue-l);color:var(--blue);}
+.day-dow.week{background:#f3f4f6;color:var(--muted);}
+.day-today{background:var(--blue);color:#fff !important;}
+.day-event{font-size:11px;color:#92400e;background:var(--amber-l);padding:2px 8px;border-radius:10px;margin-left:auto;}
+.day-empty{padding:12px 14px;font-size:12px;color:var(--hint);text-align:center;}
+
+/* 校舎ブロック */
+.campus-block{padding:0;}
+.campus-label{padding:6px 14px;font-size:10px;font-weight:700;letter-spacing:.05em;display:flex;align-items:center;gap:4px;}
+.campus-honko{background:#eff6ff;color:#1e40af;border-top:1px solid var(--border);}
+.campus-nanko{background:#f0fdfa;color:#0f766e;border-top:1px solid var(--border);}
+.campus-empty{padding:6px 14px;font-size:11px;color:var(--hint);}
+
+/* シフトアイテム */
+.shift-item{padding:10px 14px;border-top:1px solid #f3f4f6;display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .1s;}
+.shift-item:active{background:#f8f9ff;}
+.shift-time{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--blue);min-width:50px;flex-shrink:0;}
+.shift-info{flex:1;min-width:0;}
+.shift-teacher{font-size:13px;font-weight:600;color:var(--text);}
+.shift-detail{font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.shift-format{font-size:10px;padding:2px 6px;border-radius:8px;background:var(--blue-l);color:#1e40af;font-weight:600;flex-shrink:0;}
+.shift-format.f2{background:var(--amber-l);color:#92400e;}
+.shift-format.f3{background:var(--purple-l);color:#5b21b6;}
+.shift-mine{border-left:3px solid var(--blue);}
+
+/* 行事表示 */
+.event-item{padding:8px 14px;background:var(--amber-l);border-top:1px solid #fcd34d;font-size:12px;color:#92400e;display:flex;align-items:center;gap:6px;}
+
+/* ── 講師用ビュー ── */
+/* 今日カード */
+.today-card{background:linear-gradient(135deg,#eff6ff,#f5f0ff);border:1.5px solid #c4b5fd;border-radius:var(--rl);padding:1rem;margin-bottom:.75rem;}
+.today-card-title{font-size:12px;font-weight:700;color:var(--purple);letter-spacing:.08em;margin-bottom:.75rem;font-family:var(--mono);}
+.today-shift{padding:10px 12px;background:#fff;border-radius:var(--r);margin-bottom:6px;border:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.today-shift-time{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);min-width:50px;}
+.today-shift-info{flex:1;}
+.today-shift-name{font-size:14px;font-weight:700;color:var(--text);}
+.today-shift-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.no-shift{font-size:13px;color:var(--hint);text-align:center;padding:1rem 0;}
+
+/* フォーム */
+.form-card{background:var(--surface);border-radius:var(--rl);padding:1rem;margin-bottom:.75rem;box-shadow:0 1px 4px rgba(26,42,108,.06);border:1px solid var(--border);}
+.form-title{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:.75rem;font-family:var(--mono);}
+.field{margin-bottom:12px;}
+.field label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px;font-weight:500;}
+.field select,.field input[type=text],.field input[type=date],.field textarea{
+  width:100%;padding:11px 12px;border:1.5px solid var(--border-s);border-radius:var(--r);
+  font-size:14px;font-family:var(--sans);background:#f8f9ff;color:var(--text);
+  -webkit-appearance:none;appearance:none;
+}
+.field select:focus,.field input:focus,.field textarea:focus{outline:none;border-color:var(--blue);}
+.field input[type=checkbox]{width:18px;height:18px;accent-color:var(--blue);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.save-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;}
+.save-btn-green{background:linear-gradient(135deg,var(--teal),var(--green));}
+.save-btn:disabled{opacity:.5;}
+.cancel-btn{width:100%;padding:11px;background:#fff;border:1.5px solid var(--border-s);color:var(--muted);border-radius:var(--r);font-size:14px;cursor:pointer;margin-top:8px;}
+
+/* モーダル */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:flex-end;}
+.modal-bg.open{display:flex;}
+.modal{background:#fff;border-radius:var(--rl) var(--rl) 0 0;padding:1.25rem;width:100%;max-height:90vh;overflow-y:auto;}
+.modal-handle{width:40px;height:4px;background:var(--border-s);border-radius:2px;margin:0 auto 1rem;}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:1rem;}
+
+/* トースト */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:13px;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;white-space:nowrap;}
+.toast.show{opacity:1;}
+.loading{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.section-empty{text-align:center;padding:3rem 1rem;color:var(--hint);font-size:13px;}
+.loading-spinner{text-align:center;padding:3rem;color:var(--muted);}
+.loading-spinner .spin{display:inline-block;width:32px;height:32px;border:3px solid var(--border-s);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <a class="back-btn" href="portal.html">← 戻る</a>
+    <div class="header-brand">YCK</div>
+  </div>
+  <div class="header-user" id="header-user"></div>
+</div>
+
+<div class="main" id="main-content">
+  <div class="loading-spinner"><div class="spin"></div><div style="margin-top:12px;">読み込み中...</div></div>
+</div>
+
+<!-- シフト登録モーダル -->
+<div class="modal-bg" id="shift-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📅 シフト登録</div>
+    <div class="field-row">
+      <div class="field"><label>講師名</label><select id="s-teacher"></select></div>
+      <div class="field"><label>教室</label>
+        <select id="s-campus"><option value="本校">山口本校</option><option value="南校">山口南校</option></select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>日付</label><input type="date" id="s-date"></div>
+      <div class="field"><label>開始時間</label><select id="s-start"></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>コマ数</label>
+        <select id="s-slots"><option value="1">1コマ</option><option value="2">2コマ</option><option value="3">3コマ</option></select>
+      </div>
+      <div class="field"><label>授業形式</label>
+        <select id="s-format"><option value="1対1">1対1</option><option value="1対2">1対2</option><option value="1対3">1対3</option></select>
+      </div>
+    </div>
+    <div class="field"><label>担当生徒</label><input type="text" id="s-students" placeholder="田中 花子、山本 太郎"></div>
+    <div class="field"><label>備考</label><input type="text" id="s-note" placeholder="代講・テスト前など"></div>
+    <button class="save-btn" id="shift-save-btn" onclick="saveShift()">シフトを保存</button>
+    <button class="cancel-btn" onclick="closeModal('shift-modal')">キャンセル</button>
+  </div>
+</div>
+
+<!-- 振替登録モーダル -->
+<div class="modal-bg" id="absence-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔄 欠席・振替を登録</div>
+    <div class="field-row">
+      <div class="field"><label>生徒名</label><select id="ab-student"></select></div>
+      <div class="field"><label>担当講師</label><select id="ab-teacher"></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>欠席日</label><input type="date" id="ab-absent"></div>
+      <div class="field"><label>欠席コマ</label><select id="ab-slot"></select></div>
+    </div>
+    <div class="field"><label>欠席理由</label>
+      <select id="ab-reason">
+        <option value="体調不良">体調不良</option><option value="学校行事">学校行事</option>
+        <option value="部活">部活</option><option value="修学旅行">修学旅行</option><option value="その他">その他</option>
+      </select>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>振替日（未定なら空欄）</label><input type="date" id="ab-makeup"></div>
+      <div class="field"><label>振替コマ</label>
+        <select id="ab-makeup-slot"><option value="">未定</option></select>
+      </div>
+    </div>
+    <div class="field"><label>備考</label><input type="text" id="ab-note" placeholder="連絡内容など"></div>
+    <button class="save-btn save-btn-green" id="ab-save-btn" onclick="saveAbsence()">登録する</button>
+    <button class="cancel-btn" onclick="closeModal('absence-modal')">キャンセル</button>
+  </div>
+</div>
+
+<!-- 編集モーダル -->
+<div class="modal-bg" id="edit-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ シフトを編集</div>
+    <div id="edit-modal-body"></div>
+    <button class="save-btn" id="edit-save-btn">保存する</button>
+    <button class="cancel-btn" style="background:var(--red-l);color:var(--red);border-color:var(--red);" id="edit-del-btn">削除する</button>
+    <button class="cancel-btn" onclick="closeModal('edit-modal')">キャンセル</button>
+  </div>
+</div>
+
+<!-- 下部ナビ（講師用） -->
+<div class="nav-bar" id="nav-bar-teacher" style="display:none;">
+  <button class="nav-item active" id="nav-today" onclick="showSection('today')">
+    <span class="nav-icon">📅</span>今日
+  </button>
+  <button class="nav-item" id="nav-week" onclick="showSection('week')">
+    <span class="nav-icon">📋</span>週予定
+  </button>
+  <button class="nav-item" id="nav-register" onclick="showSection('register')">
+    <span class="nav-icon">＋</span>登録
+  </button>
+  <button class="nav-item" id="nav-absence" onclick="showSection('absence')">
+    <span class="nav-icon">🔄</span>振替
+  </button>
+</div>
+
+<!-- 下部ナビ（塾長用） -->
+<div class="nav-bar" id="nav-bar-admin" style="display:none;">
+  <button class="nav-item active" id="nav-admin-week" onclick="showAdminSection('week')">
+    <span class="nav-icon">📋</span>週予定
+  </button>
+  <button class="nav-item" id="nav-admin-absence" onclick="showAdminSection('absence')">
+    <span class="nav-icon">🔄</span>振替
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const GAS_URL='https://script.google.com/macros/s/AKfycbz8k41UXf6w3mkSQ3ARc4ReQ_v2xO2t2-xKizYtQ3Y_s2k1iAHEwVNSUlI52V5Go4NsZg/exec';
+const DOW=['日','月','火','水','木','金','土'];
+const HOLIDAYS={'2026-01-01':1,'2026-01-12':1,'2026-02-11':1,'2026-02-23':1,'2026-03-20':1,'2026-04-29':1,'2026-05-03':1,'2026-05-04':1,'2026-05-05':1,'2026-05-06':1,'2026-07-20':1,'2026-08-11':1,'2026-09-21':1,'2026-09-23':1,'2026-10-12':1,'2026-11-03':1,'2026-11-23':1};
+
+let shifts=[],events=[],teachers=[],master={},absences=[],startTimes=[];
+let currentUser='',isAdmin=false;
+let currentSection='today';
+let weekOffset=0; // 0=今週, 1=来週...
+let editTarget=null;
+
+function toast(msg,dur=2500){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+async function api(action,body={}){
+  const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,...body})});
+  return res.json();
+}
+function toDateStr(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
+
+// ── 初期化 ──
+async function init(){
+  const pw=sessionStorage.getItem('yck_pw');
+  if(!pw){window.location.href='portal.html';return;}
+  currentUser=sessionStorage.getItem('yck_user')||'';
+
+  // キャッシュ即表示
+  const cached=sessionStorage.getItem('yck_schedule_cache');
+  if(cached){
+    try{
+      const c=JSON.parse(cached);
+      master=c.master||{};teachers=master.teachers||[];
+      shifts=c.shifts||[];events=c.events||[];absences=c.absences||[];
+      startTimes=c.startTimes||getDefaultTimes();
+      setup();
+    }catch(e){}
+  }
+
+  // GASから最新取得
+  try{
+    const[mRes,sRes,eRes,aRes,stRes]=await Promise.all([
+      api('getMaster'),api('getShifts'),api('getEvents'),api('getAbsences'),api('getStartTimes')
+    ]);
+    master=(mRes&&mRes.master)||{};
+    teachers=master.teachers||[];
+    shifts=(sRes&&sRes.shifts)||[];
+    events=(eRes&&eRes.events)||[];
+    absences=(aRes&&aRes.absences)||[];
+    startTimes=(stRes&&stRes.startTimes)||getDefaultTimes();
+    sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences,startTimes}));
+    setup();
+  }catch(e){if(!cached)alert('データ取得エラー:'+e.message);}
+}
+
+function getDefaultTimes(){
+  return['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'];
+}
+
+function setup(){
+  isAdmin=!teachers.includes(currentUser)||currentUser==='';
+  document.getElementById('header-user').textContent=isAdmin?'👑 塾長':'👤 '+currentUser;
+
+  // ナビ表示
+  document.getElementById('nav-bar-teacher').style.display=isAdmin?'none':'flex';
+  document.getElementById('nav-bar-admin').style.display=isAdmin?'flex':'none';
+
+  // セレクト構築
+  buildSelects();
+
+  // 初期画面
+  if(isAdmin){
+    showAdminSection('week');
+  }else{
+    showSection('today');
+  }
+}
+
+function buildSelects(){
+  const sNames=(master.students||[]).map(s=>s.name||s);
+  // s-teacher
+  const st=document.getElementById('s-teacher');
+  if(st){
+    st.innerHTML='';
+    (isAdmin?teachers:[currentUser]).forEach(t=>{
+      const o=document.createElement('option');o.value=o.textContent=t;st.appendChild(o);
+    });
+    if(!isAdmin) st.value=currentUser;
+  }
+  // s-start / ab-slot / ab-makeup-slot
+  ['s-start','ab-slot','ab-makeup-slot'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    const hasEmpty=id==='ab-makeup-slot';
+    el.innerHTML=hasEmpty?'<option value="">未定</option>':'';
+    startTimes.forEach(t=>{const o=document.createElement('option');o.value=o.textContent=t;el.appendChild(o);});
+  });
+  // ab-student
+  const abst=document.getElementById('ab-student');
+  if(abst){abst.innerHTML='<option value="">選択</option>';sNames.forEach(n=>{const o=document.createElement('option');o.value=o.textContent=n;abst.appendChild(o);});}
+  // ab-teacher
+  const abt=document.getElementById('ab-teacher');
+  if(abt){abt.innerHTML='<option value="">選択</option>';teachers.forEach(t=>{const o=document.createElement('option');o.value=o.textContent=t;abt.appendChild(o);});}
+  // 今日の日付をデフォルト
+  const today=toDateStr(new Date());
+  const sd=document.getElementById('s-date');if(sd)sd.value=today;
+  const abd=document.getElementById('ab-absent');if(abd)abd.value=today;
+}
+
+// ── 講師用セクション切替 ──
+function showSection(name){
+  currentSection=name;
+  ['today','week','register','absence'].forEach(n=>{
+    const btn=document.getElementById('nav-'+n);
+    if(btn) btn.className='nav-item'+(n===name?' active':'');
+  });
+  const main=document.getElementById('main-content');
+  if(name==='today') renderTeacherToday(main);
+  else if(name==='week') renderTeacherWeek(main);
+  else if(name==='register') renderRegisterForm(main);
+  else if(name==='absence') renderAbsenceSection(main);
+}
+
+// ── 塾長用セクション切替 ──
+function showAdminSection(name){
+  ['week','absence'].forEach(n=>{
+    const btn=document.getElementById('nav-admin-'+n);
+    if(btn) btn.className='nav-item'+(n===name?' active':'');
+  });
+  const main=document.getElementById('main-content');
+  if(name==='week') renderAdminWeek(main);
+  else if(name==='absence') renderAbsenceSection(main);
+}
+
+// ── 講師：今日の予定 ──
+function renderTeacherToday(el){
+  const today=toDateStr(new Date());
+  const dt=new Date(today+'T00:00:00');
+  const dow=DOW[dt.getDay()];
+  const myShifts=shifts.filter(s=>s.date===today&&s.teacher===currentUser)
+    .sort((a,b)=>a.startTime.localeCompare(b.startTime));
+  const dayEvents=events.filter(e=>today>=e.startDate&&today<=e.endDate);
+
+  let html='<div style="margin-bottom:.75rem;">';
+  html+='<div style="font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;">TODAY</div>';
+  html+='<div style="font-size:20px;font-weight:700;color:var(--navy);">'+today.slice(5).replace('-','/')+'（'+dow+'）</div>';
+  html+='</div>';
+
+  if(dayEvents.length){
+    dayEvents.forEach(e=>{
+      html+='<div style="padding:10px 14px;background:var(--amber-l);border-radius:var(--r);margin-bottom:8px;font-size:13px;color:#92400e;border:1px solid #fcd34d;">📅 '+e.content+'</div>';
+    });
+  }
+
+  html+='<div class="today-card">';
+  html+='<div class="today-card-title">📋 本日の担当コマ</div>';
+  if(myShifts.length){
+    myShifts.forEach(s=>{
+      const fmt=s.format||'';
+      const fmtClass=fmt==='1対2'?'f2':fmt==='1対3'?'f3':'';
+      html+='<div class="today-shift" data-shift-id="'+s.id+'">';
+      html+='<div class="today-shift-time">'+s.startTime.split('（')[0]+'</div>';
+      html+='<div class="today-shift-info">';
+      html+='<div class="today-shift-name">'+s.teacher+'</div>';
+      html+='<div class="today-shift-sub">'+s.slots+'コマ'+(s.students?' / '+s.students:'')+(s.note?' / '+s.note:'')+'</div>';
+      html+='</div>';
+      if(fmt) html+='<div class="shift-format '+fmtClass+'">'+fmt+'</div>';
+      html+='</div>';
+    });
+  }else{
+    html+='<div class="no-shift">本日の担当コマはありません</div>';
+  }
+  html+='</div>';
+
+  // 今週の自分のシフト
+  const weekStart=getWeekStart(new Date());
+  const weekEnd=addDays(weekStart,6);
+  const weekShifts=shifts.filter(s=>s.teacher===currentUser&&s.date>=toDateStr(weekStart)&&s.date<=toDateStr(weekEnd)&&s.date!==today)
+    .sort((a,b)=>a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime));
+
+  if(weekShifts.length){
+    html+='<div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:8px;font-family:var(--mono);">今週の残りのコマ</div>';
+    let lastDate='';
+    weekShifts.forEach(s=>{
+      if(s.date!==lastDate){
+        const d=new Date(s.date+'T00:00:00');
+        html+='<div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin:8px 0 4px;">'+s.date.slice(5).replace('-','/')+'（'+DOW[d.getDay()]+'）</div>';
+        lastDate=s.date;
+      }
+      html+='<div class="today-shift shift-mine" data-shift-id="'+s.id+'" style="margin-bottom:4px;">';
+      html+='<div class="today-shift-time">'+s.startTime.split('（')[0]+'</div>';
+      html+='<div class="today-shift-info"><div class="today-shift-name">'+s.campus+'</div>';
+      html+='<div class="today-shift-sub">'+s.slots+'コマ'+(s.students?' / '+s.students:'')+'</div></div>';
+      html+='</div>';
+    });
+  }
+
+  el.innerHTML=html;
+}
+
+// ── 講師：週予定 ──
+function renderTeacherWeek(el){
+  const weekStart=addDays(getWeekStart(new Date()),weekOffset*7);
+  const weekEnd=addDays(weekStart,6);
+  const ws=toDateStr(weekStart),we=toDateStr(weekEnd);
+
+  let html='<div style="display:flex;align-items:center;gap:8px;margin-bottom:.75rem;">';
+  html+='<button class="nav-btn" onclick="changeWeekOffset(-1);showSection(\'week\')">‹</button>';
+  html+='<div class="period-label">'+ws.slice(5).replace('-','/')+'〜'+we.slice(5).replace('-','/')+'</div>';
+  html+='<button class="nav-btn" onclick="changeWeekOffset(1);showSection(\'week\')">›</button>';
+  html+='</div>';
+  html+='<button class="today-btn" onclick="weekOffset=0;showSection(\'week\')">今週に戻る</button>';
+
+  const myShifts=shifts.filter(s=>s.teacher===currentUser&&s.date>=ws&&s.date<=we);
+  html+=renderDayCards(ws,we,myShifts,false);
+  el.innerHTML=html;
+}
+
+// ── 塾長：2週間予定 ──
+function renderAdminWeek(el){
+  const weekStart=addDays(getWeekStart(new Date()),weekOffset*2*7);
+  const weekEnd=addDays(weekStart,13); // 2週間
+  const ws=toDateStr(weekStart),we=toDateStr(weekEnd);
+
+  let html='<div style="display:flex;align-items:center;gap:8px;margin-bottom:.75rem;">';
+  html+='<button class="nav-btn" onclick="changeWeekOffset(-1);showAdminSection(\'week\')">‹</button>';
+  html+='<div class="period-label" style="font-size:12px;">'+ws.slice(5).replace('-','/')+'〜'+we.slice(5).replace('-','/')+'</div>';
+  html+='<button class="nav-btn" onclick="changeWeekOffset(1);showAdminSection(\'week\')">›</button>';
+  html+='</div>';
+  html+='<button class="today-btn" onclick="weekOffset=0;showAdminSection(\'week\')">今週・来週に戻る</button>';
+
+  html+=renderDayCards(ws,we,shifts,true);
+  el.innerHTML=html;
+}
+
+function changeWeekOffset(d){weekOffset+=d;}
+
+function getWeekStart(d){
+  const r=new Date(d);r.setDate(r.getDate()-r.getDay());r.setHours(0,0,0,0);return r;
+}
+
+// ── 日付カード共通レンダー ──
+function renderDayCards(ws,we,filteredShifts,showAll){
+  const today=toDateStr(new Date());
+  let html='';
+  let d=new Date(ws+'T00:00:00');
+  const endDate=new Date(we+'T00:00:00');
+
+  while(d<=endDate){
+    const ds=toDateStr(d);
+    const dow=d.getDay();
+    const isToday=ds===today;
+    const isHoliday=HOLIDAYS[ds];
+    const dayShiftsHonko=filteredShifts.filter(s=>s.date===ds&&(s.campus||'本校')==='本校')
+      .sort((a,b)=>a.startTime.localeCompare(b.startTime));
+    const dayShiftsNanko=filteredShifts.filter(s=>s.date===ds&&s.campus==='南校')
+      .sort((a,b)=>a.startTime.localeCompare(b.startTime));
+    const dayEvents=events.filter(e=>ds>=e.startDate&&ds<=e.endDate);
+
+    // 全員表示でシフトも行事もない日はスキップ（塾長モード）
+    if(showAll&&!dayShiftsHonko.length&&!dayShiftsNanko.length&&!dayEvents.length){
+      d=addDays(d,1);continue;
+    }
+
+    const dowClass=dow===0||isHoliday?'sun':dow===6?'sat':'week';
+    const todayClass=isToday?' day-today':'';
+
+    html+='<div class="day-card">';
+    html+='<div class="day-header">';
+    html+='<div class="day-dow '+dowClass+todayClass+'">'+DOW[dow]+'</div>';
+    html+='<div class="day-date">'+ds.slice(5).replace('-','/')+'</div>';
+    if(dayEvents.length) html+='<div class="day-event">'+dayEvents[0].content+'</div>';
+    html+='</div>';
+
+    // 本校
+    html+='<div class="campus-label campus-honko">🔵 山口本校</div>';
+    if(dayShiftsHonko.length){
+      dayShiftsHonko.forEach(s=>{ html+=makeShiftItem(s); });
+    }else{
+      html+='<div class="campus-empty">シフトなし</div>';
+    }
+    // 南校
+    html+='<div class="campus-label campus-nanko">🟢 山口南校</div>';
+    if(dayShiftsNanko.length){
+      dayShiftsNanko.forEach(s=>{ html+=makeShiftItem(s); });
+    }else{
+      html+='<div class="campus-empty">シフトなし</div>';
+    }
+    html+='</div>';
+    d=addDays(d,1);
+  }
+  return html||'<div class="section-empty">この期間のシフトはありません</div>';
+}
+
+function makeShiftItem(s){
+  const canEdit=isAdmin||s.teacher===currentUser;
+  const fmt=s.format||'';
+  const fmtClass=fmt==='1対2'?'f2':fmt==='1対3'?'f3':'';
+  const mineClass=s.teacher===currentUser?' shift-mine':'';
+  const attr=canEdit?' data-shift-id="'+s.id+'"':'';
+  return '<div class="shift-item'+mineClass+'"'+attr+'>'
+    +'<div class="shift-time">'+s.startTime.split('（')[0]+'</div>'
+    +'<div class="shift-info">'
+    +'<div class="shift-teacher">'+s.teacher+'</div>'
+    +'<div class="shift-detail">'+s.slots+'コマ'+(s.students?' / '+s.students:'')+(s.note?' 📌'+s.note:'')+'</div>'
+    +'</div>'
+    +(fmt?'<div class="shift-format '+fmtClass+'">'+fmt+'</div>':'')
+    +'</div>';
+}
+
+// ── 登録フォーム（講師用）──
+function renderRegisterForm(el){
+  el.innerHTML='<div class="form-card">'
+    +'<div class="form-title">📅 シフト登録</div>'
+    +'<button class="save-btn" onclick="openModal(\'shift-modal\')" style="margin-bottom:10px;">＋ シフトを登録する</button>'
+    +'</div>'
+    +'<div class="form-card">'
+    +'<div class="form-title">今月のシフト</div>'
+    +'<div id="my-shifts-list"></div>'
+    +'</div>';
+  renderMyShiftsList();
+}
+
+function renderMyShiftsList(){
+  const el=document.getElementById('my-shifts-list');if(!el)return;
+  const today=toDateStr(new Date());
+  const monthStart=today.slice(0,7)+'-01';
+  const monthEnd=today.slice(0,7)+'-31';
+  const myShifts=shifts.filter(s=>s.teacher===currentUser&&s.date>=monthStart&&s.date<=monthEnd)
+    .sort((a,b)=>a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime));
+  if(!myShifts.length){el.innerHTML='<div class="section-empty">今月のシフトはありません</div>';return;}
+  el.innerHTML=myShifts.map(s=>{
+    const d=new Date(s.date+'T00:00:00');
+    return '<div class="shift-item shift-mine" data-shift-id="'+s.id+'">'
+      +'<div class="shift-time">'+s.date.slice(5).replace('-','/')+'<br><span style="font-size:10px;color:var(--muted);">'+DOW[d.getDay()]+'</span></div>'
+      +'<div class="shift-info">'
+      +'<div class="shift-teacher">'+s.campus+' '+s.startTime.split('（')[0]+'</div>'
+      +'<div class="shift-detail">'+s.slots+'コマ'+(s.students?' / '+s.students:'')+'</div>'
+      +'</div>'
+      +(s.format?'<div class="shift-format'+(s.format==='1対2'?' f2':s.format==='1対3'?' f3':'')+'">'+s.format+'</div>':'')
+      +'</div>';
+  }).join('');
+}
+
+// ── 振替管理 ──
+function renderAbsenceSection(el){
+  const pending=absences.filter(a=>a.status==='pending').length;
+  const scheduled=absences.filter(a=>a.status==='scheduled').length;
+
+  let html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:.75rem;">';
+  html+='<div style="background:var(--red-l);border-radius:var(--r);padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:var(--red);">'+pending+'</div><div style="font-size:11px;color:#b91c1c;margin-top:4px;">振替未定</div></div>';
+  html+='<div style="background:var(--amber-l);border-radius:var(--r);padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:var(--amber);">'+scheduled+'</div><div style="font-size:11px;color:#92400e;margin-top:4px;">振替予定</div></div>';
+  html+='</div>';
+  html+='<button class="save-btn save-btn-green" style="margin-bottom:.75rem;" onclick="openModal(\'absence-modal\')">＋ 欠席・振替を登録</button>';
+
+  const fl=absences.filter(a=>a.status!=='done').sort((a,b)=>b.absentDate.localeCompare(a.absentDate));
+  if(fl.length){
+    fl.forEach(a=>{
+      const sl={pending:'<span style="background:var(--red-l);color:#b91c1c;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600;">未定</span>',
+        scheduled:'<span style="background:var(--amber-l);color:#92400e;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600;">振替予定</span>'};
+      html+='<div class="day-card" style="padding:12px 14px;">';
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">';
+      html+='<div style="font-weight:700;font-size:14px;">'+a.student+'</div>';
+      html+=(sl[a.status]||'');
+      html+='</div>';
+      html+='<div style="font-size:12px;color:var(--muted);margin-bottom:4px;">欠席：'+a.absentDate+' '+a.absentSlot+'</div>';
+      html+='<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">振替：'+(a.makeupDate?a.makeupDate+' '+(a.makeupSlot||''):'<span style="color:var(--hint);">未定</span>')+'</div>';
+      html+='<div style="display:flex;gap:6px;">';
+      html+='<button style="flex:1;padding:8px;background:var(--blue-l);border:1px solid var(--blue);border-radius:var(--r);font-size:12px;color:var(--blue);cursor:pointer;" onclick="openEditAbsenceMobile(\''+a.id+'\')">編集</button>';
+      html+='<button style="flex:1;padding:8px;background:var(--green-l);border:1px solid var(--green);border-radius:var(--r);font-size:12px;color:#15803d;cursor:pointer;" onclick="markDone(\''+a.id+'\')">完了</button>';
+      html+='<button style="padding:8px 12px;background:none;border:1px solid var(--border-s);border-radius:var(--r);font-size:12px;color:var(--hint);cursor:pointer;" onclick="deleteAb(\''+a.id+'\')">×</button>';
+      html+='</div></div>';
+    });
+  }else{
+    html+='<div class="section-empty">未処理の振替はありません ✅</div>';
+  }
+  el.innerHTML=html;
+}
+
+// ── モーダル操作 ──
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ── シフト保存 ──
+async function saveShift(){
+  const teacher=document.getElementById('s-teacher').value;
+  const campus=document.getElementById('s-campus').value;
+  const date=document.getElementById('s-date').value;
+  const startTime=document.getElementById('s-start').value;
+  const slots=document.getElementById('s-slots').value;
+  const format=document.getElementById('s-format').value;
+  const students=document.getElementById('s-students').value.trim();
+  const note=document.getElementById('s-note').value.trim();
+  if(!teacher||!date){toast('⚠️ 講師・日付は必須です');return;}
+  const shift={id:'s'+Date.now(),teacher,campus,date,startTime,slots,format,students,note};
+  const btn=document.getElementById('shift-save-btn');
+  btn.innerHTML='<span class="loading"></span>保存中...';btn.disabled=true;
+  try{
+    const res=await api('addShift',{shift});
+    if(res.ok){
+      shifts.push(shift);
+      sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences,startTimes}));
+      toast('✅ シフトを保存しました');
+      closeModal('shift-modal');
+      if(currentSection==='register') renderMyShiftsList();
+      else if(isAdmin) showAdminSection('week');
+    }else alert('保存に失敗しました');
+  }catch(e){alert('通信エラー');}
+  btn.innerHTML='シフトを保存';btn.disabled=false;
+}
+
+// ── 編集モーダル ──
+document.addEventListener('click',function(e){
+  const item=e.target.closest('[data-shift-id]');
+  if(!item)return;
+  const id=item.getAttribute('data-shift-id');
+  if(id) openEditShift(id);
+});
+
+function openEditShift(id){
+  const s=shifts.find(x=>x.id===id);if(!s)return;
+  if(!isAdmin&&s.teacher!==currentUser){toast('⚠️ 自分のシフトのみ編集できます');return;}
+  editTarget=id;
+  const teacherOpts=(isAdmin?teachers:[s.teacher]).map(t=>'<option value="'+t+'"'+(t===s.teacher?' selected':'')+'>'+t+'</option>').join('');
+  const timeOpts=startTimes.map(t=>'<option'+(t===s.startTime?' selected':'')+'>'+t+'</option>').join('');
+  document.getElementById('edit-modal-body').innerHTML=
+    '<div class="field-row">'
+    +'<div class="field"><label>講師名</label><select id="m-teacher">'+teacherOpts+'</select></div>'
+    +'<div class="field"><label>教室</label><select id="m-campus">'
+    +'<option value="本校"'+(( s.campus||'本校')==='本校'?' selected':'')+'>山口本校</option>'
+    +'<option value="南校"'+(s.campus==='南校'?' selected':'')+'>山口南校</option>'
+    +'</select></div></div>'
+    +'<div class="field-row">'
+    +'<div class="field"><label>日付</label><input type="date" id="m-date" value="'+s.date+'"></div>'
+    +'<div class="field"><label>開始時間</label><select id="m-start">'+timeOpts+'</select></div>'
+    +'</div>'
+    +'<div class="field-row">'
+    +'<div class="field"><label>コマ数</label><select id="m-slots">'
+    +[1,2,3].map(n=>'<option value="'+n+'"'+(String(n)===String(s.slots)?' selected':'')+'>'+n+'コマ</option>').join('')
+    +'</select></div>'
+    +'<div class="field"><label>授業形式</label><select id="m-format">'
+    +'<option value="1対1"'+((s.format||'1対1')==='1対1'?' selected':'')+'>1対1</option>'
+    +'<option value="1対2"'+(s.format==='1対2'?' selected':'')+'>1対2</option>'
+    +'<option value="1対3"'+(s.format==='1対3'?' selected':'')+'>1対3</option>'
+    +'</select></div></div>'
+    +'<div class="field"><label>担当生徒</label><input type="text" id="m-students" value="'+(s.students||'')+'"></div>'
+    +'<div class="field"><label>備考</label><input type="text" id="m-note" value="'+(s.note||'')+'"></div>';
+  document.getElementById('edit-save-btn').onclick=saveEditShift;
+  document.getElementById('edit-del-btn').onclick=()=>deleteShift(id);
+  openModal('edit-modal');
+}
+
+async function saveEditShift(){
+  const idx=shifts.findIndex(s=>s.id===editTarget);if(idx<0)return;
+  const updated={...shifts[idx],
+    teacher:document.getElementById('m-teacher').value,
+    campus:document.getElementById('m-campus').value,
+    date:document.getElementById('m-date').value,
+    startTime:document.getElementById('m-start').value,
+    slots:document.getElementById('m-slots').value,
+    format:document.getElementById('m-format').value,
+    students:document.getElementById('m-students').value.trim(),
+    note:document.getElementById('m-note').value.trim()};
+  const btn=document.getElementById('edit-save-btn');
+  btn.innerHTML='<span class="loading"></span>保存中...';btn.disabled=true;
+  try{
+    const res=await api('updateShift',{shift:updated});
+    if(res.ok){
+      shifts[idx]=updated;
+      sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences,startTimes}));
+      toast('✅ 更新しました');closeModal('edit-modal');
+      if(isAdmin) showAdminSection('week'); else showSection(currentSection);
+    }
+  }catch(e){alert('通信エラー');}
+  btn.innerHTML='保存する';btn.disabled=false;
+}
+
+async function deleteShift(id){
+  if(!confirm('このシフトを削除しますか？'))return;
+  try{
+    const res=await api('deleteShift',{id});
+    if(res.ok){
+      shifts=shifts.filter(x=>x.id!==id);
+      sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences,startTimes}));
+      toast('削除しました');closeModal('edit-modal');
+      if(isAdmin) showAdminSection('week'); else showSection(currentSection);
+    }
+  }catch(e){alert('通信エラー');}
+}
+
+// ── 振替保存 ──
+async function saveAbsence(){
+  const student=document.getElementById('ab-student').value;
+  const absentDate=document.getElementById('ab-absent').value;
+  if(!student||!absentDate){toast('⚠️ 生徒名と欠席日は必須です');return;}
+  const makeupDate=document.getElementById('ab-makeup').value||'';
+  const ab={
+    id:'ab'+Date.now(),student,
+    teacher:document.getElementById('ab-teacher').value,
+    absentDate,absentSlot:document.getElementById('ab-slot').value,
+    reason:document.getElementById('ab-reason').value,
+    makeupDate,makeupSlot:document.getElementById('ab-makeup-slot').value||'',
+    note:document.getElementById('ab-note').value.trim(),
+    status:makeupDate?'scheduled':'pending'
+  };
+  const btn=document.getElementById('ab-save-btn');
+  btn.innerHTML='<span class="loading"></span>登録中...';btn.disabled=true;
+  try{
+    const res=await api('addAbsence',{absence:ab});
+    if(res.ok){
+      absences.push(ab);
+      sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences,startTimes}));
+      toast('✅ 振替を登録しました');closeModal('absence-modal');
+      renderAbsenceSection(document.getElementById('main-content'));
+    }
+  }catch(e){alert('通信エラー');}
+  btn.innerHTML='登録する';btn.disabled=false;
+}
+
+async function markDone(id){
+  const idx=absences.findIndex(a=>a.id===id);if(idx<0)return;
+  absences[idx].status='done';
+  try{
+    await api('updateAbsence',{absence:absences[idx]});
+    sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences,startTimes}));
+    toast('✅ 振替完了');
+    renderAbsenceSection(document.getElementById('main-content'));
+  }catch(e){alert('通信エラー');}
+}
+
+async function deleteAb(id){
+  if(!confirm('削除しますか？'))return;
+  try{
+    const res=await api('deleteAbsence',{id});
+    if(res.ok){
+      absences=absences.filter(a=>a.id!==id);
+      sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences,startTimes}));
+      toast('削除しました');
+      renderAbsenceSection(document.getElementById('main-content'));
+    }
+  }catch(e){alert('通信エラー');}
+}
+
+function openEditAbsenceMobile(id){
+  const a=absences.find(x=>x.id===id);if(!a)return;
+  document.getElementById('ab-student').value=a.student||'';
+  document.getElementById('ab-teacher').value=a.teacher||'';
+  document.getElementById('ab-absent').value=a.absentDate||'';
+  document.getElementById('ab-slot').value=a.absentSlot||'';
+  document.getElementById('ab-reason').value=a.reason||'体調不良';
+  document.getElementById('ab-makeup').value=a.makeupDate||'';
+  document.getElementById('ab-makeup-slot').value=a.makeupSlot||'';
+  document.getElementById('ab-note').value=a.note||'';
+  const btn=document.getElementById('ab-save-btn');
+  btn.textContent='更新する';
+  btn.onclick=async function(){
+    const makeupDate=document.getElementById('ab-makeup').value||'';
+    const updated={...a,
+      student:document.getElementById('ab-student').value,
+      teacher:document.getElementById('ab-teacher').value,
+      absentDate:document.getElementById('ab-absent').value,
+      absentSlot:document.getElementById('ab-slot').value,
+      reason:document.getElementById('ab-reason').value,
+      makeupDate,makeupSlot:document.getElementById('ab-makeup-slot').value||'',
+      note:document.getElementById('ab-note').value.trim(),
+      status:makeupDate?'scheduled':a.status==='done'?'done':'pending'
+    };
+    btn.innerHTML='<span class="loading"></span>更新中...';btn.disabled=true;
+    try{
+      const res=await api('updateAbsence',{absence:updated});
+      if(res.ok){
+        const idx=absences.findIndex(x=>x.id===id);
+        if(idx>=0) absences[idx]=updated;
+        sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences,startTimes}));
+        toast('✅ 更新しました');closeModal('absence-modal');
+        btn.textContent='登録する';btn.onclick=saveAbsence;
+        if(isAdmin) showAdminSection('absence'); else showSection('absence');
+      }
+    }catch(e){alert('通信エラー');}
+    btn.innerHTML='更新する';btn.disabled=false;
+  };
+  openModal('absence-modal');
+}
+
+// モーダル外タップで閉じる
+['shift-modal','absence-modal','edit-modal'].forEach(id=>{
+  const bg=document.getElementById(id);
+  bg.addEventListener('click',e=>{if(e.target===bg){closeModal(id);editTarget=null;}});
+  const modal=bg.querySelector('.modal');
+  if(modal) modal.addEventListener('click',e=>e.stopPropagation());
+});
+
+init();
+</script>
+</body>
+</html>
