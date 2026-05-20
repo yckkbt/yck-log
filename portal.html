@@ -221,6 +221,14 @@ if(sessionStorage.getItem('yck_auth')==='1'){
 
 document.getElementById('portal-pw').addEventListener('keydown',e=>{if(e.key==='Enter')portalLogin();});
 loadTeachers();
+
+function goSchedule(){
+  if(window.innerWidth<=600){
+    window.location.href='schedule-mobile.html';
+  }else{
+    window.location.href='schedule.html';
+  }
+}
 </script>
 </body>
 </html>
