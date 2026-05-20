@@ -659,36 +659,40 @@ function openTodayTab(d){
   const dayShiftsNanko=shifts.filter(s=>s.date===d&&s.campus==='南校');
   const dayEvents=events.filter(e=>d>=e.startDate&&d<=e.endDate);
 
+  // 開始時間順にソート
+  const sortByTime=(arr)=>[...arr].sort((a,b)=>a.startTime.localeCompare(b.startTime));
+
   const makeShiftRows=(arr,campusName,color)=>{
-    let rows='';
-    if(arr.length){
-      arr.forEach(s=>{
-        rows+=`<tr>
-          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-weight:600;">${s.teacher}</td>
-          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;">${s.startTime}</td>
-          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;">${s.slots}コマ</td>
-          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;">${s.format||''}</td>
-          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;">${s.students||''}</td>
-          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;">${s.note||''}</td>
-        </tr>`;
+    const sorted=sortByTime(arr);
+    let content='';
+    if(sorted.length){
+      // 時間でグループ化
+      const groups={};
+      sorted.forEach(s=>{
+        if(!groups[s.startTime]) groups[s.startTime]=[];
+        groups[s.startTime].push(s);
+      });
+      Object.keys(groups).sort().forEach(time=>{
+        content+='<div style="border-bottom:1px solid #e5e7eb;">';
+        // 時間ヘッダー
+        content+='<div style="padding:8px 14px;background:#f3f4f6;font-size:12px;font-weight:700;color:#374151;font-family:monospace;">🕐 '+time+'</div>';
+        // その時間の講師一覧
+        groups[time].forEach(s=>{
+          content+='<div style="padding:10px 14px;display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:start;border-top:1px solid #f3f4f6;">';
+          content+='<div style="font-weight:700;font-size:14px;white-space:nowrap;">'+s.teacher+'</div>';
+          content+='<div style="font-size:12px;color:#374151;">'+(s.format||'')+(s.students?' <span style="color:#6b7280;">/ '+s.students+'</span>':'')+'</div>';
+          content+='<div style="font-size:11px;color:#6b7280;">'+s.slots+'コマ'+(s.note?' / '+s.note:'')+'</div>';
+          content+='</div>';
+        });
+        content+='</div>';
       });
     } else {
-      rows='<tr><td colspan="6" style="padding:16px 14px;color:#9ca3af;text-align:center;">シフトなし</td></tr>';
+      content='<div style="padding:16px 14px;color:#9ca3af;text-align:center;font-size:13px;">シフトなし</div>';
     }
-    return `<div style="margin-bottom:1.5rem;">
-      <div style="padding:8px 14px;background:${color};font-weight:700;font-size:13px;border-radius:6px 6px 0 0;">${campusName}</div>
-      <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:0 0 6px 6px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
-        <thead><tr style="background:#f9fafb;">
-          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">講師</th>
-          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">開始時間</th>
-          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">コマ数</th>
-          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">形式</th>
-          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">担当生徒</th>
-          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">備考</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
+    return '<div style="margin-bottom:1.5rem;">'
+      +'<div style="padding:8px 14px;background:'+color+';font-weight:700;font-size:13px;border-radius:6px 6px 0 0;">'+campusName+'</div>'
+      +'<div style="background:#fff;border-radius:0 0 6px 6px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">'+content+'</div>'
+      +'</div>';
   };
 
   let evHtml='';
