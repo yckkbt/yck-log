@@ -211,7 +211,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
     <option value="">全員</option>
   </select>
   <div class="tsep"></div>
-  <button class="tb-btn tb-btn-outline" onclick="goTodayWithPopup()">今日</button>
+  <button class="tb-btn tb-btn-outline" onclick="goTodayWithPopup()">今日の予定</button>
   <button class="tb-btn tb-btn-outline" id="view-month-btn" onclick="setView('month')">📅月</button>
   <button class="tb-btn tb-btn-outline" id="view-week-btn" onclick="setView('week')">📋週</button>
   <button class="tb-btn tb-btn-outline" id="view-absence-btn" onclick="setView('absence')">🔄振替</button>
@@ -647,7 +647,98 @@ function goToday(){curYear=new Date().getFullYear();curMonth=new Date().getMonth
 function goTodayWithPopup(){
   goToday();
   const today=toDateStr(new Date());
-  showDayPopup(today);
+  openTodayTab(today);
+}
+
+function openTodayTab(d){
+  const dowNames=['日','月','火','水','木','金','土'];
+  const dt=new Date(d+'T00:00:00');
+  const dow=dowNames[dt.getDay()];
+
+  const dayShiftsHonko=shifts.filter(s=>s.date===d&&(s.campus||'本校')==='本校');
+  const dayShiftsNanko=shifts.filter(s=>s.date===d&&s.campus==='南校');
+  const dayEvents=events.filter(e=>d>=e.startDate&&d<=e.endDate);
+
+  const makeShiftRows=(arr,campusName,color)=>{
+    let rows='';
+    if(arr.length){
+      arr.forEach(s=>{
+        rows+=`<tr>
+          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-weight:600;">${s.teacher}</td>
+          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;">${s.startTime}</td>
+          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;">${s.slots}コマ</td>
+          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;">${s.format||''}</td>
+          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;">${s.students||''}</td>
+          <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;">${s.note||''}</td>
+        </tr>`;
+      });
+    } else {
+      rows='<tr><td colspan="6" style="padding:16px 14px;color:#9ca3af;text-align:center;">シフトなし</td></tr>';
+    }
+    return `<div style="margin-bottom:1.5rem;">
+      <div style="padding:8px 14px;background:${color};font-weight:700;font-size:13px;border-radius:6px 6px 0 0;">${campusName}</div>
+      <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:0 0 6px 6px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+        <thead><tr style="background:#f9fafb;">
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">講師</th>
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">開始時間</th>
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">コマ数</th>
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">形式</th>
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">担当生徒</th>
+          <th style="padding:8px 14px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">備考</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  };
+
+  let evHtml='';
+  if(dayEvents.length){
+    evHtml='<div style="margin-bottom:1rem;">';
+    dayEvents.forEach(e=>{
+      evHtml+='<div style="padding:10px 14px;background:#fef3c7;border-left:4px solid #d97706;border-radius:4px;margin-bottom:6px;font-size:13px;color:#92400e;">📅 '+e.content+(e.school?' ('+e.school+')':'')+'</div>';
+    });
+    evHtml+='</div>';
+  }
+
+  const pageHTML=`<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>YCK 今日の予定 ${d}</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:#f0f2f8;color:#1a1c2e;font-size:14px;min-height:100vh;}
+.header{background:linear-gradient(135deg,#1a2a6c,#2563eb,#7c3aed);padding:0 1.25rem;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.header-title{color:#fff;font-weight:700;font-size:15px;}
+.header-date{color:rgba(255,255,255,.8);font-size:12px;font-family:monospace;}
+.close-btn{color:rgba(255,255,255,.7);background:rgba(255,255,255,.15);border:none;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;}
+.close-btn:hover{background:rgba(255,255,255,.25);color:#fff;}
+.main{max-width:700px;margin:0 auto;padding:1.25rem 1rem 3rem;}
+.date-badge{display:inline-block;padding:6px 16px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;border-radius:20px;font-size:14px;font-weight:700;margin-bottom:1.25rem;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="header-title">YCK 今日の授業予定</div>
+    <div class="header-date">${d}（${dow}）</div>
+  </div>
+  <button class="close-btn" onclick="window.close()">✕ 閉じる</button>
+</div>
+<div class="main">
+  <div class="date-badge">📅 ${d}（${dow}）</div>
+  ${evHtml}
+  ${makeShiftRows(dayShiftsHonko,'🏫 山口本校','#dbeafe')}
+  ${makeShiftRows(dayShiftsNanko,'🏫 山口南校','#ccfbf1')}
+</div>
+</body>
+</html>`;
+
+  const blob=new Blob([pageHTML],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  window.open(url,'_blank');
 }
 
 function renderCalUnified(){
