@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YCK スケジュール 講師向け取扱説明書</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1a2a6c;--blue:#2563eb;--blue-l:#dbeafe;
+  --purple:#7c3aed;--purple-l:#ede9fe;
+  --teal:#0d9488;--teal-l:#ccfbf1;
+  --green:#16a34a;--green-l:#dcfce7;
+  --amber:#d97706;--amber-l:#fef3c7;
+  --red:#dc2626;--red-l:#fee2e2;
+  --bg:#f0f2f8;--surface:#fff;--border:#dde2f0;
+  --text:#1a1c2e;--muted:#5a6080;--hint:#9098b8;
+  --sans:'Noto Sans JP',sans-serif;--mono:'DM Mono',monospace;
+  --r:8px;--rl:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.8;}
+
+/* ヘッダー */
+.cover{background:linear-gradient(135deg,var(--navy) 0%,#1e40af 50%,var(--purple) 100%);padding:3rem 2rem 2.5rem;text-align:center;color:#fff;}
+.cover-logo{font-family:'Zen Kaku Gothic New',var(--sans);font-weight:900;font-size:28px;letter-spacing:.1em;margin-bottom:.5rem;}
+.cover-title{font-size:20px;font-weight:700;margin-bottom:.5rem;}
+.cover-sub{font-size:13px;color:rgba(255,255,255,.7);font-family:var(--mono);}
+.cover-badge{display:inline-block;margin-top:1rem;padding:5px 16px;background:rgba(255,255,255,.15);border-radius:20px;font-size:12px;color:rgba(255,255,255,.8);}
+
+/* 目次 */
+.toc{max-width:700px;margin:1.5rem auto;padding:0 1rem;}
+.toc-card{background:var(--surface);border-radius:var(--rl);padding:1.25rem 1.5rem;box-shadow:0 2px 8px rgba(26,42,108,.08);border:1px solid var(--border);}
+.toc-title{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.1em;margin-bottom:.75rem;font-family:var(--mono);}
+.toc-list{list-style:none;}
+.toc-list li{padding:5px 0;border-bottom:1px dashed var(--border);}
+.toc-list li:last-child{border-bottom:none;}
+.toc-list a{color:var(--blue);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:8px;}
+.toc-list a:hover{color:var(--purple);}
+.toc-num{font-family:var(--mono);font-size:11px;color:var(--hint);min-width:24px;}
+
+/* メイン */
+.main{max-width:700px;margin:0 auto;padding:0 1rem 4rem;}
+
+/* セクション */
+.section{margin-bottom:2rem;}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:2px solid var(--border);}
+.section-num{width:28px;height:28px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;font-family:var(--mono);}
+.section-title{font-size:17px;font-weight:700;color:var(--navy);}
+
+/* カード */
+.card{background:var(--surface);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(26,42,108,.06);border:1px solid var(--border);}
+.card-title{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:.75rem;display:flex;align-items:center;gap:6px;}
+
+/* ステップ */
+.steps{list-style:none;counter-reset:step;}
+.steps li{counter-increment:step;padding:.75rem 0 .75rem 3rem;position:relative;border-bottom:1px solid var(--border);}
+.steps li:last-child{border-bottom:none;}
+.steps li::before{content:counter(step);position:absolute;left:0;top:.75rem;width:24px;height:24px;background:var(--blue-l);color:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:var(--mono);}
+.steps li strong{color:var(--text);}
+
+/* ヒント */
+.tip{background:var(--blue-l);border-left:4px solid var(--blue);border-radius:0 var(--r) var(--r) 0;padding:.75rem 1rem;margin:.75rem 0;font-size:13px;color:#1e40af;}
+.tip-amber{background:var(--amber-l);border-color:var(--amber);color:#92400e;}
+.tip-green{background:var(--green-l);border-color:var(--green);color:#15803d;}
+.tip-icon{font-size:14px;margin-right:4px;}
+
+/* ボタン見本 */
+.btn-sample{display:inline-block;padding:4px 12px;border-radius:6px;font-size:12px;font-weight:500;margin:2px;}
+.btn-blue{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;}
+.btn-green{background:linear-gradient(135deg,var(--teal),var(--green));color:#fff;}
+.btn-amber{background:linear-gradient(135deg,var(--amber),#ea580c);color:#fff;}
+.btn-outline{background:#fff;border:1.5px solid #b8c0d8;color:var(--muted);}
+
+/* テーブル */
+.table{width:100%;border-collapse:collapse;font-size:13px;margin:.75rem 0;}
+.table th{padding:8px 12px;background:#f8f9ff;font-size:11px;font-weight:700;color:var(--muted);text-align:left;border-bottom:2px solid var(--border);}
+.table td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:top;}
+.table tr:last-child td{border-bottom:none;}
+
+/* バッジ */
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.badge-blue{background:var(--blue-l);color:#1e40af;}
+.badge-green{background:var(--green-l);color:#15803d;}
+.badge-amber{background:var(--amber-l);color:#92400e;}
+.badge-red{background:var(--red-l);color:#b91c1c;}
+
+/* アイコン付きリスト */
+.icon-list{list-style:none;}
+.icon-list li{padding:.5rem 0;display:flex;gap:8px;border-bottom:1px solid var(--border);font-size:13px;}
+.icon-list li:last-child{border-bottom:none;}
+.icon-list .icon{font-size:16px;flex-shrink:0;width:24px;text-align:center;}
+
+/* フッター */
+.footer{background:var(--navy);color:rgba(255,255,255,.6);text-align:center;padding:1.5rem;font-size:12px;font-family:var(--mono);}
+
+@media print{
+  .cover{padding:2rem;}
+  .section{page-break-inside:avoid;}
+}
+@media(max-width:600px){
+  .cover-logo{font-size:22px;}
+  .cover-title{font-size:16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- 表紙 -->
+<div class="cover">
+  <div class="cover-logo">YCK</div>
+  <div style="font-size:11px;letter-spacing:.2em;color:rgba(255,255,255,.7);margin-bottom:1rem;font-family:var(--mono);">YAMAGUCHICHU KOBETSU</div>
+  <div class="cover-title">📅 スケジュール管理システム</div>
+  <div style="font-size:15px;color:rgba(255,255,255,.85);margin-top:.25rem;">講師向け 取扱説明書</div>
+  <div class="cover-badge">山口中央個別塾 YCK</div>
+</div>
+
+<div class="toc">
+  <div class="toc-card">
+    <div class="toc-title">CONTENTS 目次</div>
+    <ul class="toc-list">
+      <li><a href="#s1"><span class="toc-num">1</span> ログイン方法</a></li>
+      <li><a href="#s2"><span class="toc-num">2</span> 画面の見方</a></li>
+      <li><a href="#s3"><span class="toc-num">3</span> 月カレンダーの見方</a></li>
+      <li><a href="#s4"><span class="toc-num">4</span> 週表示の見方</a></li>
+      <li><a href="#s5"><span class="toc-num">5</span> シフトの登録方法</a></li>
+      <li><a href="#s6"><span class="toc-num">6</span> シフトの編集・削除</a></li>
+      <li><a href="#s7"><span class="toc-num">7</span> 振替管理</a></li>
+      <li><a href="#s8"><span class="toc-num">8</span> 今日の予定を確認する</a></li>
+    </ul>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- 1. ログイン -->
+  <div class="section" id="s1">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div class="section-title">ログイン方法</div>
+    </div>
+    <div class="card">
+      <ol class="steps">
+        <li>ブラウザで <strong>YCKポータル</strong> のURLを開く</li>
+        <li><strong>パスワード</strong> を入力する（塾長から通知されたもの）</li>
+        <li><strong>自分の名前</strong> をプルダウンから選択する</li>
+        <li>「<strong>ログイン</strong>」ボタンを押す</li>
+        <li>メニューから「<strong>📅 月次スケジュール</strong>」を選択する</li>
+      </ol>
+    </div>
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <strong>名前の選択について：</strong>必ず自分の名前を選択してログインしてください。名前を選択しないと塾長モードになります。
+    </div>
+    <div class="tip tip-amber">
+      <span class="tip-icon">⚠️</span>
+      <strong>権限について：</strong>講師は<strong>自分のシフトのみ</strong>登録・編集・削除できます。他の講師のシフトは閲覧のみです。
+    </div>
+  </div>
+
+  <!-- 2. 画面の見方 -->
+  <div class="section" id="s2">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div class="section-title">画面の見方</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔧 上部ツールバー</div>
+      <table class="table">
+        <thead><tr><th>ボタン</th><th>説明</th></tr></thead>
+        <tbody>
+          <tr><td>‹ 2026年5月 ›</td><td>月を前後に切り替えます</td></tr>
+          <tr><td>講師プルダウン</td><td>特定の講師のシフトのみ表示します（全員も選択可）</td></tr>
+          <tr><td><span class="btn-sample btn-outline">今日</span></td><td>今月・今週の表示に戻します</td></tr>
+          <tr><td><span class="btn-sample btn-outline">📅月</span></td><td>月カレンダー表示に切り替えます</td></tr>
+          <tr><td><span class="btn-sample btn-outline">📋週</span></td><td>週時間割表示に切り替えます</td></tr>
+          <tr><td><span class="btn-sample btn-outline">🔄振替</span></td><td>振替管理画面を開きます</td></tr>
+          <tr><td><span class="btn-sample btn-outline">今日の予定</span></td><td>今日の授業一覧を別タブで表示します</td></tr>
+          <tr><td><span class="btn-sample btn-blue">＋シフト</span></td><td>シフト登録画面を開きます</td></tr>
+          <tr><td><span class="btn-sample btn-green">＋行事</span></td><td>行事・予定登録画面を開きます（塾長のみ）</td></tr>
+          <tr><td><span class="btn-sample btn-amber">一括</span></td><td>一括登録画面を開きます</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎨 凡例（色の見方）</div>
+      <ul class="icon-list">
+        <li><span class="icon">🟡</span>黄色のチップ：<strong>塾行事</strong></li>
+        <li><span class="icon">🔴</span>赤色のチップ：<strong>学校行事・定期テスト</strong></li>
+        <li><span class="icon">⬜</span>グレーのチップ：<strong>休講日</strong></li>
+        <li><span class="icon">🟦</span>各色のチップ：<strong>講師ごとのシフト</strong>（講師によって色が異なります）</li>
+        <li><span class="icon">✨</span>枠線が光っているチップ：<strong>自分のシフト</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 3. 月カレンダー -->
+  <div class="section" id="s3">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div class="section-title">月カレンダーの見方</div>
+    </div>
+    <div class="card">
+      <div class="card-title">📅 カレンダーの構造</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:.75rem;">各日付のセルに本校・南校のシフトが上下に表示されます。</p>
+      <div style="background:#f8f9ff;border-radius:var(--r);padding:1rem;font-size:12px;border:1px solid var(--border);">
+        <div style="font-weight:700;margin-bottom:6px;">11（月）</div>
+        <div style="color:#1e40af;font-size:10px;font-weight:700;margin-bottom:2px;">🔵本</div>
+        <div style="background:#dbeafe;border-left:2px solid #2563eb;border-radius:3px;padding:2px 4px;font-size:10px;margin-bottom:4px;">中村 17:30</div>
+        <div style="color:#0f766e;font-size:10px;font-weight:700;margin-bottom:2px;">🟢南</div>
+        <div style="background:#ccfbf1;border-left:2px solid #0d9488;border-radius:3px;padding:2px 4px;font-size:10px;">石田 17:30</div>
+      </div>
+    </div>
+    <div class="tip tip-green">
+      <span class="tip-icon">👆</span>
+      <strong>日付セルをタップ</strong>すると、その日の日付がシフト登録フォームに自動入力されます。
+    </div>
+  </div>
+
+  <!-- 4. 週表示 -->
+  <div class="section" id="s4">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div class="section-title">週表示の見方</div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 週時間割表示</div>
+      <ul class="icon-list">
+        <li><span class="icon">⬅️</span>‹ › ボタンで前後の週に移動できます</li>
+        <li><span class="icon">🏫</span>「本校」「南校」ボタンで表示する校舎を切り替えます</li>
+        <li><span class="icon">🔒</span>左端の時間列と上部の日付行は<strong>スクロールしても固定</strong>されます</li>
+        <li><span class="icon">👆</span>シフトをタップすると<strong>編集画面</strong>が開きます（自分のシフトのみ）</li>
+      </ul>
+    </div>
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      上部の講師プルダウンで自分の名前を選択すると、<strong>自分のシフトのみ表示</strong>されて見やすくなります。
+    </div>
+  </div>
+
+  <!-- 5. シフト登録 -->
+  <div class="section" id="s5">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div class="section-title">シフトの登録方法</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📝 個別登録（1件ずつ）</div>
+      <ol class="steps">
+        <li>ツールバーの <span class="btn-sample btn-blue">＋シフト</span> をタップ</li>
+        <li><strong>講師名</strong>・<strong>教室</strong>（本校/南校）を選択</li>
+        <li><strong>日付</strong>・<strong>開始時間</strong>を選択</li>
+        <li><strong>コマ数</strong>・<strong>授業形式</strong>（1対1/1対2/1対3）を選択</li>
+        <li><strong>担当生徒</strong>を入力（例：田中 花子、山本 太郎）</li>
+        <li>「<strong>シフトを保存</strong>」ボタンを押す</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 一括登録（毎週繰り返し）</div>
+      <ol class="steps">
+        <li>ツールバーの <span class="btn-sample btn-amber">一括</span> をタップ</li>
+        <li>「<strong>毎週繰り返し</strong>」タブを選択</li>
+        <li>講師名・教室・<strong>曜日</strong>（複数選択可）を設定</li>
+        <li>開始時間・コマ数・授業形式・担当生徒を入力</li>
+        <li><strong>期間の開始日・終了日</strong>を設定（例：2026-06-01〜2026-06-30）</li>
+        <li>「<strong>一括登録する</strong>」ボタンを押す</li>
+        <li>確認ダイアログで「OK」を押すと登録完了</li>
+      </ol>
+      <div class="tip tip-green">
+        <span class="tip-icon">✅</span>
+        同じ日・同じ時間のシフトが既にある場合は<strong>重複して登録されません</strong>。安心して使えます。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 入力項目の説明</div>
+      <table class="table">
+        <thead><tr><th>項目</th><th>説明</th></tr></thead>
+        <tbody>
+          <tr><td>教室</td><td>山口本校 または 山口南校</td></tr>
+          <tr><td>開始時間</td><td>授業の開始時刻（時期により変更あり）</td></tr>
+          <tr><td>コマ数</td><td>担当するコマの数（1〜3コマ）</td></tr>
+          <tr><td>授業形式</td><td><span class="badge badge-blue">1対1</span> <span class="badge badge-amber">1対2</span> <span class="badge badge-green">1対3</span>から選択</td></tr>
+          <tr><td>担当生徒</td><td>生徒名をテキスト入力（複数の場合は読点で区切る）</td></tr>
+          <tr><td>備考</td><td>代講・テスト前など特記事項があれば入力</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 6. 編集・削除 -->
+  <div class="section" id="s6">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <div class="section-title">シフトの編集・削除</div>
+    </div>
+    <div class="card">
+      <div class="card-title">✏️ 編集方法</div>
+      <ul class="icon-list">
+        <li><span class="icon">📅</span><strong>月カレンダー：</strong>シフトチップをタップ → 編集画面が開く</li>
+        <li><span class="icon">📋</span><strong>週表示：</strong>シフトをタップ → 編集画面が開く</li>
+        <li><span class="icon">📝</span><strong>シフト一覧：</strong>月表示画面下部の「今月のシフト一覧」から「編集」ボタンをタップ</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">🗑️ 削除方法</div>
+      <ol class="steps">
+        <li>上記の方法で編集画面を開く</li>
+        <li>赤い「<strong>削除</strong>」ボタンを押す</li>
+        <li>確認ダイアログで「OK」を押すと削除完了</li>
+      </ol>
+    </div>
+    <div class="tip tip-amber">
+      <span class="tip-icon">⚠️</span>
+      <strong>削除は元に戻せません。</strong>間違えて削除した場合は再度登録してください。
+    </div>
+  </div>
+
+  <!-- 7. 振替管理 -->
+  <div class="section" id="s7">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <div class="section-title">振替管理</div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔄 欠席・振替の登録</div>
+      <ol class="steps">
+        <li>ツールバーの <span class="btn-sample btn-outline">🔄振替</span> をタップ</li>
+        <li>「<strong>＋ 欠席・振替を登録</strong>」ボタンをタップ</li>
+        <li><strong>生徒名・担当講師・欠席日・欠席コマ・欠席理由</strong>を入力</li>
+        <li>振替日が決まっている場合は<strong>振替日・振替コマ</strong>も入力</li>
+        <li>「<strong>登録する</strong>」ボタンを押す</li>
+      </ol>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 状態の管理</div>
+      <table class="table">
+        <thead><tr><th>状態</th><th>説明</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-red">振替未定</span></td><td>欠席のみ登録、振替日未決定</td></tr>
+          <tr><td><span class="badge badge-amber">振替予定</span></td><td>振替日が決定済み</td></tr>
+          <tr><td><span class="badge badge-green">振替完了</span></td><td>振替授業が完了</td></tr>
+        </tbody>
+      </table>
+      <div class="tip tip-green">
+        <span class="tip-icon">✅</span>
+        振替が完了したら「<strong>完了</strong>」ボタンを押して状態を更新してください。
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. 今日の予定 -->
+  <div class="section" id="s8">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <div class="section-title">今日の予定を確認する</div>
+    </div>
+    <div class="card">
+      <div class="card-title">📅 今日の予定ページ</div>
+      <ol class="steps">
+        <li>ツールバーの <span class="btn-sample btn-outline">今日の予定</span> をタップ</li>
+        <li>新しいタブが開き、<strong>今日の授業一覧</strong>が表示される</li>
+        <li>本校・南校それぞれの時間帯ごとに講師・担当生徒・授業形式が一覧表示される</li>
+        <li>確認後は「<strong>✕ 閉じる</strong>」ボタンまたはタブを閉じる</li>
+      </ol>
+    </div>
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      授業前に毎日確認することで、その日の担当コマを素早く把握できます。
+    </div>
+  </div>
+
+  <!-- Q&A -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num" style="background:linear-gradient(135deg,var(--amber),#ea580c);">?</div>
+      <div class="section-title">よくある質問</div>
+    </div>
+    <div class="card">
+      <ul class="icon-list">
+        <li>
+          <span class="icon">❓</span>
+          <div>
+            <div style="font-weight:600;margin-bottom:4px;">シフトが表示されない</div>
+            <div style="font-size:12px;color:var(--muted);">ページを再読み込み（Ctrl+Shift+R）してください。それでも表示されない場合は塾長に連絡してください。</div>
+          </div>
+        </li>
+        <li>
+          <span class="icon">❓</span>
+          <div>
+            <div style="font-weight:600;margin-bottom:4px;">誤って他の講師のシフトを編集しようとした</div>
+            <div style="font-size:12px;color:var(--muted);">「自分のシフトのみ編集できます」と表示され、編集できません。安心してください。</div>
+          </div>
+        </li>
+        <li>
+          <span class="icon">❓</span>
+          <div>
+            <div style="font-weight:600;margin-bottom:4px;">一括登録で重複データが入ってしまった</div>
+            <div style="font-size:12px;color:var(--muted);">同じ日・時間・講師のシフトは重複登録されません。安心して一括登録できます。</div>
+          </div>
+        </li>
+        <li>
+          <span class="icon">❓</span>
+          <div>
+            <div style="font-weight:600;margin-bottom:4px;">開始時間のプルダウンに表示される時間が変わった</div>
+            <div style="font-size:12px;color:var(--muted);">塾長が管理システムで時期に合わせて変更しています。最新の時間帯が表示されます。</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  YCK 山口中央個別塾 ／ スケジュール管理システム 講師向け取扱説明書<br>
+  お問い合わせは塾長まで
+</div>
+
+</body>
+</html>
