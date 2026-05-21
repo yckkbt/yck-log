@@ -229,6 +229,7 @@ textarea{resize:vertical;min-height:60px;}
       <button class="tab active" onclick="showTab('input',this)">授業入力</button>
       <button class="tab" onclick="showTab('dashboard',this)">ダッシュボード</button>
       <button class="tab" onclick="showTab('logs',this)">ログ一覧</button>
+      <button class="tab" onclick="showTab('test',this)">📝 テスト結果</button>
     </div>
     <a href="portal.html" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;margin-left:auto;">← ポータル</a>
   </div>
@@ -343,6 +344,77 @@ textarea{resize:vertical;min-height:60px;}
       </div>
     </div>
 
+    <!-- ── テスト結果 ── -->
+    <div id="tab-test" class="section">
+
+      <!-- 入力フォーム -->
+      <div class="card">
+        <div class="card-head"><div class="card-head-icon" style="background:var(--purple-l);">📝</div><span class="card-head-label">テスト結果入力</span></div>
+        <div class="grid-2">
+          <div class="field"><label>生徒名</label><select id="t-student" onchange="onTestStudentChange()"></select></div>
+          <div class="field"><label>学校種別</label>
+            <select id="t-school-type" onchange="buildSubjectInputs()">
+              <option value="中学生">中学生</option>
+              <option value="高校生">高校生</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>テスト種別</label>
+            <select id="t-term">
+              <option value="1学期中間">1学期中間</option>
+              <option value="1学期期末">1学期期末</option>
+              <option value="2学期中間">2学期中間</option>
+              <option value="2学期期末">2学期期末</option>
+              <option value="学年末">学年末</option>
+              <option value="その他">その他</option>
+            </select>
+          </div>
+          <div class="field"><label>実施日</label><input type="date" id="t-date"></div>
+        </div>
+
+        <!-- 科目別得点入力テーブル -->
+        <div style="margin-top:.5rem;">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:.5rem;font-family:var(--mono);">科目別得点・平均点</div>
+          <div style="overflow-x:auto;">
+            <table id="score-input-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:400px;">
+              <thead>
+                <tr style="background:#f8f9ff;">
+                  <th style="padding:8px 10px;text-align:left;border-bottom:2px solid var(--border);font-size:11px;color:var(--muted);font-weight:700;">科目</th>
+                  <th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--border);font-size:11px;color:var(--muted);font-weight:700;">得点</th>
+                  <th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--border);font-size:11px;color:var(--muted);font-weight:700;">平均点</th>
+                  <th style="padding:8px 10px;text-align:center;border-bottom:2px solid var(--border);font-size:11px;color:var(--muted);font-weight:700;">得点率</th>
+                </tr>
+              </thead>
+              <tbody id="score-input-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <button class="submit-btn" id="test-save-btn" onclick="saveTestScore()" style="margin-top:1rem;">テスト結果を保存</button>
+      </div>
+
+      <!-- グラフ表示 -->
+      <div class="card">
+        <div class="card-head"><div class="card-head-icon" style="background:var(--teal-l);">📊</div><span class="card-head-label">得点推移グラフ</span></div>
+        <div class="filter-row">
+          <span class="filter-label">生徒：</span>
+          <select id="tg-student" onchange="renderTestGraphs()" style="width:auto;min-width:130px;"></select>
+        </div>
+        <div id="test-graph-area">
+          <div style="text-align:center;padding:2rem;color:var(--hint);font-size:13px;">生徒を選択してください</div>
+        </div>
+      </div>
+
+      <!-- 結果一覧 -->
+      <div class="card">
+        <div class="card-head"><div class="card-head-icon" style="background:var(--sky-l);">📋</div><span class="card-head-label">登録済みテスト結果</span></div>
+        <div id="test-list-area">
+          <div style="text-align:center;padding:1rem;color:var(--hint);font-size:13px;">データなし</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── マスタ管理 ── -->
     <div id="tab-master" class="section">
 
@@ -437,6 +509,7 @@ const TYPE_COLORS=['#2563eb','#16a34a','#ea580c','#dc2626'];
 const TYPES=['加速型','育成型','分解型','危険型'];
 const scores={pre:{u:null,o:null,s:null},post:{u:null,o:null,s:null}};
 let master={students:[],teachers:[],subjects:[]};
+let startTimes=[];
 let logs=[];
 let charts={};
 
@@ -479,12 +552,14 @@ function doLogout(){
 
 // ── INIT ──
 async function initApp(){
-  const[mRes,lRes]=await Promise.all([api('getMaster'),api('getLogs')]);
+  const[mRes,lRes,stRes]=await Promise.all([api('getMaster'),api('getLogs'),api('getStartTimes')]);
   master=mRes.master;
   logs=lRes.logs||[];
+  startTimes=(stRes&&stRes.startTimes)||['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'];
   rebuildSelects();
   buildScoreInputs();
   document.getElementById('i-date').value=new Date().toISOString().slice(0,10);
+  await loadTestScores();
   renderMaster();renderLogs();renderDash();
 }
 
@@ -956,6 +1031,254 @@ async function changePw(){
   else{msg.style.color='var(--red)';msg.textContent=res.error||'エラーが発生しました';}
 }
 
+// ── テスト結果 ──
+const SUBJECTS = {
+  '中学生': ['国語','数学','社会','理科','英語'],
+  '高校生': ['現代文','古典','数学Ⅰ・Ⅱ','数学ABC','コミュ英','英論評','化学','生物','物理','地学','日本史','地理','世界史','公民']
+};
+
+let testScores = [];
+
+async function loadTestScores(){
+  try{
+    const res = await api('getTestScores');
+    testScores = (res.scores||[]).map(s=>{
+      try{ s.subjects = JSON.parse(s.subjects||'{}'); }catch(e){ s.subjects={}; }
+      return s;
+    });
+  }catch(e){ testScores=[]; }
+}
+
+function onTestStudentChange(){
+  const studentName = document.getElementById('t-student').value;
+  const student = master.students.find(s=>(s.name||s)===studentName);
+  // 高校生か中学生か（マスタに情報があれば自動設定、なければそのまま）
+  buildSubjectInputs();
+  renderTestList();
+}
+
+function buildSubjectInputs(){
+  const type = document.getElementById('t-school-type').value;
+  const subjects = SUBJECTS[type] || SUBJECTS['中学生'];
+  const tbody = document.getElementById('score-input-body');
+  tbody.innerHTML = subjects.map(sub=>`
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:7px 10px;font-size:13px;font-weight:500;">${sub}</td>
+      <td style="padding:7px 6px;text-align:center;">
+        <input type="number" id="score-${sub}-score" min="0" max="100"
+          style="width:64px;padding:5px;border:1.5px solid var(--border-s);border-radius:var(--r);text-align:center;font-size:13px;background:#f8f9ff;"
+          placeholder="—" oninput="updateRateRow('${sub}')">
+      </td>
+      <td style="padding:7px 6px;text-align:center;">
+        <input type="number" id="score-${sub}-avg" min="0" max="100"
+          style="width:64px;padding:5px;border:1.5px solid var(--border-s);border-radius:var(--r);text-align:center;font-size:13px;background:#f8f9ff;"
+          placeholder="—" oninput="updateRateRow('${sub}')">
+      </td>
+      <td style="padding:7px 10px;text-align:center;font-size:13px;font-weight:600;color:var(--blue);" id="rate-${sub}">—</td>
+    </tr>`).join('');
+}
+
+function updateRateRow(sub){
+  const score = parseFloat(document.getElementById('score-'+sub+'-score')?.value);
+  const avg   = parseFloat(document.getElementById('score-'+sub+'-avg')?.value);
+  const rateEl = document.getElementById('rate-'+sub);
+  if(!isNaN(score) && !isNaN(avg) && avg > 0){
+    const rate = (score/avg*100).toFixed(1);
+    const color = rate>=110?'#15803d':rate>=90?'#1e40af':rate>=70?'#b45309':'#b91c1c';
+    rateEl.textContent = rate+'%';
+    rateEl.style.color = color;
+  } else {
+    rateEl.textContent = '—';
+    rateEl.style.color = 'var(--hint)';
+  }
+}
+
+async function saveTestScore(){
+  const student  = document.getElementById('t-student').value;
+  const schoolType = document.getElementById('t-school-type').value;
+  const term     = document.getElementById('t-term').value;
+  const testDate = document.getElementById('t-date').value;
+  if(!student || !testDate){ alert('生徒名と実施日は必須です'); return; }
+
+  const subjects = SUBJECTS[schoolType]||SUBJECTS['中学生'];
+  const subjectData = {};
+  subjects.forEach(sub=>{
+    const score = document.getElementById('score-'+sub+'-score')?.value;
+    const avg   = document.getElementById('score-'+sub+'-avg')?.value;
+    if(score!==''&&score!==undefined) subjectData[sub] = {score:Number(score), avg:avg!==''?Number(avg):null};
+  });
+
+  if(Object.keys(subjectData).length===0){ alert('少なくとも1科目の得点を入力してください'); return; }
+
+  const score = {id:'t'+Date.now(), student, schoolType, term, testDate, subjects:subjectData};
+  const btn = document.getElementById('test-save-btn');
+  btn.innerHTML='<span class="loading"></span>保存中...'; btn.disabled=true;
+  try{
+    const res = await api('addTestScore', {score});
+    if(res.ok){
+      testScores.push(score);
+      toast('✅ テスト結果を保存しました');
+      buildSubjectInputs(); // リセット
+      renderTestList();
+      renderTestGraphs();
+    } else alert('保存に失敗しました');
+  }catch(e){ alert('通信エラー'); }
+  btn.innerHTML='テスト結果を保存'; btn.disabled=false;
+}
+
+function renderTestList(){
+  const el = document.getElementById('test-list-area');
+  if(!el) return;
+  const student = document.getElementById('t-student')?.value||'';
+  const fl = testScores.filter(s=>!student||s.student===student)
+    .sort((a,b)=>b.testDate.localeCompare(a.testDate));
+  if(!fl.length){ el.innerHTML='<div style="text-align:center;padding:1rem;color:var(--hint);font-size:13px;">データなし</div>'; return; }
+
+  el.innerHTML = fl.map(s=>{
+    const subjects = s.subjects||{};
+    const subRows = Object.entries(subjects).map(([sub,v])=>{
+      const rate = v.avg&&v.avg>0?(v.score/v.avg*100).toFixed(1)+'%':'—';
+      const rateColor = v.avg&&v.avg>0?(v.score/v.avg*100>=110?'#15803d':v.score/v.avg*100>=90?'#1e40af':v.score/v.avg*100>=70?'#b45309':'#b91c1c'):'var(--hint)';
+      return `<tr>
+        <td style="padding:5px 8px;font-size:12px;">${sub}</td>
+        <td style="padding:5px 8px;text-align:center;font-weight:600;font-size:12px;">${v.score}点</td>
+        <td style="padding:5px 8px;text-align:center;font-size:12px;color:var(--muted);">${v.avg!==null?v.avg+'点':'—'}</td>
+        <td style="padding:5px 8px;text-align:center;font-size:12px;font-weight:600;color:${rateColor};">${rate}</td>
+      </tr>`;
+    }).join('');
+    return `<div style="border:1px solid var(--border);border-radius:var(--r);margin-bottom:.75rem;overflow:hidden;">
+      <div style="padding:8px 12px;background:#f8f9ff;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+        <div>
+          <span style="font-weight:700;font-size:13px;">${s.student}</span>
+          <span style="margin-left:8px;font-size:12px;color:var(--muted);">${s.term} / ${s.testDate} / ${s.schoolType}</span>
+        </div>
+        <button onclick="deleteTestScore('${s.id}')" style="background:none;border:none;color:var(--hint);cursor:pointer;font-size:16px;">×</button>
+      </div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="background:#fafafa;">
+          <th style="padding:5px 8px;text-align:left;font-size:10px;color:var(--muted);border-bottom:1px solid var(--border);">科目</th>
+          <th style="padding:5px 8px;text-align:center;font-size:10px;color:var(--muted);border-bottom:1px solid var(--border);">得点</th>
+          <th style="padding:5px 8px;text-align:center;font-size:10px;color:var(--muted);border-bottom:1px solid var(--border);">平均</th>
+          <th style="padding:5px 8px;text-align:center;font-size:10px;color:var(--muted);border-bottom:1px solid var(--border);">得点率</th>
+        </tr></thead>
+        <tbody>${subRows}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+}
+
+async function deleteTestScore(id){
+  if(!confirm('この結果を削除しますか？')) return;
+  try{
+    const res = await api('deleteTestScore',{id});
+    if(res.ok){
+      testScores = testScores.filter(s=>s.id!==id);
+      toast('削除しました');
+      renderTestList();
+      renderTestGraphs();
+    }
+  }catch(e){ alert('通信エラー'); }
+}
+
+function renderTestGraphs(){
+  const student = document.getElementById('tg-student')?.value||'';
+  const el = document.getElementById('test-graph-area');
+  if(!el) return;
+  if(!student){ el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--hint);font-size:13px;">生徒を選択してください</div>'; return; }
+
+  const fl = testScores.filter(s=>s.student===student)
+    .sort((a,b)=>a.testDate.localeCompare(b.testDate));
+  if(!fl.length){ el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--hint);font-size:13px;">この生徒のデータがありません</div>'; return; }
+
+  // 科目一覧を収集
+  const allSubs = new Set();
+  fl.forEach(s=>Object.keys(s.subjects||{}).forEach(k=>allSubs.add(k)));
+  const subs = [...allSubs];
+  const labels = fl.map(s=>s.term+'\n'+s.testDate.slice(5));
+
+  const colors = ['#2563eb','#16a34a','#d97706','#dc2626','#7c3aed','#0d9488','#db2777','#ea580c','#0ea5e9','#84cc16'];
+
+  // 得点グラフ用データ
+  const scoreDatasets = subs.map((sub,i)=>({
+    label:sub,
+    data:fl.map(s=>(s.subjects[sub]?.score??null)),
+    borderColor:colors[i%colors.length],
+    backgroundColor:colors[i%colors.length]+'22',
+    tension:.3,pointRadius:5,borderWidth:2,spanGaps:true
+  }));
+
+  // 得点率グラフ用データ
+  const rateDatasets = subs.map((sub,i)=>({
+    label:sub,
+    data:fl.map(s=>{
+      const v=s.subjects[sub];
+      if(!v||!v.avg||v.avg===0) return null;
+      return parseFloat((v.score/v.avg*100).toFixed(1));
+    }),
+    borderColor:colors[i%colors.length],
+    backgroundColor:colors[i%colors.length]+'22',
+    tension:.3,pointRadius:5,borderWidth:2,spanGaps:true
+  }));
+
+  el.innerHTML=`
+    <div style="margin-bottom:1rem;">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:.5rem;font-family:var(--mono);">得点推移</div>
+      <div style="position:relative;height:220px;"><canvas id="c-test-score"></canvas></div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:.5rem;font-family:var(--mono);">得点率推移（得点÷平均点×100%）</div>
+      <div style="position:relative;height:220px;"><canvas id="c-test-rate"></canvas></div>
+    </div>`;
+
+  // グラフ描画
+  setTimeout(()=>{
+    const commonOpts = {
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{font:{size:10},boxWidth:12}}},
+      scales:{
+        x:{ticks:{font:{size:10}},grid:{display:false}},
+        y:{beginAtZero:false,ticks:{font:{size:10}}}
+      }
+    };
+
+    if(charts.testScore) charts.testScore.destroy();
+    charts.testScore = new Chart(document.getElementById('c-test-score').getContext('2d'),{
+      type:'line',
+      data:{labels,datasets:scoreDatasets},
+      options:{...commonOpts,scales:{...commonOpts.scales,y:{...commonOpts.scales.y,min:0,max:100,ticks:{font:{size:10}}}}}
+    });
+
+    if(charts.testRate) charts.testRate.destroy();
+    charts.testRate = new Chart(document.getElementById('c-test-rate').getContext('2d'),{
+      type:'line',
+      data:{labels,datasets:rateDatasets},
+      options:{
+        ...commonOpts,
+        scales:{
+          ...commonOpts.scales,
+          y:{beginAtZero:false,ticks:{font:{size:10},callback:v=>v+'%'},
+            plugins:{annotation:{annotations:{line100:{type:'line',yMin:100,yMax:100,borderColor:'rgba(220,38,38,.4)',borderWidth:1.5,borderDash:[4,4]}}}}}
+        }
+      }
+    });
+  },50);
+}
+
+function rebuildTestSelects(){
+  const sNames = master.students.map(s=>s.name||s);
+  const pop=(id,arr,addEmpty)=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.innerHTML=addEmpty?'<option value="">選択してください</option>':'';
+    arr.forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;el.appendChild(o);});
+  };
+  pop('t-student',sNames,true);
+  pop('tg-student',sNames,true);
+  // 今日の日付
+  const today=new Date().toISOString().slice(0,10);
+  const td=document.getElementById('t-date');if(td)td.value=today;
+  buildSubjectInputs();
+}
+
 // ── TABS ──
 function showTab(name,btn){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -965,6 +1288,11 @@ function showTab(name,btn){
   if(name==='dashboard')renderDash();
   if(name==='logs')renderLogs();
   if(name==='master')renderMaster();
+  if(name==='test'){
+    rebuildTestSelects();
+    renderTestList();
+    renderTestGraphs();
+  }
 }
 
 
