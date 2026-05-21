@@ -252,6 +252,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
   <button class="nav-item" id="nav-week" onclick="showSection('week')">
     <span class="nav-icon">📋</span>週予定
   </button>
+  <button class="nav-item" id="nav-cal" onclick="showSection('cal')">
+    <span class="nav-icon">🗓️</span>月表示
+  </button>
   <button class="nav-item" id="nav-register" onclick="showSection('register')">
     <span class="nav-icon">＋</span>登録
   </button>
@@ -393,13 +396,14 @@ function buildSelects(){
 // ── 講師用セクション切替 ──
 function showSection(name){
   currentSection=name;
-  ['today','week','register','absence'].forEach(n=>{
+  ['today','week','cal','register','absence'].forEach(n=>{
     const btn=document.getElementById('nav-'+n);
     if(btn) btn.className='nav-item'+(n===name?' active':'');
   });
   const main=document.getElementById('main-content');
   if(name==='today') renderTeacherToday(main);
   else if(name==='week') renderTeacherWeek(main);
+  else if(name==='cal') renderTeacherCal(main);
   else if(name==='register') renderRegisterForm(main);
   else if(name==='absence') renderAbsenceSection(main);
 }
@@ -525,6 +529,84 @@ function changeWeekOffset(d){weekOffset+=d;}
 // ── 塾長：月カレンダー ──
 let calYear=new Date().getFullYear();
 let calMonth=new Date().getMonth();
+
+// ── 講師：月カレンダー（自分のシフトのみ）──
+function renderTeacherCal(el){
+  const today=toDateStr(new Date());
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const prevDays=new Date(calYear,calMonth,0).getDate();
+  const monthLabel=calYear+'年'+(calMonth+1)+'月';
+
+  let html='<div style="display:flex;align-items:center;gap:8px;margin-bottom:.75rem;">';
+  html+='<button class="nav-btn" onclick="prevCalTeacher()">‹</button>';
+  html+='<div class="period-label">'+monthLabel+'</div>';
+  html+='<button class="nav-btn" onclick="nextCalTeacher()">›</button>';
+  html+='</div>';
+
+  html+='<div style="background:var(--surface);border-radius:var(--rl);border:1px solid var(--border);overflow:hidden;margin-bottom:.75rem;">';
+  html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);background:#f8f9ff;border-bottom:2px solid var(--border);">';
+  ['日','月','火','水','木','金','土'].forEach((d,i)=>{
+    const c=i===0?'color:var(--red);':i===6?'color:var(--blue);':'color:var(--muted);';
+    html+='<div style="text-align:center;padding:6px 2px;font-size:10px;font-weight:700;font-family:var(--mono);'+c+'">'+d+'</div>';
+  });
+  html+='</div>';
+
+  html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);">';
+  let cells=[];
+  for(let i=firstDay-1;i>=0;i--) cells.push({date:null,day:prevDays-i,other:true});
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    cells.push({date:ds,day:d,other:false});
+  }
+  const rem=(7-cells.length%7)%7;
+  for(let i=1;i<=rem;i++) cells.push({date:null,day:i,other:true});
+
+  cells.forEach((c,idx)=>{
+    const dow=idx%7;
+    const isSun=dow===0,isSat=dow===6;
+    const isToday=c.date===today;
+    const isHoliday=c.date&&HOLIDAYS[c.date];
+    const myShifts=c.date?shifts.filter(s=>s.date===c.date&&s.teacher===currentUser):[];
+    const dayEvents=c.date?events.filter(e=>c.date>=e.startDate&&c.date<=e.endDate):[];
+
+    let bg=c.other?'background:#f8f9ff;opacity:.5;':'background:#fff;';
+    if(isToday) bg='background:linear-gradient(180deg,#eff6ff,#fff);';
+    let dateColor=isSun||isHoliday?'color:var(--red);':isSat?'color:var(--blue);':'color:var(--text);';
+
+    html+='<div style="min-height:70px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:2px;'+bg+'">';
+    const dateStyle='font-size:9px;font-weight:700;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);margin-bottom:2px;border-radius:50%;'+(isToday?'background:var(--blue);color:#fff;':dateColor);
+    html+='<div style="'+dateStyle+'">'+c.day+'</div>';
+
+    dayEvents.forEach(e=>{
+      html+='<div style="font-size:7px;border-radius:2px;padding:1px 2px;background:var(--amber-l);color:#92400e;border-left:2px solid var(--amber);margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+e.content+'</div>';
+    });
+
+    // 本校・南校に分けて表示
+    const honko=myShifts.filter(s=>(s.campus||'本校')==='本校');
+    const nanko=myShifts.filter(s=>s.campus==='南校');
+    if(honko.length){
+      html+='<div style="font-size:7px;color:#1e40af;font-weight:700;">🔵本</div>';
+      honko.forEach(s=>{
+        const t=s.startTime.split('（')[0];
+        html+='<div style="font-size:7px;border-radius:2px;padding:1px 2px;background:var(--blue-l);border-left:2px solid var(--blue);margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1e40af;">'+t+'</div>';
+      });
+    }
+    if(nanko.length){
+      html+='<div style="font-size:7px;color:#0f766e;font-weight:700;">🟢南</div>';
+      nanko.forEach(s=>{
+        const t=s.startTime.split('（')[0];
+        html+='<div style="font-size:7px;border-radius:2px;padding:1px 2px;background:var(--teal-l);border-left:2px solid var(--teal);margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#0f766e;">'+t+'</div>';
+      });
+    }
+    html+='</div>';
+  });
+  html+='</div></div>';
+  el.innerHTML=html;
+}
+
+function prevCalTeacher(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}showSection('cal');}
+function nextCalTeacher(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}showSection('cal');}
 
 function prevCal(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}showAdminSection('cal');}
 function nextCal(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}showAdminSection('cal');}
