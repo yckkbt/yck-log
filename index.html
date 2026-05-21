@@ -1090,7 +1090,7 @@ function updateRateRow(sub){
   const rateEl = document.getElementById('rate-'+sub);
   if(!isNaN(score) && !isNaN(avg) && avg > 0){
     const rate = (score/avg*100).toFixed(1);
-    const color = rate>=110?'#15803d':rate>=90?'#1e40af':rate>=70?'#b45309':'#b91c1c';
+    const color = rate>=110?'#15803d':rate>=90?'#1e40af':rate>=50?'#b45309':'#b91c1c';
     rateEl.textContent = rate+'%';
     rateEl.style.color = color;
   } else {
@@ -1155,42 +1155,94 @@ function renderTestList(){
   const el = document.getElementById('test-list-area');
   if(!el) return;
   const student = document.getElementById('t-student')?.value||'';
-  const fl = testScores.filter(s=>!student||s.student===student)
-    .sort((a,b)=>b.testDate.localeCompare(a.testDate));
-  if(!fl.length){ el.innerHTML='<div style="text-align:center;padding:1rem;color:var(--hint);font-size:13px;">データなし</div>'; return; }
 
-  el.innerHTML = fl.map(s=>{
-    const subjects = s.subjects||{};
-    const subRows = Object.entries(subjects).map(([sub,v])=>{
-      const rate = v.avg&&v.avg>0?(v.score/v.avg*100).toFixed(1)+'%':'—';
-      const rateColor = v.avg&&v.avg>0?(v.score/v.avg*100>=110?'#15803d':v.score/v.avg*100>=90?'#1e40af':v.score/v.avg*100>=70?'#b45309':'#b91c1c'):'var(--hint)';
-      return `<tr>
-        <td style="padding:5px 8px;font-size:12px;">${sub}</td>
-        <td style="padding:5px 8px;text-align:center;font-weight:600;font-size:12px;">${v.score}点</td>
-        <td style="padding:5px 8px;text-align:center;font-size:12px;color:var(--muted);">${v.avg!==null?v.avg+'点':'—'}</td>
-        <td style="padding:5px 8px;text-align:center;font-size:12px;font-weight:600;color:${rateColor};">${rate}</td>
-      </tr>`;
-    }).join('');
-    return `<div style="border:1px solid var(--border);border-radius:var(--r);margin-bottom:.75rem;overflow:hidden;">
-      <div style="padding:8px 12px;background:#f8f9ff;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
-        <div>
-          <span style="font-weight:700;font-size:13px;">${s.student}</span>
-          <span style="margin-left:8px;font-size:12px;color:var(--muted);">${s.term} / ${s.testDate} / ${s.schoolType}</span>
+  // 生徒が未選択なら全生徒をリストアップ
+  const targetStudents = student
+    ? [student]
+    : [...new Set(testScores.map(s=>s.student))].sort();
+
+  if(!targetStudents.length||!testScores.length){
+    el.innerHTML='<div style="text-align:center;padding:1rem;color:var(--hint);font-size:13px;">データなし</div>';
+    return;
+  }
+
+  const termOrder = ['1学期中間','1学期期末','2学期中間','2学期期末','学年末','その他'];
+
+  el.innerHTML = targetStudents.map(stu=>{
+    const stuScores = testScores.filter(s=>s.student===stu)
+      .sort((a,b)=>{
+        const ai=termOrder.indexOf(a.term), bi=termOrder.indexOf(b.term);
+        if(ai!==bi) return ai-bi;
+        return a.testDate.localeCompare(b.testDate);
+      });
+    if(!stuScores.length) return '';
+
+    // テスト列（term+date でユニーク）
+    const cols = stuScores.map(s=>({id:s.id,label:s.term,date:s.testDate.slice(5)}));
+
+    // 科目行（全スコアから収集）
+    const allSubs = [];
+    const schoolType = stuScores[0].schoolType||'中学生';
+    (SUBJECTS[schoolType]||SUBJECTS['中学生']).forEach(sub=>{
+      if(stuScores.some(s=>s.subjects&&s.subjects[sub]!==undefined)) allSubs.push(sub);
+    });
+
+    const rateColor=(r)=>r>=110?'#15803d':r>=90?'#1e40af':r>=50?'#b45309':'#b91c1c';
+    const cellStyle='padding:6px 8px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border);font-size:12px;';
+    const headStyle='padding:7px 8px;text-align:center;border-bottom:2px solid var(--border);border-right:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);background:#f8f9ff;white-space:nowrap;';
+
+    // ヘッダー行
+    let thead='<tr><th style="'+headStyle+'text-align:left;min-width:80px;">科目</th>';
+    cols.forEach(c=>{
+      thead+=`<th style="${headStyle}">${c.label}<br><span style="font-weight:400;font-size:9px;">${c.date}</span></th>`;
+    });
+    thead+='</tr>';
+
+    // 科目行
+    let tbody='';
+    allSubs.forEach(sub=>{
+      tbody+=`<tr><td style="${cellStyle}text-align:left;font-weight:500;background:#fafafa;">${sub}</td>`;
+      cols.forEach(c=>{
+        const s=stuScores.find(x=>x.id===c.id);
+        const v=s?.subjects?.[sub];
+        if(!v){
+          tbody+=`<td style="${cellStyle}color:var(--hint);">—</td>`;
+        }else{
+          const rate=v.avg&&v.avg>0?(v.score/v.avg*100):null;
+          const bg=rate!==null?(rate>=110?'#f0fdf4':rate>=90?'#eff6ff':rate>=50?'#fffbeb':'#fef2f2'):'';
+          tbody+=`<td style="${cellStyle}${bg?'background:'+bg+';':''}">
+            <div style="font-weight:700;">${v.score}</div>
+            ${v.avg!==null&&v.avg!==undefined?`<div style="font-size:9px;color:var(--muted);">平均${v.avg}</div>`:''}
+            ${rate!==null?`<div style="font-size:9px;font-weight:600;color:${rateColor(rate)};">${rate.toFixed(0)}%</div>`:''}
+          </td>`;
+        }
+      });
+      tbody+='</tr>';
+    });
+
+    // 操作行（編集・削除ボタン）
+    let opRow=`<tr><td style="${cellStyle}text-align:left;background:#fafafa;font-size:10px;color:var(--hint);">操作</td>`;
+    cols.forEach(c=>{
+      opRow+=`<td style="${cellStyle}">
+        <div style="display:flex;flex-direction:column;gap:3px;align-items:center;">
+          <button onclick="editTestScore('${c.id}')" style="padding:2px 8px;border:1px solid var(--border-s);border-radius:3px;font-size:10px;cursor:pointer;color:var(--muted);background:#fff;width:100%;">編集</button>
+          <button onclick="deleteTestScore('${c.id}')" style="padding:2px 8px;border:none;border-radius:3px;font-size:10px;cursor:pointer;color:#b91c1c;background:var(--red-l);width:100%;">削除</button>
         </div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <button onclick="editTestScore('${s.id}')" style="padding:3px 10px;border:1px solid var(--border-s);border-radius:4px;font-size:11px;cursor:pointer;color:var(--muted);background:#fff;">編集</button>
-          <button onclick="deleteTestScore('${s.id}')" style="background:none;border:none;color:var(--hint);cursor:pointer;font-size:16px;">×</button>
-        </div>
+      </td>`;
+    });
+    opRow+='</tr>';
+
+    return `<div style="margin-bottom:1.5rem;">
+      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:.5rem;display:flex;align-items:center;gap:8px;">
+        ${stu}
+        <span style="font-size:11px;color:var(--muted);font-weight:400;">${schoolType}</span>
       </div>
-      <table style="width:100%;border-collapse:collapse;">
-        <thead><tr style="background:#fafafa;">
-          <th style="padding:5px 8px;text-align:left;font-size:10px;color:var(--muted);border-bottom:1px solid var(--border);">科目</th>
-          <th style="padding:5px 8px;text-align:center;font-size:10px;color:var(--muted);border-bottom:1px solid var(--border);">得点</th>
-          <th style="padding:5px 8px;text-align:center;font-size:10px;color:var(--muted);border-bottom:1px solid var(--border);">平均</th>
-          <th style="padding:5px 8px;text-align:center;font-size:10px;color:var(--muted);border-bottom:1px solid var(--border);">得点率</th>
-        </tr></thead>
-        <tbody>${subRows}</tbody>
-      </table>
+      <div style="overflow-x:auto;">
+        <table style="border-collapse:collapse;background:#fff;border-radius:var(--rl);overflow:hidden;box-shadow:0 1px 4px rgba(26,42,108,.06);border:1px solid var(--border);min-width:300px;">
+          <thead>${thead}</thead>
+          <tbody>${tbody}${opRow}</tbody>
+        </table>
+      </div>
     </div>`;
   }).join('');
 }
