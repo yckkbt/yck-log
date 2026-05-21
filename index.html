@@ -413,7 +413,8 @@ textarea{resize:vertical;min-height:60px;}
 
       <!-- 結果一覧 -->
       <div class="card">
-        <div class="card-head"><div class="card-head-icon" style="background:var(--sky-l);">📋</div><span class="card-head-label">登録済みテスト結果</span></div>
+        <div class="card-head"><div class="card-head-icon" style="background:var(--sky-l);">📋</div><span class="card-head-label">テスト結果一覧</span></div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:.75rem;">生徒名をクリックすると詳細が別タブで開きます。</p>
         <div id="test-list-area">
           <div style="text-align:center;padding:1rem;color:var(--hint);font-size:13px;">データなし</div>
         </div>
@@ -1154,97 +1155,149 @@ async function saveTestScore(){
 function renderTestList(){
   const el = document.getElementById('test-list-area');
   if(!el) return;
-  const student = document.getElementById('t-student')?.value||'';
 
-  // 生徒が未選択なら全生徒をリストアップ
-  const targetStudents = student
-    ? [student]
-    : [...new Set(testScores.map(s=>s.student))].sort();
-
-  if(!targetStudents.length||!testScores.length){
+  // 登録済み生徒を一覧表示
+  const students = [...new Set(testScores.map(s=>s.student))].sort();
+  if(!students.length){
     el.innerHTML='<div style="text-align:center;padding:1rem;color:var(--hint);font-size:13px;">データなし</div>';
     return;
   }
 
-  const termOrder = ['1学期中間','1学期期末','2学期中間','2学期期末','学年末','その他'];
-
-  el.innerHTML = targetStudents.map(stu=>{
-    const stuScores = testScores.filter(s=>s.student===stu)
-      .sort((a,b)=>{
-        const ai=termOrder.indexOf(a.term), bi=termOrder.indexOf(b.term);
-        if(ai!==bi) return ai-bi;
-        return a.testDate.localeCompare(b.testDate);
-      });
-    if(!stuScores.length) return '';
-
-    // テスト列（term+date でユニーク）
-    const cols = stuScores.map(s=>({id:s.id,label:s.term,date:s.testDate.slice(5)}));
-
-    // 科目行（全スコアから収集）
-    const allSubs = [];
-    const schoolType = stuScores[0].schoolType||'中学生';
-    (SUBJECTS[schoolType]||SUBJECTS['中学生']).forEach(sub=>{
-      if(stuScores.some(s=>s.subjects&&s.subjects[sub]!==undefined)) allSubs.push(sub);
-    });
-
-    const rateColor=(r)=>r>=110?'#15803d':r>=90?'#1e40af':r>=50?'#b45309':'#b91c1c';
-    const cellStyle='padding:6px 8px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border);font-size:12px;';
-    const headStyle='padding:7px 8px;text-align:center;border-bottom:2px solid var(--border);border-right:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);background:#f8f9ff;white-space:nowrap;';
-
-    // ヘッダー行
-    let thead='<tr><th style="'+headStyle+'text-align:left;min-width:80px;">科目</th>';
-    cols.forEach(c=>{
-      thead+=`<th style="${headStyle}">${c.label}<br><span style="font-weight:400;font-size:9px;">${c.date}</span></th>`;
-    });
-    thead+='</tr>';
-
-    // 科目行
-    let tbody='';
-    allSubs.forEach(sub=>{
-      tbody+=`<tr><td style="${cellStyle}text-align:left;font-weight:500;background:#fafafa;">${sub}</td>`;
-      cols.forEach(c=>{
-        const s=stuScores.find(x=>x.id===c.id);
-        const v=s?.subjects?.[sub];
-        if(!v){
-          tbody+=`<td style="${cellStyle}color:var(--hint);">—</td>`;
-        }else{
-          const rate=v.avg&&v.avg>0?(v.score/v.avg*100):null;
-          const bg=rate!==null?(rate>=110?'#f0fdf4':rate>=90?'#eff6ff':rate>=50?'#fffbeb':'#fef2f2'):'';
-          tbody+=`<td style="${cellStyle}${bg?'background:'+bg+';':''}">
-            <div style="font-weight:700;">${v.score}</div>
-            ${v.avg!==null&&v.avg!==undefined?`<div style="font-size:9px;color:var(--muted);">平均${v.avg}</div>`:''}
-            ${rate!==null?`<div style="font-size:9px;font-weight:600;color:${rateColor(rate)};">${rate.toFixed(0)}%</div>`:''}
-          </td>`;
-        }
-      });
-      tbody+='</tr>';
-    });
-
-    // 操作行（編集・削除ボタン）
-    let opRow=`<tr><td style="${cellStyle}text-align:left;background:#fafafa;font-size:10px;color:var(--hint);">操作</td>`;
-    cols.forEach(c=>{
-      opRow+=`<td style="${cellStyle}">
-        <div style="display:flex;flex-direction:column;gap:3px;align-items:center;">
-          <button onclick="editTestScore('${c.id}')" style="padding:2px 8px;border:1px solid var(--border-s);border-radius:3px;font-size:10px;cursor:pointer;color:var(--muted);background:#fff;width:100%;">編集</button>
-          <button onclick="deleteTestScore('${c.id}')" style="padding:2px 8px;border:none;border-radius:3px;font-size:10px;cursor:pointer;color:#b91c1c;background:var(--red-l);width:100%;">削除</button>
-        </div>
-      </td>`;
-    });
-    opRow+='</tr>';
-
-    return `<div style="margin-bottom:1.5rem;">
-      <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:.5rem;display:flex;align-items:center;gap:8px;">
-        ${stu}
-        <span style="font-size:11px;color:var(--muted);font-weight:400;">${schoolType}</span>
+  el.innerHTML = students.map(stu=>{
+    const stuScores = testScores.filter(s=>s.student===stu);
+    const schoolType = stuScores[0]?.schoolType||'中学生';
+    const termCount = stuScores.length;
+    const latestDate = stuScores.sort((a,b)=>b.testDate.localeCompare(a.testDate))[0]?.testDate||'';
+    return `<div onclick="openTestTab('${stu}')"
+      style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;background:#f8f9ff;cursor:pointer;transition:background .1s;"
+      onmouseover="this.style.background='var(--blue-l)'"
+      onmouseout="this.style.background='#f8f9ff'">
+      <div>
+        <div style="font-weight:700;font-size:14px;color:var(--text);">${stu}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${schoolType} ／ ${termCount}回分 ／ 最終：${latestDate}</div>
       </div>
-      <div style="overflow-x:auto;">
-        <table style="border-collapse:collapse;background:#fff;border-radius:var(--rl);overflow:hidden;box-shadow:0 1px 4px rgba(26,42,108,.06);border:1px solid var(--border);min-width:300px;">
-          <thead>${thead}</thead>
-          <tbody>${tbody}${opRow}</tbody>
-        </table>
-      </div>
+      <div style="color:var(--blue);font-size:18px;">›</div>
     </div>`;
   }).join('');
+}
+
+function openTestTab(student){
+  const stuScores = testScores.filter(s=>s.student===student)
+    .sort((a,b)=>{
+      const termOrder=['1学期中間','1学期期末','2学期中間','2学期期末','学年末','その他'];
+      const ai=termOrder.indexOf(a.term),bi=termOrder.indexOf(b.term);
+      if(ai!==bi) return ai-bi;
+      return a.testDate.localeCompare(b.testDate);
+    });
+  if(!stuScores.length) return;
+
+  const schoolType = stuScores[0].schoolType||'中学生';
+  const allSubs = [];
+  (SUBJECTS[schoolType]||SUBJECTS['中学生']).forEach(sub=>{
+    if(stuScores.some(s=>s.subjects&&s.subjects[sub]!==undefined)) allSubs.push(sub);
+  });
+
+  const cols = stuScores.map(s=>({id:s.id,label:s.term,date:s.testDate.slice(5),score:s}));
+  const rateColor=(r)=>r>=110?'#15803d':r>=90?'#1e40af':r>=50?'#b45309':'#b91c1c';
+  const rateBg=(r)=>r>=110?'#f0fdf4':r>=90?'#eff6ff':r>=50?'#fffbeb':'#fef2f2';
+
+  const cellSt='padding:8px 10px;text-align:center;border-bottom:1px solid #e5e7eb;border-right:1px solid #e5e7eb;font-size:13px;';
+  const headSt='padding:8px 10px;text-align:center;border-bottom:2px solid #e5e7eb;border-right:1px solid #e5e7eb;font-size:11px;font-weight:700;color:#6b7280;background:#f9fafb;white-space:nowrap;';
+
+  let thead='<tr><th style="'+headSt+'text-align:left;min-width:90px;">科目</th>';
+  cols.forEach(c=>{
+    thead+=`<th style="${headSt}">${c.label}<br><span style="font-weight:400;font-size:10px;">${c.date}</span></th>`;
+  });
+  thead+='</tr>';
+
+  let tbody='';
+  allSubs.forEach(sub=>{
+    tbody+=`<tr><td style="${cellSt}text-align:left;font-weight:600;background:#f9fafb;">${sub}</td>`;
+    cols.forEach(c=>{
+      const v=c.score.subjects?.[sub];
+      if(!v){ tbody+=`<td style="${cellSt}color:#9ca3af;">—</td>`; return; }
+      const rate=v.avg&&v.avg>0?(v.score/v.avg*100):null;
+      tbody+=`<td style="${cellSt}${rate!==null?'background:'+rateBg(rate)+';':''}">
+        <div style="font-weight:700;font-size:14px;">${v.score}</div>
+        ${v.avg!=null?`<div style="font-size:10px;color:#6b7280;">平均 ${v.avg}</div>`:''}
+        ${rate!==null?`<div style="font-size:11px;font-weight:700;color:${rateColor(rate)};">${rate.toFixed(0)}%</div>`:''}
+      </td>`;
+    });
+    tbody+='</tr>';
+  });
+
+  // 操作行
+  let opRow=`<tr><td style="${cellSt}text-align:left;background:#f9fafb;font-size:11px;color:#9ca3af;">操作</td>`;
+  cols.forEach(c=>{
+    opRow+=`<td style="${cellSt}">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <button onclick="window.opener&&window.opener.editTestScore('${c.id}')" style="padding:4px 0;width:100%;border:1px solid #d1d5db;border-radius:4px;font-size:11px;cursor:pointer;color:#6b7280;background:#fff;">編集</button>
+        <button onclick="if(confirm('削除しますか？')){window.opener&&window.opener.deleteTestScoreFromTab('${c.id}',window)}" style="padding:4px 0;width:100%;border:none;border-radius:4px;font-size:11px;cursor:pointer;color:#b91c1c;background:#fee2e2;">削除</button>
+      </div>
+    </td>`;
+  });
+  opRow+='</tr>';
+
+  const pageHTML=`<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>テスト結果 - ${student}</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:#f0f2f8;color:#1a1c2e;font-size:14px;min-height:100vh;}
+.header{background:linear-gradient(135deg,#1a2a6c,#2563eb,#7c3aed);padding:0 1.25rem;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.header-title{color:#fff;font-weight:700;font-size:15px;}
+.header-sub{color:rgba(255,255,255,.7);font-size:12px;margin-top:2px;}
+.close-btn{color:rgba(255,255,255,.7);background:rgba(255,255,255,.15);border:none;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;}
+.main{max-width:900px;margin:0 auto;padding:1.25rem 1rem 3rem;}
+.card{background:#fff;border-radius:12px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(26,42,108,.06);border:1px solid #dde2f0;}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:1rem;font-size:12px;}
+.legend-item{display:flex;align-items:center;gap:6px;}
+.legend-dot{width:14px;height:14px;border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="header-title">📝 ${student} のテスト結果</div>
+    <div class="header-sub">${schoolType} ／ ${cols.length}回分</div>
+  </div>
+  <button class="close-btn" onclick="window.close()">✕ 閉じる</button>
+</div>
+<div class="main">
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#f0fdf4;border:1px solid #16a34a;"></div>110%以上（平均超）</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#eff6ff;border:1px solid #2563eb;"></div>90〜110%（平均付近）</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fffbeb;border:1px solid #d97706;"></div>50〜90%（やや低）</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fef2f2;border:1px solid #dc2626;"></div>50%未満（要注意）</div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;min-width:400px;">
+        <thead>${thead}</thead>
+        <tbody>${tbody}${opRow}</tbody>
+      </table>
+    </div>
+  </div>
+  <div style="margin-top:.75rem;font-size:12px;color:#9098b8;text-align:center;">
+    編集・削除後は元の画面をリロードしてください
+  </div>
+</div>
+</body>
+</html>`;
+
+  const blob=new Blob([pageHTML],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  window.open(url,'_blank');
+}
+
+function deleteTestScoreFromTab(id, tabWindow){
+  deleteTestScore(id).then(()=>{
+    if(tabWindow) tabWindow.close();
+  });
 }
 
 function editTestScore(id){
