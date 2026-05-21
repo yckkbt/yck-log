@@ -350,6 +350,11 @@ textarea{resize:vertical;min-height:60px;}
       <!-- 入力フォーム -->
       <div class="card">
         <div class="card-head"><div class="card-head-icon" style="background:var(--purple-l);">📝</div><span class="card-head-label">テスト結果入力</span></div>
+        <!-- 編集モードバー -->
+        <div id="test-edit-bar" style="display:none;padding:8px 12px;background:var(--amber-l);border-radius:var(--r);margin-bottom:12px;font-size:12px;color:#92400e;display:none;align-items:center;justify-content:space-between;">
+          <span>✏️ 編集モード：既存の結果を修正しています</span>
+          <button onclick="cancelEditTestScore()" style="padding:3px 10px;border:1px solid #d97706;border-radius:4px;font-size:11px;cursor:pointer;color:#92400e;background:#fff;">キャンセル</button>
+        </div>
         <div class="grid-2">
           <div class="field"><label>生徒名</label><select id="t-student" onchange="onTestStudentChange()"></select></div>
           <div class="field"><label>学校種別</label>
@@ -1038,6 +1043,7 @@ const SUBJECTS = {
 };
 
 let testScores = [];
+let editingTestId = null;
 
 async function loadTestScores(){
   try{
@@ -1110,20 +1116,39 @@ async function saveTestScore(){
 
   if(Object.keys(subjectData).length===0){ alert('少なくとも1科目の得点を入力してください'); return; }
 
-  const score = {id:'t'+Date.now(), student, schoolType, term, testDate, subjects:subjectData};
   const btn = document.getElementById('test-save-btn');
-  btn.innerHTML='<span class="loading"></span>保存中...'; btn.disabled=true;
-  try{
-    const res = await api('addTestScore', {score});
-    if(res.ok){
-      testScores.push(score);
-      toast('✅ テスト結果を保存しました');
-      buildSubjectInputs(); // リセット
-      renderTestList();
-      renderTestGraphs();
-    } else alert('保存に失敗しました');
-  }catch(e){ alert('通信エラー'); }
-  btn.innerHTML='テスト結果を保存'; btn.disabled=false;
+  btn.innerHTML='<span class="loading"></span>処理中...'; btn.disabled=true;
+
+  if(editingTestId){
+    // 編集モード：既存データを更新
+    const score = {id:editingTestId, student, schoolType, term, testDate, subjects:subjectData};
+    try{
+      const res = await api('updateTestScore', {score});
+      if(res.ok){
+        const idx = testScores.findIndex(s=>s.id===editingTestId);
+        if(idx>=0) testScores[idx]=score;
+        toast('✅ テスト結果を更新しました');
+        cancelEditTestScore();
+        renderTestList();
+        renderTestGraphs();
+      } else alert('更新に失敗しました');
+    }catch(e){ alert('通信エラー'); }
+  } else {
+    // 新規登録モード
+    const score = {id:'t'+Date.now(), student, schoolType, term, testDate, subjects:subjectData};
+    try{
+      const res = await api('addTestScore', {score});
+      if(res.ok){
+        testScores.push(score);
+        toast('✅ テスト結果を保存しました');
+        buildSubjectInputs();
+        renderTestList();
+        renderTestGraphs();
+      } else alert('保存に失敗しました');
+    }catch(e){ alert('通信エラー'); }
+  }
+  btn.innerHTML = editingTestId?'✅ テスト結果を更新する':'テスト結果を保存';
+  btn.disabled=false;
 }
 
 function renderTestList(){
@@ -1152,7 +1177,10 @@ function renderTestList(){
           <span style="font-weight:700;font-size:13px;">${s.student}</span>
           <span style="margin-left:8px;font-size:12px;color:var(--muted);">${s.term} / ${s.testDate} / ${s.schoolType}</span>
         </div>
-        <button onclick="deleteTestScore('${s.id}')" style="background:none;border:none;color:var(--hint);cursor:pointer;font-size:16px;">×</button>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button onclick="editTestScore('${s.id}')" style="padding:3px 10px;border:1px solid var(--border-s);border-radius:4px;font-size:11px;cursor:pointer;color:var(--muted);background:#fff;">編集</button>
+          <button onclick="deleteTestScore('${s.id}')" style="background:none;border:none;color:var(--hint);cursor:pointer;font-size:16px;">×</button>
+        </div>
       </div>
       <table style="width:100%;border-collapse:collapse;">
         <thead><tr style="background:#fafafa;">
@@ -1165,6 +1193,53 @@ function renderTestList(){
       </table>
     </div>`;
   }).join('');
+}
+
+function editTestScore(id){
+  const s = testScores.find(x=>x.id===id);
+  if(!s) return;
+  editingTestId = id;
+
+  // フォームに値をセット
+  document.getElementById('t-student').value = s.student;
+  document.getElementById('t-school-type').value = s.schoolType||'中学生';
+  document.getElementById('t-term').value = s.term||'1学期中間';
+  document.getElementById('t-date').value = s.testDate||'';
+
+  // 科目入力欄を再構築してから値をセット
+  buildSubjectInputs();
+  setTimeout(()=>{
+    const subjects = s.subjects||{};
+    Object.entries(subjects).forEach(([sub,v])=>{
+      const scoreEl = document.getElementById('score-'+sub+'-score');
+      const avgEl   = document.getElementById('score-'+sub+'-avg');
+      if(scoreEl) scoreEl.value = v.score!==undefined?v.score:'';
+      if(avgEl)   avgEl.value   = v.avg!==null&&v.avg!==undefined?v.avg:'';
+      updateRateRow(sub);
+    });
+  },50);
+
+  // 編集モードバーを表示
+  const bar = document.getElementById('test-edit-bar');
+  if(bar){ bar.style.display='flex'; }
+
+  // 保存ボタンを「更新」に変更
+  const btn = document.getElementById('test-save-btn');
+  if(btn) btn.textContent = '✅ テスト結果を更新する';
+
+  // タブの上部にスクロール
+  document.getElementById('tab-test').scrollIntoView({behavior:'smooth'});
+}
+
+function cancelEditTestScore(){
+  editingTestId = null;
+  const bar = document.getElementById('test-edit-bar');
+  if(bar) bar.style.display='none';
+  const btn = document.getElementById('test-save-btn');
+  if(btn) btn.textContent = 'テスト結果を保存';
+  buildSubjectInputs(); // フォームをリセット
+  document.getElementById('t-student').value='';
+  document.getElementById('t-date').value=new Date().toISOString().slice(0,10);
 }
 
 async function deleteTestScore(id){
