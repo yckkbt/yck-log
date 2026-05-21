@@ -62,7 +62,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 .cal-dow.sun{color:var(--red);}
 .cal-dow.sat{color:var(--blue);}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);}
-.cal-cell{min-height:52px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:2px;position:relative;cursor:pointer;}
+.cal-cell{min-height:80px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:2px;position:relative;cursor:pointer;}
 .cal-cell:nth-child(7n){border-right:none;}
 .cal-cell.other-month{background:#f8f9ff;opacity:.6;}
 .cal-cell.today{background:linear-gradient(180deg,#eff6ff,#fff);}
@@ -79,6 +79,16 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 .campus-divider-honko{color:#1e40af;}
 .campus-divider-nanko{color:#0f766e;}
 .campus-section{min-height:14px;}
+/* コマ別ブロック */
+.koma-block{border-top:1px solid var(--border);margin-top:2px;padding-top:2px;}
+.koma-block:first-of-type{border-top:none;margin-top:0;}
+.koma-label{display:flex;align-items:center;gap:3px;margin-bottom:1px;}
+.koma-time{font-size:7px;font-weight:700;color:var(--blue);font-family:var(--mono);}
+.koma-name{font-size:7px;background:var(--blue);color:#fff;padding:0 3px;border-radius:3px;font-weight:600;}
+.koma-campus{font-size:7px;font-weight:700;margin:1px 0 0;line-height:1;}
+.koma-campus-h{color:#1e40af;}
+.koma-campus-n{color:#0f766e;}
+.koma-chip{font-size:8px !important;padding:1px 3px !important;margin-bottom:1px;display:block !important;}
 .chip-mine{outline:1.5px solid rgba(37,99,235,.6);outline-offset:0px;}
 
 /* 週表示 */
@@ -756,11 +766,63 @@ function renderCalUnified(){
   let cells=[];
   for(let i=firstDay-1;i>=0;i--) cells.push({date:null,day:prevDays-i,other:true});
   for(let d=1;d<=daysInMonth;d++){
-    const ds=`${curYear}-${String(curMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const ds=curYear+'-'+String(curMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     cells.push({date:ds,day:d,other:false});
   }
   const rem=(7-cells.length%7)%7;
   for(let i=1;i<=rem;i++) cells.push({date:null,day:i,other:true});
+
+  // コマラベル抽出（例：「17:30（1コマ）」→「1コマ」）
+  const getKomaLabel=(t)=>{
+    const m=t.match(/（(.+)）/);
+    return m?m[1]:t.split('（')[0];
+  };
+
+  // 時間帯でグループ化して本校・南校を縦並び表示
+  const makeKomaSection=(honko,nanko)=>{
+    // 全時間帯を収集してソート
+    const allTimes=[...new Set([...honko,...nanko].map(s=>s.startTime))].sort();
+    if(!allTimes.length) return '';
+
+    return allTimes.map(time=>{
+      const komaLabel=getKomaLabel(time);
+      const timeShort=time.split('（')[0];
+      const hShifts=honko.filter(s=>s.startTime===time);
+      const nShifts=nanko.filter(s=>s.startTime===time);
+      if(!hShifts.length&&!nShifts.length) return '';
+
+      let html='<div class="koma-block">';
+      // コマラベル（時間帯ヘッダー）
+      html+='<div class="koma-label"><span class="koma-time">'+timeShort+'</span><span class="koma-name">'+komaLabel+'</span></div>';
+
+      // 本校
+      if(hShifts.length){
+        html+='<div class="koma-campus koma-campus-h">🔵本</div>';
+        hShifts.forEach(s=>{
+          const tc=teacherColorMap[s.teacher]||'tc0';
+          const canEdit=isAdmin||s.teacher===currentUser;
+          const mine=s.teacher===currentUser?' chip-mine':'';
+          const editAttr=canEdit?' data-shift-id="'+s.id+'"':'';
+          const tip=s.teacher+(s.students?' / '+s.students:'');
+          html+='<span class="chip chip-shift koma-chip '+tc+mine+'"'+editAttr+' title="'+tip+'">'+s.teacher+'</span>';
+        });
+      }
+      // 南校
+      if(nShifts.length){
+        html+='<div class="koma-campus koma-campus-n">🟢南</div>';
+        nShifts.forEach(s=>{
+          const tc=teacherColorMap[s.teacher]||'tc0';
+          const canEdit=isAdmin||s.teacher===currentUser;
+          const mine=s.teacher===currentUser?' chip-mine':'';
+          const editAttr=canEdit?' data-shift-id="'+s.id+'"':'';
+          const tip=s.teacher+(s.students?' / '+s.students:'');
+          html+='<span class="chip chip-shift koma-chip '+tc+mine+'"'+editAttr+' title="'+tip+'">'+s.teacher+'</span>';
+        });
+      }
+      html+='</div>';
+      return html;
+    }).join('');
+  };
 
   grid.innerHTML=cells.map((c,idx)=>{
     const dow=idx%7;
@@ -770,28 +832,14 @@ function renderCalUnified(){
     let dc='cell-date';if(isSun||isHoliday)dc+=' sun';else if(isSat)dc+=' sat';
     let cc='cal-cell';if(c.other)cc+=' other-month';if(isToday)cc+=' today';
 
-    // 行事（本校・南校共通）
     const dayEvents=c.date?events.filter(e=>c.date>=e.startDate&&c.date<=e.endDate):[];
-    const evChips=dayEvents.map(e=>`<span class="chip ${e.type==='school'?'chip-school':e.type==='holiday'?'chip-holiday':'chip-event'}">${e.content}</span>`).join('');
+    const evChips=dayEvents.map(e=>'<span class="chip '+(e.type==='school'?'chip-school':e.type==='holiday'?'chip-holiday':'chip-event')+'">'+e.content+'</span>').join('');
 
-    // 本校シフト
     const honkoShifts=c.date?shifts.filter(s=>s.date===c.date&&(s.campus||'本校')==='本校'&&(!filter||s.teacher===filter)):[];
-    // 南校シフト
     const nankoShifts=c.date?shifts.filter(s=>s.date===c.date&&s.campus==='南校'&&(!filter||s.teacher===filter)):[];
-
-    const makeChips=(arr)=>arr.map(s=>{
-      const tc=teacherColorMap[s.teacher]||'tc0';
-      const canEdit=isAdmin||s.teacher===currentUser;
-      const lbl=s.teacher+(s.startTime?' '+s.startTime.split('（')[0]:'');
-      const tip=lbl+(s.students?' '+s.students:'');
-      const mine=s.teacher===currentUser?' chip-mine':'';
-      const editAttr=canEdit?' data-shift-id="'+s.id+'"':'';
-      return '<span class="chip chip-shift '+tc+mine+'"'+editAttr+' title="'+tip+'">'+lbl+'</span>';
-    }).join('');
-    const honkoSection='<div class="campus-divider campus-divider-honko">🔵本</div><div class="campus-section">'+makeChips(honkoShifts)+'</div>';
-    const nankoSection='<div class="campus-divider campus-divider-nanko">🟢南</div><div class="campus-section">'+makeChips(nankoShifts)+'</div>';
+    const komaSection=makeKomaSection(honkoShifts,nankoShifts);
     const dateStr=c.date||'';
-    return '<div class="'+cc+'" onclick="onCellClick(\''+dateStr+'\')"><div class="'+dc+'">'+c.day+'</div>'+evChips+honkoSection+nankoSection+'</div>';
+    return '<div class="'+cc+'" onclick="onCellClick(\''+dateStr+'\')"><div class="'+dc+'">'+c.day+'</div>'+evChips+komaSection+'</div>';
   }).join('');
 }
 
