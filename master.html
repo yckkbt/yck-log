@@ -410,8 +410,12 @@ function renderSalary(){
   document.getElementById('salary-thead').innerHTML='<tr>'+
     '<th class="salary-th salary-th-name">講師</th>'+
     dates.map(d=>{const dt=new Date(d+'T00:00:00');return`<th class="salary-th">${d.slice(5)}<br><span style="font-weight:400;">${dowNames[dt.getDay()]}</span></th>`;}).join('')+
-    '<th class="salary-th">1対1<br>計</th><th class="salary-th">1対2<br>計</th><th class="salary-th">1対3<br>計</th><th class="salary-th">合計</th></tr>';
-  let g1tot=0,g2tot=0,g3tot=0;
+    '<th class="salary-th">1対1<br>計</th><th class="salary-th">1対2<br>計</th><th class="salary-th">1対3<br>計</th><th class="salary-th">合計</th>'+
+    '<th class="salary-th" style="background:#f0f9ff;border-left:2px solid #7dd3fc;">本校<br>出勤</th>'+
+    '<th class="salary-th" style="background:#f0fdf4;border-left:1px solid var(--border);">南校<br>出勤</th>'+
+    '<th class="salary-th" style="background:#f5f3ff;">出勤<br>合計</th>'+
+    '</tr>';
+  let g1tot=0,g2tot=0,g3tot=0,honkoDaysTot=0,nankoDaysTot=0,totalDaysTot=0;
   const totalByDate={};dates.forEach(d=>totalByDate[d]={g1:0,g2:0,g3:0,gu:0});
   const rows=Object.keys(teacherData).sort().map(teacher=>{
     let g1=0,g2=0,g3=0;
@@ -430,7 +434,20 @@ function renderSalary(){
       return`<td class="salary-td">${parts}</td>`;
     }).join('');
     const total=g1+g2+g3;g1tot+=g1;g2tot+=g2;g3tot+=g3;
-    return`<tr><td class="salary-td salary-td-name">${teacher}</td>${cells}<td class="salary-td salary-cell-1"><strong>${g1||'—'}</strong></td><td class="salary-td salary-cell-2"><strong>${g2||'—'}</strong></td><td class="salary-td salary-cell-3"><strong>${g3||'—'}</strong></td><td class="salary-td" style="font-weight:700;font-size:14px;">${total}</td></tr>`;
+    // 出勤日数：その講師がその日付・その教室に1件以上シフトがある日を数える
+    const honkoDays=new Set(periodShifts.filter(s=>s.teacher===teacher&&(s.campus||'本校')==='本校').map(s=>s.date)).size;
+    const nankoDays=new Set(periodShifts.filter(s=>s.teacher===teacher&&s.campus==='南校').map(s=>s.date)).size;
+    const totalDays=new Set(periodShifts.filter(s=>s.teacher===teacher).map(s=>s.date)).size;
+    honkoDaysTot+=honkoDays; nankoDaysTot+=nankoDays; totalDaysTot+=totalDays;
+    return`<tr><td class="salary-td salary-td-name">${teacher}</td>${cells}`+
+      `<td class="salary-td salary-cell-1"><strong>${g1||'—'}</strong></td>`+
+      `<td class="salary-td salary-cell-2"><strong>${g2||'—'}</strong></td>`+
+      `<td class="salary-td salary-cell-3"><strong>${g3||'—'}</strong></td>`+
+      `<td class="salary-td" style="font-weight:700;font-size:14px;">${total}</td>`+
+      `<td class="salary-td" style="background:#f0f9ff;border-left:2px solid #7dd3fc;font-weight:700;color:#0369a1;">${honkoDays||'—'}</td>`+
+      `<td class="salary-td" style="background:#f0fdf4;font-weight:700;color:#15803d;">${nankoDays||'—'}</td>`+
+      `<td class="salary-td" style="background:#f5f3ff;font-weight:700;color:#6d28d9;">${totalDays}</td>`+
+      `</tr>`;
   }).join('');
   document.getElementById('salary-tbody').innerHTML=rows;
   const dateTotals=dates.map(d=>{
@@ -440,7 +457,15 @@ function renderSalary(){
     if(t.g3)parts.push(`<span class="salary-cell-3" style="display:inline-block;border-radius:3px;padding:1px 4px;font-size:10px;">${t.g3}</span>`);
     return`<td class="salary-td">${parts.join(' ')}</td>`;
   }).join('');
-  document.getElementById('salary-tfoot').innerHTML=`<tr class="salary-total-row"><td class="salary-td salary-th-name">合計</td>${dateTotals}<td class="salary-td salary-cell-1"><strong>${g1tot}</strong></td><td class="salary-td salary-cell-2"><strong>${g2tot}</strong></td><td class="salary-td salary-cell-3"><strong>${g3tot}</strong></td><td class="salary-td" style="font-weight:700;font-size:14px;">${g1tot+g2tot+g3tot}</td></tr>`;
+  document.getElementById('salary-tfoot').innerHTML=`<tr class="salary-total-row"><td class="salary-td salary-th-name">合計</td>${dateTotals}`+
+    `<td class="salary-td salary-cell-1"><strong>${g1tot}</strong></td>`+
+    `<td class="salary-td salary-cell-2"><strong>${g2tot}</strong></td>`+
+    `<td class="salary-td salary-cell-3"><strong>${g3tot}</strong></td>`+
+    `<td class="salary-td" style="font-weight:700;font-size:14px;">${g1tot+g2tot+g3tot}</td>`+
+    `<td class="salary-td" style="background:#f0f9ff;border-left:2px solid #7dd3fc;font-weight:700;color:#0369a1;">${honkoDaysTot}</td>`+
+    `<td class="salary-td" style="background:#f0fdf4;font-weight:700;color:#15803d;">${nankoDaysTot}</td>`+
+    `<td class="salary-td" style="background:#f5f3ff;font-weight:700;color:#6d28d9;">${totalDaysTot}</td>`+
+    `</tr>`;
   document.getElementById('salary-detail').innerHTML=fl.map(s=>{
     const fi=getFormatInfo(s.format);
     return`<div class="salary-detail-item"><span class="sd-date">${s.date}</span><span class="sd-teacher">${s.teacher}</span><span class="sd-slot">${s.startTime} ${s.slots}コマ</span><span class="sd-students">${s.students||'—'}</span><span class="${fi.badge}">${fi.label}</span>${s.campus?`<span style="font-size:11px;color:var(--hint);">${s.campus}</span>`:''}</div>`;
