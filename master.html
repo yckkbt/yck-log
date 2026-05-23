@@ -436,8 +436,8 @@ function renderSalary(){
     const total=g1+g2+g3;g1tot+=g1;g2tot+=g2;g3tot+=g3;
     // 出勤日数：その講師がその日付・その教室に1件以上シフトがある日を数える
     const honkoDays=new Set(periodShifts.filter(s=>s.teacher===teacher&&(s.campus||'本校')==='本校').map(s=>s.date)).size;
-    const nankoDays=new Set(periodShifts.filter(s=>s.teacher===teacher&&s.campus==='南校').map(s=>s.date)).size;
-    const totalDays=new Set(periodShifts.filter(s=>s.teacher===teacher).map(s=>s.date)).size;
+    const nankoDays=new Set(fl.filter(s=>s.teacher===teacher&&s.campus==='南校').map(s=>s.date)).size;
+    const totalDays=new Set(fl.filter(s=>s.teacher===teacher).map(s=>s.date)).size;
     honkoDaysTot+=honkoDays; nankoDaysTot+=nankoDays; totalDaysTot+=totalDays;
     return`<tr><td class="salary-td salary-td-name">${teacher}</td>${cells}`+
       `<td class="salary-td salary-cell-1"><strong>${g1||'—'}</strong></td>`+
