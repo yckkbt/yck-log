@@ -113,9 +113,10 @@ textarea{resize:vertical;min-height:60px;}
 .msection{display:none;}.msection.active{display:block;}
 /* 給与集計 */
 .salary-th{padding:8px 10px;text-align:center;font-size:11px;font-weight:700;color:var(--muted);font-family:var(--mono);border-bottom:2px solid var(--border);border-right:1px solid var(--border);background:#f8f9ff;white-space:nowrap;}
-.salary-th-name{text-align:left;min-width:90px;}
+.salary-th-name{text-align:left;min-width:90px;position:sticky;left:0;z-index:3;background:#f0f4ff;box-shadow:2px 0 4px rgba(0,0,0,.08);}
 .salary-td{padding:7px 8px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border);font-size:12px;font-family:var(--mono);vertical-align:middle;}
-.salary-td-name{text-align:left;font-weight:600;font-size:13px;}
+.salary-td-name{text-align:left;font-weight:600;font-size:13px;position:sticky;left:0;z-index:2;background:#fff;box-shadow:2px 0 4px rgba(0,0,0,.06);}
+.salary-total-row .salary-td-name{background:#f0f4ff;}
 .salary-cell-1{background:var(--blue-l);color:#1e40af;}
 .salary-cell-2{background:var(--amber-l);color:#92400e;}
 .salary-cell-3{background:var(--purple-l);color:#5b21b6;}
@@ -258,7 +259,7 @@ textarea{resize:vertical;min-height:60px;}
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
         <div style="overflow-x:auto;">
-          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <table style="width:100%;border-collapse:separate;border-spacing:0;font-size:13px;">
             <thead id="salary-thead"></thead>
             <tbody id="salary-tbody"></tbody>
             <tfoot id="salary-tfoot"></tfoot>
