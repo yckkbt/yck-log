@@ -910,7 +910,12 @@ function closeDayPopup(){
 function openShiftModal(){document.getElementById('shift-modal').classList.add('open');}
 function closeShiftModal(){document.getElementById('shift-modal').classList.remove('open');}
 function openEventModal(){document.getElementById('event-modal').classList.add('open');}
-function closeEventModal(){document.getElementById('event-modal').classList.remove('open');}
+function closeEventModal(){
+  document.getElementById('event-modal').classList.remove('open');
+  // 保存ボタンを登録モードに戻す
+  const btn=document.getElementById('event-save-btn');
+  if(btn){btn.textContent='行事を保存';btn.onclick=saveEvent;}
+}
 function openBulkModal(){
   const first=`${curYear}-${String(curMonth+1).padStart(2,'0')}-01`;
   const last=toDateStr(new Date(curYear,curMonth+1,0));
@@ -1014,14 +1019,14 @@ function renderEventList(){
   const me=events.filter(e=>e.startDate&&e.startDate.startsWith(`${curYear}-${String(curMonth+1).padStart(2,'0')}`))
     .sort((a,b)=>a.startDate.localeCompare(b.startDate));
   if(!me.length){ul.innerHTML='<li style="font-size:11px;color:var(--hint);padding:6px;">行事なし</li>';return;}
-  const tl={event:'塾行事',school:'学校行事',holiday:'休講'};
-  ul.innerHTML=me.map(e=>`<li class="sitem">
-    <div class="sitem-left">
-      <div class="sitem-name">${e.startDate.slice(5)}${e.endDate&&e.endDate!==e.startDate?'〜'+e.endDate.slice(5):''} ${e.content}</div>
-      <div class="sitem-detail">${tl[e.type]||e.type}${e.school?' / '+e.school:''}</div>
-    </div>
-    <div class="sitem-acts">${isAdmin?`<button class="del-btn2" onclick="deleteEvent('${e.id}')">×</button>`:''}</div>
-  </li>`).join('');
+  if(!me.length){ul.innerHTML='<li style="font-size:11px;color:var(--hint);padding:6px;">行事なし</li>';return;}
+
+  ul.innerHTML=me.map(e=>{
+    const editBtn=isAdmin?'<button class="edit-btn2" onclick="openEditEvent(\''+e.id+'\')">編集</button><button class="del-btn2" onclick="deleteEvent(\''+e.id+'\')" >×</button>':'';
+    const period=e.startDate.slice(5)+(e.endDate&&e.endDate!==e.startDate?'〜'+e.endDate.slice(5):'');
+    const tl={event:'塾行事',school:'学校行事',holiday:'休講'};
+    return '<li class="sitem"><div class="sitem-left"><div class="sitem-name">'+period+' '+e.content+'</div><div class="sitem-detail">'+(tl[e.type]||e.type)+(e.school?' / '+e.school:'')+'</div></div><div class="sitem-acts">'+editBtn+'</div></li>';
+  }).join('');
 }
 
 // ── 削除 ──
@@ -1031,6 +1036,47 @@ async function deleteShift(id){
   if(!confirm('削除しますか？'))return;
   try{const res=await api('deleteShift',{id});if(res.ok){shifts=shifts.filter(x=>x.id!==id);toast('削除しました');renderAll();}}catch(e){alert('通信エラー');}
 }
+function openEditEvent(id){
+  const e=events.find(x=>x.id===id);if(!e)return;
+  // 行事登録モーダルに値をセット
+  document.getElementById('e-start').value=e.startDate||'';
+  document.getElementById('e-end').value=e.endDate||'';
+  document.getElementById('e-type').value=e.type||'event';
+  document.getElementById('e-content').value=e.content||'';
+  document.getElementById('e-school').value=e.school||'';
+  // 保存ボタンを更新モードに
+  const btn=document.getElementById('event-save-btn');
+  btn.textContent='行事を更新';
+  btn.onclick=()=>saveEditEvent(id);
+  openEventModal();
+}
+
+async function saveEditEvent(id){
+  const idx=events.findIndex(e=>e.id===id);if(idx<0)return;
+  const updated={
+    id,
+    startDate:document.getElementById('e-start').value,
+    endDate:document.getElementById('e-end').value||document.getElementById('e-start').value,
+    type:document.getElementById('e-type').value,
+    content:document.getElementById('e-content').value.trim(),
+    school:document.getElementById('e-school').value.trim()
+  };
+  if(!updated.startDate||!updated.content){toast('⚠️ 開始日と内容は必須です');return;}
+  const btn=document.getElementById('event-save-btn');
+  btn.innerHTML='<span class="loading"></span>更新中...';btn.disabled=true;
+  try{
+    const res=await api('updateEvent',{event:updated});
+    if(res.ok){
+      events[idx]=updated;
+      toast('✅ 行事を更新しました');
+      closeEventModal();
+      renderAll();
+      renderEventList();
+    }else alert('更新に失敗しました');
+  }catch(e){alert('通信エラー');}
+  btn.innerHTML='行事を更新';btn.disabled=false;
+}
+
 async function deleteEvent(id){
   if(!isAdmin||!confirm('削除しますか？'))return;
   try{const res=await api('deleteEvent',{id});if(res.ok){events=events.filter(x=>x.id!==id);toast('削除しました');renderAll();renderEventList();}}catch(e){alert('通信エラー');}
