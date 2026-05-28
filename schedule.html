@@ -543,32 +543,8 @@ async function init(){
 
   currentUser=sessionStorage.getItem('yck_user')||'';
 
-  // キャッシュがあれば即表示
-  const cached=sessionStorage.getItem('yck_schedule_cache');
-  if(cached){
-    try{
-      const c=JSON.parse(cached);
-      master=c.master||{students:[],teachers:[],subjects:[]};
-      teachers=master.teachers||[];
-      shifts=c.shifts||[];
-      events=c.events||[];
-      absences=c.absences||[];
-      startTimes=c.startTimes||['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'];
-      isAdmin=!teachers.includes(currentUser)||currentUser==='';
-      document.getElementById('header-user').textContent=isAdmin?'👑 塾長':'👤 '+currentUser;
-      if(!isAdmin) document.getElementById('event-btn').style.display='none';
-      teachers.forEach((t,i)=>teacherColorMap[t]=TEACHER_COLORS[i%TEACHER_COLORS.length]);
-      currentWeekStart=getWeekStart(new Date());
-      rebuildSelects();
-      rebuildAbsenceSelects();
-      setDefaultDates();
-      document.getElementById('loading-overlay').style.display='none';
-      document.getElementById('main-content').style.display='block';
-      renderAll();
-    }catch(e){}
-  }
 
-  // バックグラウンドでGASから最新データを取得
+  // GASから最新データを取得
   try{
     const[mRes,sRes,eRes,nRes,aRes,stRes]=await Promise.all([
       api('getMaster'),api('getShifts'),api('getEvents'),api('getNotices'),api('getAbsences'),api('getStartTimes')
@@ -581,7 +557,6 @@ async function init(){
     startTimes=(stRes&&stRes.startTimes)||['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'];
 
     // キャッシュに保存
-    sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences,startTimes}));
 
     isAdmin=!teachers.includes(currentUser)||currentUser==='';
     document.getElementById('header-user').textContent=isAdmin?'👑 塾長':'👤 '+currentUser;
@@ -983,7 +958,6 @@ async function saveShift(){
     const res=await api('addShift',{shift});
     if(res.ok){
       shifts.push(shift);
-      sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences}));
       toast('✅ シフトを保存しました');closeShiftModal();renderAll();
     }
     else alert('保存に失敗しました：'+JSON.stringify(res));
@@ -1152,7 +1126,6 @@ async function saveEditShift(){
     const res=await api('updateShift',{shift:updated});
     if(res.ok){
       shifts[idx]=updated;
-      sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences}));
       toast('✅ 更新しました');closeModal();renderAll();
     }
     else alert('更新に失敗しました');
@@ -1195,7 +1168,6 @@ async function execBulkWeekly(){
     const res=await api('bulkAddShifts',{shifts:newShifts});
     if(res.ok){
       shifts.push(...newShifts);
-      sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences}));
       toast('✅ '+newShifts.length+'件を一括登録しました');closeBulkModal();renderAll();
     }
     else alert('登録に失敗しました：'+JSON.stringify(res));
