@@ -527,9 +527,19 @@ function toast(msg,dur=2200){
 }
 
 // ── API ──
-async function api(action,body={}){
-  const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,...body})});
-  return res.json();
+async function api(action,body={},retry=2){
+  let lastErr;
+  for(let i=0;i<=retry;i++){
+    try{
+      const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,...body})});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      return await res.json();
+    }catch(e){
+      lastErr=e;
+      if(i<retry) await new Promise(r=>setTimeout(r,1000*(i+1)));
+    }
+  }
+  throw lastErr;
 }
 
 // ── AUTH ──
