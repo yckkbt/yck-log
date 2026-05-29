@@ -1099,32 +1099,28 @@ function openEditModal(id){
   document.getElementById('modal-title').textContent='シフトを編集';
   document.getElementById('modal-del-btn').style.display='inline-block';
   const teacherOpts=isAdmin?teachers.map(t=>`<option${t===s.teacher?' selected':''}>${t}</option>`).join(''):`<option selected>${s.teacher}</option>`;
-  document.getElementById('modal-body').innerHTML=`
-    <div class="fr">
-      <div class="ff"><label>講師名</label><select id="m-teacher">${teacherOpts}</select></div>
-      <div class="ff"><label>教室</label><select id="m-campus">
-        <option value="本校"${(s.campus||'本校')==='本校'?' selected':''}>山口本校</option>
-        <option value="南校"${s.campus==='南校'?' selected':''}>山口南校</option>
-      </select></div>
-    </div>
-    <div class="fr">
-      <div class="ff"><label>日付</label><input type="date" id="m-date" value="${s.date}"></div>
-      <div class="ff"><label>開始時間</label><select id="m-start">
-        ${['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'].map(t=>`<option${t===s.startTime?' selected':''}>${t}</option>`).join('')}
-      </select></div>
-    </div>
-    <div class="fr">
-      <div class="ff"><label>コマ数</label><select id="m-slots">
-        ${[1,2,3].map(n=>`<option value="${n}"${String(n)===String(s.slots)?' selected':''}>${n}コマ</option>`).join('')}
-      </select></div>
-      <div class="ff"><label>授業形式</label><select id="m-format">
-        <option value="1対1"${(s.format||'1対1')==='1対1'?' selected':''}>1対1</option>
-        <option value="1対2"${s.format==='1対2'?' selected':''}>1対2</option>
-        <option value="1対3"${s.format==='1対3'?' selected':''}>1対3</option>
-      </select></div>
-    </div>
-    <div class="ff"><label>担当生徒</label><input type="text" id="m-students" value="${s.students||''}" placeholder="例：田中 花子、山本 太郎"></div>
-    <div class="ff"><label>備考</label><input type="text" id="m-note" value="${s.note||''}"></div>`;
+  const timeOpts=startTimes.map(t=>'<option'+(t===s.startTime?' selected':'')+'>'+t+'</option>').join('');
+  const slotOpts=[1,2,3].map(n=>'<option value="'+n+'"'+(String(n)===String(s.slots)?' selected':'')+'>'+n+'コマ</option>').join('');
+  document.getElementById('modal-body').innerHTML=
+    '<div class="fr">'
+    +'<div class="ff"><label>講師名</label><select id="m-teacher">'+teacherOpts+'</select></div>'
+    +'<div class="ff"><label>教室</label><select id="m-campus">'
+    +'<option value="本校"'+((s.campus||'本校')==='本校'?' selected':'')+'>山口本校</option>'
+    +'<option value="南校"'+(s.campus==='南校'?' selected':'')+'>山口南校</option>'
+    +'</select></div></div>'
+    +'<div class="fr">'
+    +'<div class="ff"><label>日付</label><input type="date" id="m-date" value="'+s.date+'"></div>'
+    +'<div class="ff"><label>開始時間</label><select id="m-start">'+timeOpts+'</select></div>'
+    +'</div>'
+    +'<div class="fr">'
+    +'<div class="ff"><label>コマ数</label><select id="m-slots">'+slotOpts+'</select></div>'
+    +'<div class="ff"><label>授業形式</label><select id="m-format">'
+    +'<option value="1対1"'+((s.format||'1対1')==='1対1'?' selected':'')+'>1対1</option>'
+    +'<option value="1対2"'+(s.format==='1対2'?' selected':'')+'>1対2</option>'
+    +'<option value="1対3"'+(s.format==='1対3'?' selected':'')+'>1対3</option>'
+    +'</select></div></div>'
+    +'<div class="ff"><label>担当生徒</label><input type="text" id="m-students" value="'+(s.students||'')+'" placeholder="例：田中 花子、山本 太郎"></div>'
+    +'<div class="ff"><label>備考</label><input type="text" id="m-note" value="'+(s.note||'')+'"></div>';
   document.getElementById('modal-save-btn').onclick=saveEditShift;
 
   // 繰り返しセクション初期化
