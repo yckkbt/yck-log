@@ -940,7 +940,9 @@ function switchBulkTab(tab){
 }
 
 // ── シフト保存 ──
+let _savingShift=false;
 async function saveShift(){
+  if(_savingShift){toast('⚠️ 保存中です。しばらくお待ちください');return;}
   const teacher=document.getElementById('s-teacher').value;
   const campus=document.getElementById('s-campus').value;
   const date=document.getElementById('s-date').value;
@@ -951,6 +953,7 @@ async function saveShift(){
   const note=document.getElementById('s-note').value.trim();
   if(!teacher||!date){toast('⚠️ 講師・日付は必須です');return;}
   if(!isAdmin&&teacher!==currentUser){toast('⚠️ 自分のシフトのみ登録できます');return;}
+  _savingShift=true;
   const shift={id:'s'+Date.now(),teacher,campus,date,startTime,slots,format,students,note};
   const btn=document.getElementById('shift-save-btn');
   btn.innerHTML='<span class="loading"></span>保存中...';btn.disabled=true;
@@ -959,12 +962,17 @@ async function saveShift(){
     if(res.ok){
       shifts.push(shift);
       toast('✅ シフトを保存しました');closeShiftModal();renderAll();
+      btn.innerHTML='シフトを保存';btn.disabled=false;
+    } else {
+      alert('保存に失敗しました：'+JSON.stringify(res));
+      btn.innerHTML='シフトを保存';btn.disabled=false;
     }
-    else alert('保存に失敗しました：'+JSON.stringify(res));
-  }catch(e){alert('通信エラー：'+e.message);}
-  btn.innerHTML='シフトを保存';btn.disabled=false;
+  }catch(e){
+    alert('通信エラー：'+e.message);
+    btn.innerHTML='シフトを保存';btn.disabled=false;
+  }
+  _savingShift=false;
 }
-
 function renderShiftList(){
   const ul=document.getElementById('shift-list');
   const ms=shifts.filter(s=>s.date&&s.date.startsWith(`${curYear}-${String(curMonth+1).padStart(2,'0')}`))
@@ -985,21 +993,34 @@ function renderShiftList(){
 }
 
 // ── 行事保存 ──
+let _savingEvent=false;
 async function saveEvent(){
   if(!isAdmin){toast('⚠️ 塾長のみ登録できます');return;}
+  if(_savingEvent){toast('⚠️ 保存中です。しばらくお待ちください');return;}
   const startDate=document.getElementById('e-start').value;
   const endDate=document.getElementById('e-end').value||startDate;
   const content=document.getElementById('e-content').value.trim();
   if(!startDate||!content){toast('⚠️ 開始日と内容は必須です');return;}
-  const ev={id:'e'+Date.now(),startDate,endDate,type:document.getElementById('e-type').value,content,school:document.getElementById('e-school').value.trim()};
+  _savingEvent=true;
   const btn=document.getElementById('event-save-btn');
   btn.innerHTML='<span class="loading"></span>保存中...';btn.disabled=true;
+  const ev={id:'e'+Date.now(),startDate,endDate,type:document.getElementById('e-type').value,content,school:document.getElementById('e-school').value.trim()};
   try{
     const res=await api('addEvent',{event:ev});
-    if(res.ok){events.push(ev);toast('✅ 行事を保存しました');renderAll();renderEventList();}
-    else alert('保存に失敗しました');
-  }catch(e){alert('通信エラー');}
-  btn.innerHTML='行事を保存';btn.disabled=false;
+    if(res.ok){
+      events.push(ev);
+      toast('✅ 行事を保存しました');
+      closeEventModal();
+      renderAll();
+    }else{
+      alert('保存に失敗しました');
+      btn.innerHTML='行事を保存';btn.disabled=false;
+    }
+  }catch(e){
+    alert('通信エラー：'+e.message);
+    btn.innerHTML='行事を保存';btn.disabled=false;
+  }
+  _savingEvent=false;
 }
 
 function renderEventList(){
