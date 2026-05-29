@@ -1471,44 +1471,44 @@ function renderWeek(){
   const today=toDateStr(new Date());
   const dowNames=['日','月','火','水','木','金','土'];
   const ws=days[0],we=days[6];
-  document.getElementById('week-label').textContent=`${ws.getMonth()+1}/${ws.getDate()}（${dowNames[ws.getDay()]}）〜 ${we.getMonth()+1}/${we.getDate()}（${dowNames[we.getDay()]}）`;
+  document.getElementById('week-label').textContent=(ws.getMonth()+1)+'/'+ws.getDate()+'（'+dowNames[ws.getDay()]+'）〜 '+(we.getMonth()+1)+'/'+we.getDate()+'（'+dowNames[we.getDay()]+'）';
   curYear=ws.getFullYear();curMonth=ws.getMonth();updateMonthLabel();
-  const TIMES=[
-    {key:'10:30（午前）',label:'午前'},
-    {key:'14:00（午後）',label:'午後'},
-    {key:'16:00（0コマ）',label:'0コマ'},
-    {key:'16:25（0コマ）',label:'0コマ'},
-    {key:'17:30（1コマ）',label:'1コマ'},
-    {key:'19:15（2コマ）',label:'2コマ'},
-    {key:'20:45（3コマ）',label:'3コマ'},
+  const TIMES=startTimes.length?startTimes.map(function(t){
+    const m=t.match(/（(.+)）/);
+    return {key:t,label:m?m[1]:t.split('（')[0]};
+  }):[
+    {key:'10:30（午前）',label:'午前'},{key:'14:00（午後）',label:'午後'},
+    {key:'16:00（0コマ）',label:'0コマ'},{key:'16:25（0コマ）',label:'0コマ'},
+    {key:'17:30（1コマ）',label:'1コマ'},{key:'19:15（2コマ）',label:'2コマ'},
+    {key:'20:45（3コマ）',label:'3コマ'}
   ];
   const thead=document.getElementById('week-thead');
-  thead.innerHTML='<tr><th style="min-width:50px;">時間</th>'+days.map((d,i)=>{
+  thead.innerHTML='<tr><th style="min-width:50px;">時間</th>'+days.map(function(d,i){
     const ds=toDateStr(d);const isToday=ds===today;const isHol=HOLIDAYS[ds];
-    let cls=isToday?'today-col':isHol||i===0?'sun-col':i===6?'sat-col':'';
-    return `<th class="${cls}">${d.getMonth()+1}/${d.getDate()}<br>${dowNames[i]}</th>`;
+    const cls=isToday?'today-col':isHol||i===0?'sun-col':i===6?'sat-col':'';
+    return '<th class="'+cls+'">'+(d.getMonth()+1)+'/'+d.getDate()+'<br>'+dowNames[i]+'</th>';
   }).join('')+'</tr>';
   const tbody=document.getElementById('week-tbody');
-  tbody.innerHTML=TIMES.map(time=>{
-    const cells=days.map((d,i)=>{
+  const wFilter=document.getElementById('teacher-filter').value;
+  tbody.innerHTML=TIMES.map(function(time){
+    const cells=days.map(function(d,i){
       const ds=toDateStr(d);
       const isToday=ds===today;const isHol=HOLIDAYS[ds];
-      let cellCls=isToday?'today-col':isHol||i===0?'holiday-col':'';
-      const wFilter=document.getElementById('teacher-filter').value;
-      const dayShifts=shifts.filter(s=>s.date===ds&&s.startTime===time.key&&(s.campus||'本校')===currentCampus&&(!wFilter||s.teacher===wFilter));
-      const shiftHtml=dayShifts.length===0?'<div class="week-empty">—</div>':dayShifts.map(s=>{
+      const cellCls=isToday?'today-col':isHol||i===0?'holiday-col':'';
+      const dayShifts=shifts.filter(function(s){
+        return s.date===ds&&s.startTime===time.key&&(s.campus||'本校')===currentCampus&&(!wFilter||s.teacher===wFilter);
+      });
+      const shiftHtml=dayShifts.length===0?'<div class="week-empty">—</div>':dayShifts.map(function(s){
         const tc=teacherColorMap[s.teacher]||'tc0';
         const canEdit=isAdmin||s.teacher===currentUser;
-        const editAttrW=canEdit?' data-shift-id="'+s.id+'"':'';
-        const studentsHtml=s.students?'<div class="week-slot-students">👤 '+s.students+'</div>':'';
-        const formatHtml=s.format&&s.format!=='1対1'?'<div class="week-slot-students">'+s.format+'</div>':'';
-        return '<div class="week-slot '+tc+'"'+editAttrW+'><div class="week-slot-teacher">'+s.teacher+'</div>'+studentsHtml+formatHtml+'</div>';
-
+        const editAttr=canEdit?' data-shift-id="'+s.id+'"':'';
+        const studHtml=s.students?'<div class="week-slot-students">👤 '+s.students+'</div>':'';
+        const fmtHtml=s.format&&s.format!=='1対1'?'<div class="week-slot-students">'+s.format+'</div>':'';
+        return '<div class="week-slot '+tc+'"'+editAttr+'><div class="week-slot-teacher">'+s.teacher+'</div>'+studHtml+fmtHtml+'</div>';
       }).join('');
-
-
+      return '<td class="week-table-cell '+cellCls+'">'+shiftHtml+'</td>';
     }).join('');
-    return `<tr><td class="time-col">${time.label}<br><span style="font-size:9px;">${time.key.split('（')[0]}</span></td>${cells}</tr>`;
+    return '<tr><td class="time-col">'+time.label+'<br><span style="font-size:9px;">'+time.key.split('（')[0]+'</span></td>'+cells+'</tr>';
   }).join('');
 }
 
