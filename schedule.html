@@ -1138,16 +1138,15 @@ function openEditModal(id){
   document.getElementById('modal-save-btn').onclick=saveEditShift;
 
   // 繰り返しセクション初期化
-  if(s){
-    // 終了日デフォルト：当月末
+  const _repEnd=document.getElementById('repeat-end-date');
+  const _repDow=document.getElementById('repeat-dow-checks');
+  if(s && _repEnd && _repDow){
     const d=new Date(s.date+'T00:00:00');
     const lastDay=new Date(d.getFullYear(),d.getMonth()+1,0);
-    document.getElementById('repeat-end-date').value=toDateStr(lastDay);
-
-    // 曜日チェックボックス（現在の曜日を初期選択）
+    _repEnd.value=toDateStr(lastDay);
     const dowNames=['日','月','火','水','木','金','土'];
     const currentDow=d.getDay();
-    document.getElementById('repeat-dow-checks').innerHTML=dowNames.map(function(n,i){
+    _repDow.innerHTML=dowNames.map(function(n,i){
       const isCur=i===currentDow;
       const borderC=isCur?'var(--blue)':'var(--border-s)';
       const bgC=isCur?'var(--blue-l)':'#fff';
@@ -1159,7 +1158,6 @@ function openEditModal(id){
         +'</label>';
     }).join('');
   }
-
   document.getElementById('edit-modal').classList.add('open');
 }
 
@@ -1206,8 +1204,8 @@ function updateDowStyle(cb){
 async function saveRepeatShifts(){
   const s=shifts.find(x=>x.id===editTarget);
   if(!s){toast('⚠️ 元のシフトが見つかりません');return;}
-
-  const endDate=document.getElementById('repeat-end-date').value;
+  const _endEl2=document.getElementById('repeat-end-date');
+  const endDate=_endEl2?_endEl2.value:'';
   if(!endDate){toast('⚠️ 終了日を入力してください');return;}
 
   const checkedDows=[...document.querySelectorAll('#repeat-dow-checks input:checked')].map(cb=>Number(cb.value));
