@@ -1503,7 +1503,7 @@ function renderWeek(){
         const studentsHtml=s.students?'<div class="week-slot-students">👤 '+s.students+'</div>':'';
         const formatHtml=s.format&&s.format!=='1対1'?'<div class="week-slot-students">'+s.format+'</div>':'';
         return '<div class="week-slot '+tc+'"'+editAttrW+'><div class="week-slot-teacher">'+s.teacher+'</div>'+studentsHtml+formatHtml+'</div>';
-        return '<div class="week-slot '+tc+'"'+editAttrW+'><div class="week-slot-teacher">'+s.teacher+'</div>'+studentsHtml+formatHtml+'</div>';
+
       }).join('');
 
 
