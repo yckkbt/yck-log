@@ -485,6 +485,20 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
       <button class="modal-del" id="modal-del-btn" style="display:none;" onclick="deleteFromModal()">削除</button>
       <button class="modal-save" id="modal-save-btn">保存</button>
     </div>
+    <!-- 繰り返し登録セクション -->
+    <div id="repeat-section" style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;margin-bottom:.75rem;font-family:var(--mono);">🔁 この条件で繰り返し登録</div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>終了日</label>
+        <input type="date" id="repeat-end-date" style="width:100%;">
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>繰り返す曜日</label>
+        <div id="repeat-dow-checks" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">※ 同じ日時に既にシフトがある場合はスキップします</div>
+      <button onclick="saveRepeatShifts()" style="width:100%;padding:10px;background:linear-gradient(135deg,var(--teal),var(--green));color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;" id="repeat-save-btn">🔁 繰り返し登録する</button>
+    </div>
   </div>
 </div>
 
@@ -1133,11 +1147,17 @@ function openEditModal(id){
     // 曜日チェックボックス（現在の曜日を初期選択）
     const dowNames=['日','月','火','水','木','金','土'];
     const currentDow=d.getDay();
-    document.getElementById('repeat-dow-checks').innerHTML=dowNames.map((n,i)=>`
-      <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;padding:4px 8px;border:1.5px solid ${i===currentDow?'var(--blue)':'var(--border-s)'};border-radius:6px;background:${i===currentDow?'var(--blue-l)':'#fff'};">
-        <input type="checkbox" value="${i}" ${i===currentDow?'checked':''} onchange="updateDowStyle(this)" style="display:none;">
-        <span style="color:${i===0?'var(--red)':i===6?'var(--blue)':'var(--text)'};font-weight:${i===currentDow?'700':'400'};">${n}</span>
-      </label>`).join('');
+    document.getElementById('repeat-dow-checks').innerHTML=dowNames.map(function(n,i){
+      const isCur=i===currentDow;
+      const borderC=isCur?'var(--blue)':'var(--border-s)';
+      const bgC=isCur?'var(--blue-l)':'#fff';
+      const textC=i===0?'var(--red)':i===6?'var(--blue)':'var(--text)';
+      const fw=isCur?'700':'400';
+      return '<label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;padding:4px 8px;border:1.5px solid '+borderC+';border-radius:6px;background:'+bgC+';">'
+        +'<input type="checkbox" value="'+i+'" '+(isCur?'checked':'')+' onchange="updateDowStyle(this)" style="display:none;">'
+        +'<span style="color:'+textC+';font-weight:'+fw+';">'+n+'</span>'
+        +'</label>';
+    }).join('');
   }
 
   document.getElementById('edit-modal').classList.add('open');
@@ -1481,14 +1501,14 @@ function renderWeek(){
       const shiftHtml=dayShifts.length===0?'<div class="week-empty">—</div>':dayShifts.map(s=>{
         const tc=teacherColorMap[s.teacher]||'tc0';
         const canEdit=isAdmin||s.teacher===currentUser;
-        const onclick=canEdit?'onclick="openEditModal(\'' +s.id+ '\')'  :'';
-        return `<div class="week-slot ${tc}" ${onclick}>
-          <div class="week-slot-teacher">${s.teacher}</div>
-          ${s.students?`<div class="week-slot-students">👤 ${s.students}</div>`:''}
-          ${s.format&&s.format!=='1対1'?`<div class="week-slot-students">${s.format}</div>`:''}
-        </div>`;
+        const editAttrW=canEdit?' data-shift-id="'+s.id+'"':'';
+        const studentsHtml=s.students?'<div class="week-slot-students">👤 '+s.students+'</div>':'';
+        const formatHtml=s.format&&s.format!=='1対1'?'<div class="week-slot-students">'+s.format+'</div>':'';
+        return '<div class="week-slot '+tc+'"'+editAttrW+'><div class="week-slot-teacher">'+s.teacher+'</div>'+studentsHtml+formatHtml+'</div>';
+        return '<div class="week-slot '+tc+'"'+editAttrW+'><div class="week-slot-teacher">'+s.teacher+'</div>'+studentsHtml+formatHtml+'</div>';
       }).join('');
-      return `<td class="${cellCls}">${shiftHtml}</td>`;
+
+
     }).join('');
     return `<tr><td class="time-col">${time.label}<br><span style="font-size:9px;">${time.key.split('（')[0]}</span></td>${cells}</tr>`;
   }).join('');
