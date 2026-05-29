@@ -1128,9 +1128,7 @@ function openEditModal(id){
   document.getElementById('modal-save-btn').onclick=saveEditShift;
 
   // 繰り返しセクション初期化
-  const sRepeat=shifts.find(x=>x.id===id);
-  if(sRepeat){
-    const s=sRepeat;
+  if(s){
     // 終了日デフォルト：当月末
     const d=new Date(s.date+'T00:00:00');
     const lastDay=new Date(d.getFullYear(),d.getMonth()+1,0);
