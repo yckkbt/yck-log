@@ -1126,6 +1126,26 @@ function openEditModal(id){
     <div class="ff"><label>担当生徒</label><input type="text" id="m-students" value="${s.students||''}" placeholder="例：田中 花子、山本 太郎"></div>
     <div class="ff"><label>備考</label><input type="text" id="m-note" value="${s.note||''}"></div>`;
   document.getElementById('modal-save-btn').onclick=saveEditShift;
+
+  // 繰り返しセクション初期化
+  const sRepeat=shifts.find(x=>x.id===id);
+  if(sRepeat){
+    const s=sRepeat;
+    // 終了日デフォルト：当月末
+    const d=new Date(s.date+'T00:00:00');
+    const lastDay=new Date(d.getFullYear(),d.getMonth()+1,0);
+    document.getElementById('repeat-end-date').value=toDateStr(lastDay);
+
+    // 曜日チェックボックス（現在の曜日を初期選択）
+    const dowNames=['日','月','火','水','木','金','土'];
+    const currentDow=d.getDay();
+    document.getElementById('repeat-dow-checks').innerHTML=dowNames.map((n,i)=>`
+      <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;padding:4px 8px;border:1.5px solid ${i===currentDow?'var(--blue)':'var(--border-s)'};border-radius:6px;background:${i===currentDow?'var(--blue-l)':'#fff'};">
+        <input type="checkbox" value="${i}" ${i===currentDow?'checked':''} onchange="updateDowStyle(this)" style="display:none;">
+        <span style="color:${i===0?'var(--red)':i===6?'var(--blue)':'var(--text)'};font-weight:${i===currentDow?'700':'400'};">${n}</span>
+      </label>`).join('');
+  }
+
   document.getElementById('edit-modal').classList.add('open');
 }
 
@@ -1155,6 +1175,81 @@ async function saveEditShift(){
 }
 
 async function deleteFromModal(){if(!editTarget)return;await deleteShift(editTarget);closeModal();}
+
+function updateDowStyle(cb){
+  const lbl=cb.closest('label');
+  if(cb.checked){
+    lbl.style.borderColor='var(--blue)';
+    lbl.style.background='var(--blue-l)';
+    lbl.querySelector('span').style.fontWeight='700';
+  }else{
+    lbl.style.borderColor='var(--border-s)';
+    lbl.style.background='#fff';
+    lbl.querySelector('span').style.fontWeight='400';
+  }
+}
+
+async function saveRepeatShifts(){
+  const s=shifts.find(x=>x.id===editTarget);
+  if(!s){toast('⚠️ 元のシフトが見つかりません');return;}
+
+  const endDate=document.getElementById('repeat-end-date').value;
+  if(!endDate){toast('⚠️ 終了日を入力してください');return;}
+
+  const checkedDows=[...document.querySelectorAll('#repeat-dow-checks input:checked')].map(cb=>Number(cb.value));
+  if(!checkedDows.length){toast('⚠️ 曜日を選択してください');return;}
+
+  // 登録対象の日付を収集
+  const startD=new Date(s.date+'T00:00:00');
+  startD.setDate(startD.getDate()+7); // 元の日付の翌週から
+  const endD=new Date(endDate+'T00:00:00');
+
+  const newShifts=[];
+  let cur=new Date(startD);
+  while(cur<=endD){
+    if(checkedDows.includes(cur.getDay())){
+      const ds=toDateStr(cur);
+      // 同じ日・同じ講師・同じ時間が既にあればスキップ
+      const exists=shifts.some(x=>x.date===ds&&x.teacher===s.teacher&&x.startTime===s.startTime&&x.campus===s.campus);
+      if(!exists){
+        newShifts.push({
+          id:'s'+Date.now()+Math.random().toString(36).slice(2,6),
+          teacher:s.teacher,
+          campus:s.campus,
+          date:ds,
+          startTime:s.startTime,
+          slots:s.slots,
+          format:s.format,
+          students:s.students||'',
+          note:s.note||''
+        });
+      }
+    }
+    cur.setDate(cur.getDate()+1);
+  }
+
+  if(!newShifts.length){toast('⚠️ 登録対象の日付がありません（全てスキップ）');return;}
+
+  if(!confirm(newShifts.length+'件のシフトを登録します。よろしいですか？'))return;
+
+  const btn=document.querySelector('#repeat-section button');
+  btn.textContent='登録中...';btn.disabled=true;
+
+  try{
+    const res=await api('bulkAddShifts',{shifts:newShifts});
+    if(res.ok){
+      shifts.push(...newShifts);
+      toast('✅ '+newShifts.length+'件を繰り返し登録しました');
+      closeModal();
+      renderAll();
+    }else{
+      alert('登録に失敗しました');
+    }
+  }catch(e){
+    alert('通信エラー：'+e.message);
+  }
+  btn.textContent='🔁 繰り返し登録する';btn.disabled=false;
+}
 function closeModal(){document.getElementById('edit-modal').classList.remove('open');editTarget=null;}
 
 // ── 一括登録 ──
