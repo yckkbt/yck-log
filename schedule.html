@@ -1325,7 +1325,9 @@ async function execBulkWeekly(){
 async function execBulkMonth(){
   const text=document.getElementById('bm-text').value.trim();
   if(!text){toast('⚠️ テキストを入力してください');return;}
-  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const lines=text.split('
+').map(function(l){return l.trim();}).filter(Boolean);
+
   const newShifts=[];const errors=[];
   lines.forEach((line,i)=>{
     const parts=line.split(',').map(p=>p.trim());
@@ -1336,7 +1338,10 @@ async function execBulkMonth(){
     if(!isAdmin&&currentUser&&teacher!==currentUser){errors.push(`行${i+1}: 自分以外のシフトは登録不可`);return;}
     newShifts.push({id:'s'+Date.now()+Math.random(),teacher,campus:campus||'本校',date,startTime,slots,format,students,note});
   });
-  if(errors.length){alert('エラー：\n'+errors.join('\n'));return;}
+  if(errors.length){alert('エラー：'+errors.join('
+'));return;}
+
+
   if(!newShifts.length){toast('⚠️ 登録できる行がありません');return;}
   if(!confirm(`${newShifts.length}件登録します。よろしいですか？`))return;
   try{
@@ -1533,6 +1538,116 @@ function renderWeek(){
 }
 
 // カレンダー・週表示のシフトチップクリックをイベント委任で処理
+// ── アンケート ──
+let activeSurveys = [];
+let currentSurvey = null;
+let surveyAnswers = {};
+
+async function loadActiveSurveys(){
+  if(!currentUser) return;
+  try{
+    const res = await api('getSurveys');
+    const all = res.surveys || [];
+    const today = toDateStr(new Date());
+    activeSurveys = all.filter(function(sv){ return sv.status==='active' && sv.deadline >= today; });
+    if(activeSurveys.length){
+      const banner = document.getElementById('survey-banner');
+      if(banner){
+        banner.style.display='flex';
+        document.getElementById('survey-banner-text').textContent =
+          '「'+activeSurveys[0].title+'」の回答をお願いします（締切：'+activeSurveys[0].deadline+'）';
+      }
+    }
+  }catch(e){ console.log('survey load error',e); }
+}
+
+async function openSurveyAnswer(){
+  if(!activeSurveys.length) return;
+  currentSurvey = activeSurveys[0];
+  surveyAnswers = {};
+  document.getElementById('survey-modal-title').textContent = currentSurvey.title;
+  document.getElementById('survey-modal-desc').textContent =
+    '対象期間：'+currentSurvey.startDate+'〜'+currentSurvey.endDate+' ／ 締切：'+currentSurvey.deadline;
+  document.getElementById('survey-answer-table').innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);">読み込み中...</div>';
+  document.getElementById('survey-modal').style.display='flex';
+  try{
+    const answersRes = await api('getSurveyAnswers',{surveyId:currentSurvey.id});
+    const myAnswers = (answersRes.answers||[]).filter(function(a){ return a.teacher===currentUser; });
+    myAnswers.forEach(function(a){ surveyAnswers[a.date+'|'+a.slot]=a.answer; });
+    renderSurveyAnswerTable(currentSurvey, startTimes);
+  }catch(e){ alert('エラー：'+e.message); }
+}
+
+function renderSurveyAnswerTable(sv, slots){
+  const el = document.getElementById('survey-answer-table');
+  const dowNames=['日','月','火','水','木','金','土'];
+  const dates = [];
+  let d = new Date(sv.startDate+'T00:00:00');
+  const end = new Date(sv.endDate+'T00:00:00');
+  while(d<=end){
+    const ds = toDateStr(d);
+    dates.push({date:ds, label:(d.getMonth()+1)+'/'+d.getDate()+'('+dowNames[d.getDay()]+')', dow:d.getDay()});
+    d.setDate(d.getDate()+1);
+  }
+  const thSt='padding:6px 4px;font-size:10px;border-bottom:2px solid var(--border);border-right:1px solid var(--border);background:#f8f9ff;text-align:center;min-width:50px;';
+  const tdSt='padding:3px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:center;';
+  let thead='<tr><th style="'+thSt+'position:sticky;left:0;z-index:3;min-width:80px;">コマ</th>';
+  dates.forEach(function(d){
+    const c=d.dow===0?'color:var(--red)':d.dow===6?'color:var(--blue)':'';
+    thead+='<th style="'+thSt+c+'">'+d.label+'</th>';
+  });
+  thead+='</tr>';
+  let tbody='';
+  (slots||[]).forEach(function(slot){
+    const slotShort=slot.split('（')[0];
+    const m=slot.match(/（(.+)）/);
+    const komaLabel=m?m[1]:'';
+    tbody+='<tr>';
+    tbody+='<td style="'+tdSt+'position:sticky;left:0;z-index:2;background:#f8f9ff;font-size:11px;font-weight:600;white-space:nowrap;padding:4px 8px;">'+slotShort+'<br><span style="color:var(--muted);font-weight:400;">'+komaLabel+'</span></td>';
+    dates.forEach(function(d){
+      const key=d.date+'|'+slot;
+      const cur=surveyAnswers[key]||'';
+      const isSun=d.dow===0,isSat=d.dow===6;
+      const bg=isSun?'#fff5f5':isSat?'#eff6ff':'#fff';
+      tbody+='<td style="'+tdSt+'background:'+bg+';padding:2px;">'
+        +'<select data-date="'+d.date+'" data-slot="'+slot+'" onchange="onSurveyChange(this)"'
+        +' style="width:48px;padding:3px 2px;font-size:13px;border:1.5px solid var(--border-s);border-radius:4px;text-align:center;background:inherit;">'
+        +'<option value=""'+(cur===''?' selected':'')+'>-</option>'
+        +'<option value="○"'+(cur==='○'?' selected':'')+'>○</option>'
+        +'<option value="×"'+(cur==='×'?' selected':'')+'>×</option>'
+        +'</select></td>';
+    });
+    tbody+='</tr>';
+  });
+  el.innerHTML='<table style="border-collapse:separate;border-spacing:0;background:#fff;min-width:300px;"><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table>';
+}
+
+function onSurveyChange(sel){
+  const date=sel.getAttribute('data-date');
+  const slot=sel.getAttribute('data-slot');
+  surveyAnswers[date+'|'+slot] = sel.value;
+}
+
+async function submitSurveyAnswer(){
+  if(!currentSurvey||!currentUser){ alert('エラー'); return; }
+  const btn=document.getElementById('survey-submit-btn');
+  btn.innerHTML='<span class="loading"></span>送信中...';btn.disabled=true;
+  try{
+    const entries=Object.entries(surveyAnswers).filter(function(e){ return e[1]!==''; });
+    await Promise.all(entries.map(function(e){
+      const parts=e[0].split('|');
+      return api('saveSurveyAnswer',{answer:{surveyId:currentSurvey.id,teacher:currentUser,date:parts[0],slot:parts[1],answer:e[1]}});
+    }));
+    toast('✅ 回答を送信しました');
+    closeSurveyModal();
+  }catch(e){ alert('送信エラー：'+e.message); }
+  btn.innerHTML='回答を送信する';btn.disabled=false;
+}
+
+function closeSurveyModal(){
+  document.getElementById('survey-modal').style.display='none';
+}
+
 document.addEventListener('click', function(e){
   const chip = e.target.closest('[data-shift-id]');
   if(chip){
