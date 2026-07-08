@@ -579,24 +579,27 @@ async function init(){
 
   // GASから最新データを取得
   try{
-    // 全データを1回のAPIコールで取得
-    const allRes = await api('getAllData');
-    master=(allRes.master)||{students:[],teachers:[],subjects:[]};
+    const[mRes,sRes,eRes,aRes,stRes]=await Promise.all([
+      api('getMaster'),api('getShifts'),api('getEvents'),api('getAbsences'),api('getStartTimes')
+    ]);
+    master=(mRes&&mRes.master)||{students:[],teachers:[],subjects:[]};
     teachers=[...new Set(master.teachers||[])];
-    shifts=(allRes.shifts)||[];
-    events=(allRes.events)||[];
-    absences=(allRes.absences)||[];
-    startTimes=(allRes.startTimes)||['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'];
-    // アンケートデータを設定
-    const today=toDateStr(new Date());
-    activeSurveys=((allRes.surveys)||[]).filter(function(sv){return sv.status==='active'&&sv.deadline>=today;});
-    if(activeSurveys.length&&currentUser){
-      const banner=document.getElementById('survey-banner');
-      if(banner){
-        banner.style.display='flex';
-        document.getElementById('survey-banner-text').textContent='「'+activeSurveys[0].title+'」の回答をお願いします（締切：'+String(activeSurveys[0].deadline).slice(0,10)+'）';
+    shifts=(sRes&&sRes.shifts)||[];
+    events=(eRes&&eRes.events)||[];
+    absences=(aRes&&aRes.absences)||[];
+    startTimes=(stRes&&stRes.startTimes)||['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'];
+    // アンケートをバックグラウンドで取得
+    api('getSurveys').then(function(svRes){
+      const today=toDateStr(new Date());
+      activeSurveys=((svRes&&svRes.surveys)||[]).filter(function(sv){return sv.status==='active'&&sv.deadline>=today;});
+      if(activeSurveys.length&&currentUser){
+        const banner=document.getElementById('survey-banner');
+        if(banner){
+          banner.style.display='flex';
+          document.getElementById('survey-banner-text').textContent='「'+activeSurveys[0].title+'」の回答をお願いします（締切：'+String(activeSurveys[0].deadline).slice(0,10)+'）';
+        }
       }
-    }
+    }).catch(function(){});
 
     // キャッシュに保存
 
