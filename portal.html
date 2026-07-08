@@ -203,8 +203,8 @@ async function loadTeachers(){
       }catch(e){}
     }
     // バックグラウンドで最新を取得
-    const res=await api('getTeachersOnly');
-    const teachers=res.teachers||[];
+    const res=await api('getMaster');
+    const teachers=[...new Set((res.master?.teachers||[]))];
     localStorage.setItem('yck_teachers', JSON.stringify(teachers));
     buildTeacherSelect(teachers);
   }catch(e){}
