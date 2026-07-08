@@ -167,6 +167,27 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
   </div>
 </div>
 
+<!-- アンケートバナー -->
+<div id="survey-banner-m" style="display:none;background:linear-gradient(135deg,#ede9fe,#ddd6fe);border-bottom:2px solid #c4b5fd;padding:10px 1rem;align-items:center;justify-content:space-between;gap:8px;">
+  <div style="font-size:12px;color:#5b21b6;font-weight:600;flex:1;">📋 <span id="survey-banner-text-m"></span></div>
+  <button onclick="openSurveyMobile()" style="padding:7px 14px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;">回答する</button>
+</div>
+
+<!-- アンケート回答モーダル -->
+<div class="modal-bg" id="survey-modal-m" style="display:none;align-items:flex-start;overflow-y:auto;">
+  <div class="modal" style="margin-top:0;border-radius:0 0 var(--rl) var(--rl);max-height:90vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="survey-title-m">出勤希望アンケート</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:.75rem;line-height:1.6;" id="survey-desc-m"></p>
+    <div id="survey-table-m" style="overflow-x:auto;-webkit-overflow-scrolling:touch;"></div>
+    <div style="margin-top:.75rem;padding:8px 12px;background:#fff3cd;border-radius:var(--r);font-size:12px;color:#856404;font-weight:600;">
+      ※ 出勤できない日時のみ × を選択してください。空欄＝出勤可とみなします。
+    </div>
+    <button class="save-btn" id="survey-submit-m" onclick="submitSurveyMobile()" style="margin-top:1rem;">回答を送信する</button>
+    <button class="cancel-btn" onclick="closeSurveyMobile()">閉じる</button>
+  </div>
+</div>
+
 <div class="main" id="main-content">
   <div class="loading-spinner"><div class="spin"></div><div style="margin-top:12px;">読み込み中...</div></div>
 </div>
@@ -293,9 +314,19 @@ function toast(msg,dur=2500){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),dur);
 }
-async function api(action,body={}){
-  const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,...body})});
-  return res.json();
+async function api(action,body={},retry=2){
+  let lastErr;
+  for(let i=0;i<=retry;i++){
+    try{
+      const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({action,...body})});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      return await res.json();
+    }catch(e){
+      lastErr=e;
+      if(i<retry) await new Promise(r=>setTimeout(r,1000*(i+1)));
+    }
+  }
+  throw lastErr;
 }
 function toDateStr(d){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -325,6 +356,10 @@ async function init(){
     const[mRes,sRes,eRes,aRes,stRes]=await Promise.all([
       api('getMaster'),api('getShifts'),api('getEvents'),api('getAbsences'),api('getStartTimes')
     ]);
+    // アンケートを非同期取得してバナー表示
+    api('getSurveys').then(function(svRes){
+      showSurveyBanner(svRes&&svRes.surveys);
+    }).catch(function(){});
     master=(mRes&&mRes.master)||{};
     teachers=master.teachers||[];
     shifts=(sRes&&sRes.shifts)||[];
@@ -1084,8 +1119,113 @@ function openEditAbsenceMobile(id){
   openModal('absence-modal');
 }
 
+// ── アンケート（スマホ版）──
+let _surveyAnswers = {};
+let _currentSurvey = null;
+
+function showSurveyBanner(surveys){
+  if(!surveys||!surveys.length||!currentUser) return;
+  const today = toDateStr(new Date());
+  const active = surveys.filter(function(sv){ return sv.status==='active'&&sv.deadline>=today; });
+  if(!active.length) return;
+  _currentSurvey = active[0];
+  const banner = document.getElementById('survey-banner-m');
+  if(banner){
+    banner.style.display='flex';
+    document.getElementById('survey-banner-text-m').textContent =
+      '「'+_currentSurvey.title+'」（締切：'+String(_currentSurvey.deadline).slice(0,10)+'）';
+  }
+}
+
+async function openSurveyMobile(){
+  if(!_currentSurvey||!currentUser){ toast('⚠️ 講師としてログインしてください'); return; }
+  _surveyAnswers = {};
+  document.getElementById('survey-title-m').textContent = _currentSurvey.title;
+  document.getElementById('survey-desc-m').textContent =
+    '対象期間：'+String(_currentSurvey.startDate).slice(0,10)
+    +'〜'+String(_currentSurvey.endDate).slice(0,10);
+  document.getElementById('survey-table-m').innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);">読み込み中...</div>';
+  document.getElementById('survey-modal-m').style.display='flex';
+
+  try{
+    const res = await api('getSurveyAnswers',{surveyId:_currentSurvey.id});
+    const myAns = (res.answers||[]).filter(function(a){ return a.teacher===currentUser; });
+    myAns.forEach(function(a){ _surveyAnswers[a.date+'|'+a.slot]=a.answer; });
+    renderSurveyTableMobile(_currentSurvey, startTimes);
+  }catch(e){ alert('エラー：'+e.message); }
+}
+
+function renderSurveyTableMobile(sv, slots){
+  const el = document.getElementById('survey-table-m');
+  const dowNames=['日','月','火','水','木','金','土'];
+  const dates=[];
+  let d=new Date(sv.startDate+'T00:00:00');
+  const end=new Date(sv.endDate+'T00:00:00');
+  while(d<=end){
+    dates.push({date:toDateStr(d),m:d.getMonth()+1,day:d.getDate(),dow:d.getDay()});
+    d.setDate(d.getDate()+1);
+  }
+  const thSt='border:1px solid #ddd;padding:5px 3px;text-align:center;font-size:10px;white-space:nowrap;background:#f8f9ff;min-width:46px;';
+  const tdSt='border:1px solid #ddd;padding:2px;text-align:center;';
+  let thead='<tr><th style="'+thSt+'min-width:60px;background:#f0f4ff;">コマ</th>';
+  dates.forEach(function(d){
+    const bg=d.dow===0?'#fff0f0':d.dow===6?'#f0f0ff':'#f8f9ff';
+    const c=d.dow===0?'color:#dc2626':d.dow===6?'color:#2563eb':'';
+    thead+='<th style="'+thSt+'background:'+bg+';'+c+'">'+d.m+'/'+d.day+'<br>'+dowNames[d.dow]+'</th>';
+  });
+  thead+='</tr>';
+  let tbody='';
+  (slots||[]).forEach(function(slot){
+    const sh=slot.split('（')[0];
+    const m=slot.match(/（(.+)）/);
+    const kl=m?m[1]:'';
+    tbody+='<tr><td style="'+tdSt+'background:#f8f9ff;font-size:10px;font-weight:700;padding:3px 5px;white-space:nowrap;">'+sh+'<br><span style="color:#6b7280;font-weight:400;">'+kl+'</span></td>';
+    dates.forEach(function(d){
+      const key=d.date+'|'+slot;
+      const cur=_surveyAnswers[key]||'';
+      const bg=d.dow===0?'#fff5f5':d.dow===6?'#eff6ff':'#fff';
+      const selBg=cur==='×'?'#fee2e2':bg;
+      tbody+='<td style="'+tdSt+'background:'+selBg+';padding:1px;">'
+        +'<select data-date="'+d.date+'" data-slot="'+slot+'" onchange="onSurveyChangeMobile(this)"'
+        +' style="width:44px;height:30px;font-size:13px;border:1px solid #ddd;border-radius:3px;background:inherit;text-align:center;">'
+        +'<option value=""'+(cur===''?' selected':'')+'>　</option>'
+        +'<option value="×"'+(cur==='×'?' selected':'')+'>×</option>'
+        +'</select></td>';
+    });
+    tbody+='</tr>';
+  });
+  el.innerHTML='<table style="border-collapse:collapse;font-family:monospace;">'+thead+tbody+'</table>';
+}
+
+function onSurveyChangeMobile(sel){
+  const date=sel.getAttribute('data-date');
+  const slot=sel.getAttribute('data-slot');
+  _surveyAnswers[date+'|'+slot]=sel.value;
+  sel.closest('td').style.background=sel.value==='×'?'#fee2e2':'';
+}
+
+async function submitSurveyMobile(){
+  if(!_currentSurvey||!currentUser){ toast('⚠️ 講師としてログインしてください'); return; }
+  const btn=document.getElementById('survey-submit-m');
+  btn.innerHTML='<span class="loading"></span>送信中...';btn.disabled=true;
+  try{
+    const entries=Object.entries(_surveyAnswers).filter(function(e){ return e[1]!==''; });
+    await Promise.all(entries.map(function(e){
+      const parts=e[0].split('|');
+      return api('saveSurveyAnswer',{answer:{surveyId:_currentSurvey.id,teacher:currentUser,date:parts[0],slot:parts[1],answer:e[1]}});
+    }));
+    toast('✅ 回答を送信しました');
+    closeSurveyMobile();
+  }catch(e){ alert('送信エラー：'+e.message); }
+  btn.innerHTML='回答を送信する';btn.disabled=false;
+}
+
+function closeSurveyMobile(){
+  document.getElementById('survey-modal-m').style.display='none';
+}
+
 // モーダル外タップで閉じる
-['shift-modal','absence-modal','edit-modal','event-modal'].forEach(id=>{
+['shift-modal','absence-modal','edit-modal','event-modal','survey-modal-m'].forEach(id=>{
   const bg=document.getElementById(id);
   bg.addEventListener('click',e=>{if(e.target===bg){closeModal(id);editTarget=null;}});
   const modal=bg.querySelector('.modal');
