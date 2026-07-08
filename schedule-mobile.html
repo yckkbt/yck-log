@@ -353,19 +353,20 @@ async function init(){
 
   // GASから最新取得
   try{
-    const[mRes,sRes,eRes,aRes,stRes]=await Promise.all([
-      api('getMaster'),api('getShifts'),api('getEvents'),api('getAbsences'),api('getStartTimes')
-    ]);
-    // アンケートを非同期取得してバナー表示
-    api('getSurveys').then(function(svRes){
-      showSurveyBanner(svRes&&svRes.surveys);
-    }).catch(function(){});
-    master=(mRes&&mRes.master)||{};
+    // 全データを1回のAPIコールで取得
+    const allRes=await api('getAllData');
+    const mRes={master:allRes.master};
+    const sRes={shifts:allRes.shifts};
+    const eRes={events:allRes.events};
+    const aRes={absences:allRes.absences};
+    const stRes={startTimes:allRes.startTimes};
+    showSurveyBanner(allRes.surveys);
+    master=(mRes.master)||{};
     teachers=master.teachers||[];
-    shifts=(sRes&&sRes.shifts)||[];
-    events=(eRes&&eRes.events)||[];
-    absences=(aRes&&aRes.absences)||[];
-    startTimes=(stRes&&stRes.startTimes)||getDefaultTimes();
+    shifts=(sRes.shifts)||[];
+    events=(eRes.events)||[];
+    absences=(aRes.absences)||[];
+    startTimes=(stRes.startTimes)||getDefaultTimes();
     sessionStorage.setItem('yck_schedule_cache',JSON.stringify({master,shifts,events,absences,startTimes}));
     setup();
   }catch(e){if(!cached)alert('データ取得エラー:'+e.message);}

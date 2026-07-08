@@ -579,23 +579,22 @@ async function init(){
 
   // GASから最新データを取得
   try{
-    const[mRes,sRes,eRes,nRes,aRes,stRes,svRes]=await Promise.all([
-      api('getMaster'),api('getShifts'),api('getEvents'),api('getNotices'),api('getAbsences'),api('getStartTimes'),api('getSurveys')
-    ]);
-    master=(mRes&&mRes.master)||{students:[],teachers:[],subjects:[]};
+    // 全データを1回のAPIコールで取得
+    const allRes = await api('getAllData');
+    master=(allRes.master)||{students:[],teachers:[],subjects:[]};
     teachers=[...new Set(master.teachers||[])];
-    shifts=(sRes&&sRes.shifts)||[];
-    events=(eRes&&eRes.events)||[];
-    absences=(aRes&&aRes.absences)||[];
-    startTimes=(stRes&&stRes.startTimes)||['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'];
+    shifts=(allRes.shifts)||[];
+    events=(allRes.events)||[];
+    absences=(allRes.absences)||[];
+    startTimes=(allRes.startTimes)||['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'];
     // アンケートデータを設定
     const today=toDateStr(new Date());
-    activeSurveys=((svRes&&svRes.surveys)||[]).filter(function(sv){return sv.status==='active'&&sv.deadline>=today;});
-    if(activeSurveys.length){
+    activeSurveys=((allRes.surveys)||[]).filter(function(sv){return sv.status==='active'&&sv.deadline>=today;});
+    if(activeSurveys.length&&currentUser){
       const banner=document.getElementById('survey-banner');
       if(banner){
         banner.style.display='flex';
-        document.getElementById('survey-banner-text').textContent='「'+activeSurveys[0].title+'」の回答をお願いします（締切：'+activeSurveys[0].deadline+'）';
+        document.getElementById('survey-banner-text').textContent='「'+activeSurveys[0].title+'」の回答をお願いします（締切：'+String(activeSurveys[0].deadline).slice(0,10)+'）';
       }
     }
 
