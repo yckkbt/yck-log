@@ -179,20 +179,34 @@ async function portalLogin(){
   btn.textContent='ログイン';btn.disabled=false;
 }
 
+function buildTeacherSelect(teachers){
+  const sel=document.getElementById('portal-user');
+  sel.innerHTML='<option value="">塾長（管理者）</option>';
+  teachers.forEach(t=>{
+    const o=document.createElement('option');
+    o.value=o.textContent=t;
+    sel.appendChild(o);
+  });
+  // 前回のユーザーを復元
+  const saved=sessionStorage.getItem('yck_user');
+  if(saved) sel.value=saved;
+}
+
 async function loadTeachers(){
   try{
-    const res=await api('getMaster');
-    const teachers=res.master?.teachers||[];
-    const sel=document.getElementById('portal-user');
-    sel.innerHTML='<option value="">塾長（管理者）</option>';
-    teachers.forEach(t=>{
-      const o=document.createElement('option');
-      o.value=o.textContent=t;
-      sel.appendChild(o);
-    });
-    // 前回のユーザーを復元
-    const saved=sessionStorage.getItem('yck_user')||'';
-    sel.value=saved;
+    // キャッシュがあれば即座に表示
+    const cached = localStorage.getItem('yck_teachers');
+    if(cached){
+      try{
+        const teachers = JSON.parse(cached);
+        buildTeacherSelect(teachers);
+      }catch(e){}
+    }
+    // バックグラウンドで最新を取得
+    const res=await api('getTeachersOnly');
+    const teachers=res.teachers||[];
+    localStorage.setItem('yck_teachers', JSON.stringify(teachers));
+    buildTeacherSelect(teachers);
   }catch(e){}
 }
 
