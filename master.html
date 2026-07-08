@@ -177,6 +177,7 @@ textarea{resize:vertical;min-height:60px;}
     <button class="mtab active" id="mtab-master" onclick="showMTab('master',this)">マスタ管理</button>
     <button class="mtab" id="mtab-salary" onclick="showMTab('salary',this)">💴 給与集計</button>
     <button class="mtab" id="mtab-times" onclick="showMTab('times',this)">⏰ 授業時間</button>
+    <button class="mtab" id="mtab-survey" onclick="showMTab('survey',this)">📋 アンケート</button>
   </div>
 
   <div class="main">
@@ -304,6 +305,48 @@ textarea{resize:vertical;min-height:60px;}
         </div>
       </div>
     </div><!-- /msection-times -->
+
+    <!-- アンケート管理 -->
+    <div id="msection-survey" class="msection">
+
+      <!-- アンケート作成 -->
+      <div class="card">
+        <div class="card-head"><div class="card-icon" style="background:var(--purple-l);">📋</div><span class="card-label">新しいアンケートを作成</span></div>
+        <div class="field">
+          <label>タイトル（例：2026年夏期講習会 希望調査）</label>
+          <input type="text" id="sv-title" placeholder="例：夏期講習会 出勤希望調査">
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>対象期間（開始）</label><input type="date" id="sv-start"></div>
+          <div class="field"><label>対象期間（終了）</label><input type="date" id="sv-end"></div>
+        </div>
+        <div class="field">
+          <label>回答締め切り日</label>
+          <input type="date" id="sv-deadline">
+        </div>
+        <button class="add-btn" onclick="createSurvey()">＋ アンケートを作成・送信</button>
+      </div>
+
+      <!-- アンケート一覧 -->
+      <div class="card">
+        <div class="card-head"><div class="card-icon" style="background:var(--blue-l);">📊</div><span class="card-label">アンケート一覧</span></div>
+        <div id="survey-list-area">
+          <div style="text-align:center;padding:1rem;color:var(--hint);font-size:13px;">アンケートなし</div>
+        </div>
+      </div>
+
+      <!-- 回答集計 -->
+      <div class="card" id="survey-result-card" style="display:none;">
+        <div class="card-head">
+          <div class="card-icon" style="background:var(--green-l);">📅</div>
+          <span class="card-label" id="survey-result-title">回答集計</span>
+        </div>
+        <div style="margin-bottom:.75rem;display:flex;gap:8px;">
+          <button onclick="printSurveyResult()" style="padding:7px 16px;background:#fff;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:13px;cursor:pointer;">🖨️ 印刷</button>
+        </div>
+        <div id="survey-result-area" style="overflow-x:auto;"></div>
+      </div>
+    </div><!-- /msection-survey -->
 
   </div>
 </div>
@@ -495,6 +538,7 @@ function showMTab(name,btn){
   if(name==='salary'&&salaryShifts.length===0){loadSalaryData().then(renderSalary);}
   if(name==='salary'&&salaryShifts.length>0)renderSalary();
   if(name==='times') loadStartTimes();
+  if(name==='survey') loadSurveys();
 }
 
 async function loadMaster(){
@@ -642,6 +686,179 @@ async function dedupMaster(){
     }else alert('削除に失敗しました');
   }catch(e){alert('通信エラーが発生しました');}
   btn.innerHTML='🧹 重複データを自動削除';btn.disabled=false;
+}
+
+// ── アンケート管理 ──
+let surveys = [];
+let currentSurveyId = null;
+
+async function loadSurveys(){
+  try{
+    const res = await api('getSurveys');
+    surveys = res.surveys || [];
+    renderSurveyList();
+  }catch(e){ console.log('survey load error', e); }
+}
+
+function renderSurveyList(){
+  const el = document.getElementById('survey-list-area');
+  if(!el) return;
+  if(!surveys.length){
+    el.innerHTML='<div style="text-align:center;padding:1rem;color:var(--hint);font-size:13px;">アンケートなし</div>';
+    return;
+  }
+  el.innerHTML = surveys.map(sv=>{
+    const statusLabel = sv.status==='active'
+      ? '<span style="background:var(--green-l);color:#15803d;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:600;">受付中</span>'
+      : '<span style="background:#f3f4f6;color:var(--muted);padding:2px 8px;border-radius:8px;font-size:11px;">終了</span>';
+    return '<div style="padding:12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+      +'<div style="font-weight:700;font-size:14px;">'+sv.title+'</div>'
+      +statusLabel
+      +'</div>'
+      +'<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">対象期間：'+sv.startDate+'〜'+sv.endDate+' ／ 締切：'+sv.deadline+'</div>'
+      +'<div style="display:flex;gap:6px;">'
+      +'<button onclick="viewSurveyResult(\'' +sv.id+ '\'  )" style="flex:1;padding:7px;background:var(--blue-l);border:1px solid var(--blue);border-radius:var(--r);font-size:12px;color:var(--blue);cursor:pointer;font-weight:600;">📊 回答を見る</button>'
+      +'<button onclick="deleteSurvey(\''  +sv.id+ '\'  )" style="padding:7px 12px;background:none;border:1px solid var(--border-s);border-radius:var(--r);font-size:12px;color:var(--hint);cursor:pointer;">×</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+async function createSurvey(){
+  const title    = document.getElementById('sv-title').value.trim();
+  const startDate= document.getElementById('sv-start').value;
+  const endDate  = document.getElementById('sv-end').value;
+  const deadline = document.getElementById('sv-deadline').value;
+  if(!title||!startDate||!endDate||!deadline){ toast('⚠️ 全項目を入力してください'); return; }
+  if(startDate>endDate){ toast('⚠️ 期間の開始・終了日を確認してください'); return; }
+  const survey = {
+    id:'sv'+Date.now(),
+    title, startDate, endDate, deadline, status:'active'
+  };
+  try{
+    const res = await api('addSurvey',{survey});
+    if(res.ok){
+      surveys.unshift(survey);
+      toast('✅ アンケートを作成しました');
+      renderSurveyList();
+      // フォームリセット
+      document.getElementById('sv-title').value='';
+    }else alert('作成に失敗しました');
+  }catch(e){ alert('通信エラー：'+e.message); }
+}
+
+async function deleteSurvey(id){
+  if(!confirm('このアンケートを削除しますか？')) return;
+  try{
+    const res = await api('deleteSurvey',{id});
+    if(res.ok){
+      surveys = surveys.filter(s=>s.id!==id);
+      toast('削除しました');
+      renderSurveyList();
+      document.getElementById('survey-result-card').style.display='none';
+    }
+  }catch(e){ alert('通信エラー'); }
+}
+
+async function viewSurveyResult(surveyId){
+  currentSurveyId = surveyId;
+  const sv = surveys.find(s=>s.id===surveyId);
+  if(!sv) return;
+  document.getElementById('survey-result-title').textContent = sv.title+' 回答集計';
+  document.getElementById('survey-result-card').style.display='block';
+  document.getElementById('survey-result-area').innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);">読み込み中...</div>';
+
+  try{
+    const [answersRes, timesRes] = await Promise.all([
+      api('getSurveyAnswers',{surveyId}),
+      api('getStartTimes')
+    ]);
+    const answers = answersRes.answers || [];
+    const slots = timesRes.startTimes || [];
+    renderSurveyResult(sv, answers, slots);
+  }catch(e){ alert('取得エラー：'+e.message); }
+}
+
+function renderSurveyResult(sv, answers, slots){
+  const el = document.getElementById('survey-result-area');
+
+  // 日付一覧生成
+  const dates = [];
+  const dowNames=['日','月','火','水','木','金','土'];
+  let d = new Date(sv.startDate+'T00:00:00');
+  const end = new Date(sv.endDate+'T00:00:00');
+  while(d<=end){
+    dates.push({
+      date: d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),
+      label: (d.getMonth()+1)+'/'+d.getDate()+'('+dowNames[d.getDay()]+')',
+      dow: d.getDay()
+    });
+    d.setDate(d.getDate()+1);
+  }
+
+  // 講師一覧（回答者）
+  const teachers = [...new Set(answers.map(a=>a.teacher))].sort();
+
+  // 回答マップ {teacher_date_slot: answer}
+  const ansMap = {};
+  answers.forEach(a=>{ ansMap[a.teacher+'|'+a.date+'|'+a.slot] = a.answer; });
+
+  // ヘッダー行
+  let thead = '<thead><tr>'
+    +'<th style="position:sticky;left:0;z-index:3;background:#f8f9ff;padding:8px 10px;border-bottom:2px solid var(--border);border-right:2px solid var(--border);font-size:11px;min-width:80px;">講師</th>'
+    +'<th style="position:sticky;left:80px;z-index:3;background:#f8f9ff;padding:8px 10px;border-bottom:2px solid var(--border);border-right:2px solid var(--border);font-size:11px;min-width:80px;">コマ</th>';
+  dates.forEach(d=>{
+    const isSun=d.dow===0,isSat=d.dow===6;
+    const bg=isSun?'#fff5f5':isSat?'#eff6ff':'#f8f9ff';
+    const color=isSun?'var(--red)':isSat?'var(--blue)':'var(--text)';
+    thead+='<th style="background:'+bg+';padding:6px 4px;border-bottom:2px solid var(--border);border-right:1px solid var(--border);font-size:10px;color:'+color+';white-space:nowrap;min-width:50px;">'+d.label+'</th>';
+  });
+  thead+='</tr></thead>';
+
+  // データ行
+  let tbody = '<tbody>';
+  if(!teachers.length){
+    tbody+='<tr><td colspan="'+(dates.length+2)+'" style="padding:2rem;text-align:center;color:var(--hint);">まだ回答がありません</td></tr>';
+  } else {
+    teachers.forEach(teacher=>{
+      slots.forEach((slot,si)=>{
+        tbody+='<tr>';
+        if(si===0){
+          tbody+='<td style="position:sticky;left:0;z-index:2;background:#fff;font-weight:700;font-size:12px;padding:6px 10px;border-bottom:1px solid var(--border);border-right:2px solid var(--border);vertical-align:middle;" rowspan="'+slots.length+'">'+teacher+'</td>';
+        }
+        tbody+='<td style="position:sticky;left:80px;z-index:2;background:#f8f9ff;font-size:10px;padding:4px 8px;border-bottom:1px solid var(--border);border-right:2px solid var(--border);white-space:nowrap;">'+slot.split('（')[0]+'<br><span style="color:var(--muted);">'+(slot.match(/（(.+)）/)?.[1]||'')+'</span></td>';
+        dates.forEach(d=>{
+          const ans = ansMap[teacher+'|'+d.date+'|'+slot] || '';
+          const isSun=d.dow===0,isSat=d.dow===6;
+          let bg=isSun?'#fff5f5':isSat?'#eff6ff':'#fff';
+          let content='';
+          if(ans==='×'){
+            bg='#fee2e2';
+            content='<div style="text-align:center;font-size:16px;color:var(--red);font-weight:700;">×</div>';
+          } else if(ans==='○'){
+            bg='#f0fdf4';
+            content='<div style="text-align:center;font-size:16px;color:#15803d;font-weight:700;">○</div>';
+          }
+          tbody+='<td style="background:'+bg+';border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:2px;">'+content+'</td>';
+        });
+        tbody+='</tr>';
+      });
+    });
+  }
+  tbody+='</tbody>';
+
+  el.innerHTML='<table style="border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;min-width:500px;">'+thead+tbody+'</table>';
+  document.getElementById('survey-result-card').scrollIntoView({behavior:'smooth'});
+}
+
+function printSurveyResult(){
+  const area = document.getElementById('survey-result-area');
+  const title = document.getElementById('survey-result-title').textContent;
+  const w = window.open('','_blank');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+title+'</title>'
+    +'<style>body{font-family:sans-serif;font-size:11px;}table{border-collapse:collapse;width:100%;}th,td{border:1px solid #ccc;padding:4px 6px;}th{background:#f3f4f6;}@media print{button{display:none;}}</style>'
+    +'</head><body><h2>'+title+'</h2>'+area.innerHTML+'<br><button onclick="window.print()">🖨️ 印刷</button></body></html>');
+  w.document.close();
 }
 
 // ── 授業時間管理 ──

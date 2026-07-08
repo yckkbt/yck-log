@@ -225,7 +225,26 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 </div>
 
 <div class="main">
-  <div id="loading-overlay" style="text-align:center;padding:3rem;color:var(--muted);font-size:14px;">
+  <!-- アンケートバナー -->
+<div id="survey-banner" style="display:none;background:linear-gradient(135deg,var(--purple-l),#ede9fe);border-bottom:2px solid #c4b5fd;padding:10px 1.25rem;display:none;align-items:center;justify-content:space-between;gap:12px;">
+  <div style="font-size:13px;color:#5b21b6;font-weight:600;">📋 <span id="survey-banner-text"></span></div>
+  <button onclick="openSurveyAnswer()" style="padding:6px 14px;background:var(--purple);color:#fff;border:none;border-radius:var(--r);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">回答する</button>
+</div>
+
+<!-- アンケート回答モーダル -->
+<div class="modal-bg" id="survey-modal" style="display:none;align-items:flex-start;overflow-y:auto;padding:1rem 0;">
+  <div class="modal" style="margin:auto;max-width:900px;max-height:none;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="survey-modal-title">出勤希望アンケート</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:1rem;" id="survey-modal-desc"></p>
+    <div style="overflow-x:auto;" id="survey-answer-table"></div>
+    <div style="margin-top:1rem;font-size:12px;color:var(--muted);">※ 変更した場合は再度「送信」を押してください</div>
+    <button class="modal-save" id="survey-submit-btn" onclick="submitSurveyAnswer()" style="width:100%;margin-top:1rem;">回答を送信する</button>
+    <button class="modal-cancel" onclick="closeSurveyModal()" style="width:100%;margin-top:8px;">閉じる</button>
+  </div>
+</div>
+
+<div id="loading-overlay"  style="text-align:center;padding:3rem;color:var(--muted);font-size:14px;">
     <div style="display:inline-block;width:32px;height:32px;border:3px solid var(--border-s);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:1rem;"></div>
     <div>データを読み込んでいます...</div>
   </div>
@@ -564,7 +583,7 @@ async function init(){
       api('getMaster'),api('getShifts'),api('getEvents'),api('getNotices'),api('getAbsences'),api('getStartTimes')
     ]);
     master=(mRes&&mRes.master)||{students:[],teachers:[],subjects:[]};
-    teachers=master.teachers||[];
+    teachers=[...new Set(master.teachers||[])];
     shifts=(sRes&&sRes.shifts)||[];
     events=(eRes&&eRes.events)||[];
     absences=(aRes&&aRes.absences)||[];
@@ -575,7 +594,7 @@ async function init(){
     isAdmin=!teachers.includes(currentUser)||currentUser==='';
     document.getElementById('header-user').textContent=isAdmin?'👑 塾長':'👤 '+currentUser;
     if(!isAdmin) document.getElementById('event-btn').style.display='none';
-    teachers.forEach((t,i)=>teacherColorMap[t]=TEACHER_COLORS[i%TEACHER_COLORS.length]);
+    teachers=[...new Set(teachers)];teachers.forEach((t,i)=>teacherColorMap[t]=TEACHER_COLORS[i%TEACHER_COLORS.length]);
     currentWeekStart=currentWeekStart||getWeekStart(new Date());
     rebuildSelects();
     rebuildAbsenceSelects();
@@ -624,6 +643,7 @@ function rebuildSelects(){
   (isAdmin?teachers:[currentUser]).forEach(t=>{const o=document.createElement('option');o.value=o.textContent=t;sTeacher.appendChild(o);});
   pop('bw-teacher',isAdmin?teachers:[currentUser],false);
   rebuildStartTimesSelects();
+  loadActiveSurveys();
   const leg=document.getElementById('legend');
   leg.innerHTML=
     '<span class="legend-item"><span class="legend-dot" style="background:var(--amber-l);border:1px solid var(--amber);"></span>塾行事</span>'+
