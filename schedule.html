@@ -603,7 +603,7 @@ async function init(){
     document.getElementById('main-content').style.display='block';
     renderAll();
   }catch(e){
-    if(!cached) alert('データ取得エラー：'+e.message);
+    alert('データ取得エラー：'+e.message);
   }
 }
 
