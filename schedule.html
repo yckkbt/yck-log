@@ -1575,7 +1575,7 @@ async function openSurveyAnswer(){
   surveyAnswers = {};
   document.getElementById('survey-modal-title').textContent = currentSurvey.title;
   document.getElementById('survey-modal-desc').textContent =
-    '対象期間：'+currentSurvey.startDate+'〜'+currentSurvey.endDate+' ／ 締切：'+currentSurvey.deadline;
+    '対象期間：'+String(currentSurvey.startDate).slice(0,10)+'〜'+String(currentSurvey.endDate).slice(0,10)+' ／ 締切：'+String(currentSurvey.deadline).slice(0,10);
   document.getElementById('survey-answer-table').innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);">読み込み中...</div>';
   document.getElementById('survey-modal').style.display='flex';
   try{
@@ -1589,51 +1589,74 @@ async function openSurveyAnswer(){
 function renderSurveyAnswerTable(sv, slots){
   const el = document.getElementById('survey-answer-table');
   const dowNames=['日','月','火','水','木','金','土'];
+  const dowColors=['var(--red)','var(--text)','var(--text)','var(--text)','var(--text)','var(--text)','var(--blue)'];
+
+  // 日付一覧生成
   const dates = [];
   let d = new Date(sv.startDate+'T00:00:00');
   const end = new Date(sv.endDate+'T00:00:00');
   while(d<=end){
-    const ds = toDateStr(d);
-    dates.push({date:ds, label:(d.getMonth()+1)+'/'+d.getDate()+'('+dowNames[d.getDay()]+')', dow:d.getDay()});
+    dates.push({
+      date: toDateStr(d),
+      month: d.getMonth()+1,
+      day: d.getDate(),
+      dow: d.getDay()
+    });
     d.setDate(d.getDate()+1);
   }
-  const thSt='padding:6px 4px;font-size:10px;border-bottom:2px solid var(--border);border-right:1px solid var(--border);background:#f8f9ff;text-align:center;min-width:50px;';
-  const tdSt='padding:3px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:center;';
-  let thead='<tr><th style="'+thSt+'position:sticky;left:0;z-index:3;min-width:80px;">コマ</th>';
+
+  // スタイル定数
+  const thBase = 'border:1px solid #ccc;padding:6px 4px;text-align:center;font-size:11px;white-space:nowrap;';
+  const tdBase = 'border:1px solid #ccc;padding:0;text-align:center;';
+
+  // ヘッダー行1（月/日）
+  let thead = '<thead>';
+  thead += '<tr><th style="'+thBase+'background:#f0f4ff;min-width:60px;">コマ</th>';
   dates.forEach(function(d){
-    const c=d.dow===0?'color:var(--red)':d.dow===6?'color:var(--blue)':'';
-    thead+='<th style="'+thSt+c+'">'+d.label+'</th>';
+    const bg = d.dow===0?'#fff0f0':d.dow===6?'#f0f0ff':'#f8f9ff';
+    const color = dowColors[d.dow];
+    thead += '<th style="'+thBase+'background:'+bg+';color:'+color+';min-width:52px;">'
+      +d.month+'/'+d.day+'<br><span style="font-size:10px;">（'+dowNames[d.dow]+'）</span></th>';
   });
-  thead+='</tr>';
-  let tbody='';
+  thead += '</tr></thead>';
+
+  // データ行（コマごと）
+  let tbody = '<tbody>';
   (slots||[]).forEach(function(slot){
-    const slotShort=slot.split('（')[0];
-    const m=slot.match(/（(.+)）/);
-    const komaLabel=m?m[1]:'';
-    tbody+='<tr>';
-    tbody+='<td style="'+tdSt+'position:sticky;left:0;z-index:2;background:#f8f9ff;font-size:11px;font-weight:600;white-space:nowrap;padding:4px 8px;">'+slotShort+'<br><span style="color:var(--muted);font-weight:400;">'+komaLabel+'</span></td>';
+    const slotShort = slot.split('（')[0];
+    const m = slot.match(/（(.+)）/);
+    const komaLabel = m?m[1]:'';
+    tbody += '<tr>';
+    tbody += '<td style="'+tdBase+'background:#f8f9ff;font-size:11px;font-weight:700;padding:4px 6px;">'
+      +slotShort+'<br><span style="color:var(--muted);font-weight:400;font-size:10px;">'+komaLabel+'</span></td>';
     dates.forEach(function(d){
-      const key=d.date+'|'+slot;
-      const cur=surveyAnswers[key]||'';
+      const key = d.date+'|'+slot;
+      const cur = surveyAnswers[key]||'';
       const isSun=d.dow===0,isSat=d.dow===6;
-      const bg=isSun?'#fff5f5':isSat?'#eff6ff':'#fff';
-      tbody+='<td style="'+tdSt+'background:'+bg+';padding:2px;">'
+      const bg = isSun?'#fff5f5':isSat?'#eff6ff':'#fff';
+      const selColor = cur==='○'?'#dcfce7':cur==='×'?'#fee2e2':'#fff';
+      tbody += '<td style="'+tdBase+'background:'+bg+';padding:2px;">'
         +'<select data-date="'+d.date+'" data-slot="'+slot+'" onchange="onSurveyChange(this)"'
-        +' style="width:48px;padding:3px 2px;font-size:13px;border:1.5px solid var(--border-s);border-radius:4px;text-align:center;background:inherit;">'
-        +'<option value=""'+(cur===''?' selected':'')+'>-</option>'
+        +' style="width:50px;height:32px;padding:2px;font-size:14px;border:1.5px solid #ddd;border-radius:4px;text-align:center;background:'+selColor+';cursor:pointer;">'
+        +'<option value=""'+(cur===''?' selected':'')+'>－</option>'
         +'<option value="○"'+(cur==='○'?' selected':'')+'>○</option>'
         +'<option value="×"'+(cur==='×'?' selected':'')+'>×</option>'
         +'</select></td>';
     });
-    tbody+='</tr>';
+    tbody += '</tr>';
   });
-  el.innerHTML='<table style="border-collapse:separate;border-spacing:0;background:#fff;min-width:300px;"><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table>';
+  tbody += '</tbody>';
+
+  el.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:8px;">※ ○=出勤可　×=出勤不可　－=未回答</div>'
+    +'<table style="border-collapse:collapse;background:#fff;font-family:var(--mono);">'+thead+tbody+'</table>';
 }
 
 function onSurveyChange(sel){
   const date=sel.getAttribute('data-date');
   const slot=sel.getAttribute('data-slot');
   surveyAnswers[date+'|'+slot] = sel.value;
+  // 選択に応じて背景色を変更
+  sel.style.background = sel.value==='○'?'#dcfce7':sel.value==='×'?'#fee2e2':'#fff';
 }
 
 async function submitSurveyAnswer(){
