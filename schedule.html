@@ -1325,8 +1325,8 @@ async function execBulkWeekly(){
 async function execBulkMonth(){
   const text=document.getElementById('bm-text').value.trim();
   if(!text){toast('⚠️ テキストを入力してください');return;}
-  const lines=text.split('
-').map(function(l){return l.trim();}).filter(Boolean);
+  const lines=text.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+
 
   const newShifts=[];const errors=[];
   lines.forEach((line,i)=>{
@@ -1338,8 +1338,7 @@ async function execBulkMonth(){
     if(!isAdmin&&currentUser&&teacher!==currentUser){errors.push(`行${i+1}: 自分以外のシフトは登録不可`);return;}
     newShifts.push({id:'s'+Date.now()+Math.random(),teacher,campus:campus||'本校',date,startTime,slots,format,students,note});
   });
-  if(errors.length){alert('エラー：'+errors.join('
-'));return;}
+  if(errors.length){alert('エラー：'+errors.join('\n'));return;}
 
 
   if(!newShifts.length){toast('⚠️ 登録できる行がありません');return;}
