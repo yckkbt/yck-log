@@ -1571,11 +1571,14 @@ async function loadActiveSurveys(){
 
 async function openSurveyAnswer(){
   if(!activeSurveys.length) return;
+  if(!currentUser){ toast('⚠️ 講師としてログインしてください'); return; }
   currentSurvey = activeSurveys[0];
   surveyAnswers = {};
   document.getElementById('survey-modal-title').textContent = currentSurvey.title;
   document.getElementById('survey-modal-desc').textContent =
-    '対象期間：'+String(currentSurvey.startDate).slice(0,10)+'〜'+String(currentSurvey.endDate).slice(0,10)+' ／ 締切：'+String(currentSurvey.deadline).slice(0,10);
+    '出勤できない日時のみ×を入力してください（'+String(currentSurvey.startDate).slice(0,10)
+    +'〜'+String(currentSurvey.endDate).slice(0,10)
+    +' ／ 締切：'+String(currentSurvey.deadline).slice(0,10)+'）';
   document.getElementById('survey-answer-table').innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);">読み込み中...</div>';
   document.getElementById('survey-modal').style.display='flex';
   try{
@@ -1634,12 +1637,11 @@ function renderSurveyAnswerTable(sv, slots){
       const cur = surveyAnswers[key]||'';
       const isSun=d.dow===0,isSat=d.dow===6;
       const bg = isSun?'#fff5f5':isSat?'#eff6ff':'#fff';
-      const selColor = cur==='○'?'#dcfce7':cur==='×'?'#fee2e2':'#fff';
+      const selColor = cur==='×'?'#fee2e2':'#fff';
       tbody += '<td style="'+tdBase+'background:'+bg+';padding:2px;">'
         +'<select data-date="'+d.date+'" data-slot="'+slot+'" onchange="onSurveyChange(this)"'
         +' style="width:50px;height:32px;padding:2px;font-size:14px;border:1.5px solid #ddd;border-radius:4px;text-align:center;background:'+selColor+';cursor:pointer;">'
-        +'<option value=""'+(cur===''?' selected':'')+'>－</option>'
-        +'<option value="○"'+(cur==='○'?' selected':'')+'>○</option>'
+        +'<option value=""'+(cur===''?' selected':'')+'>　</option>'
         +'<option value="×"'+(cur==='×'?' selected':'')+'>×</option>'
         +'</select></td>';
     });
@@ -1647,7 +1649,7 @@ function renderSurveyAnswerTable(sv, slots){
   });
   tbody += '</tbody>';
 
-  el.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-bottom:8px;">※ ○=出勤可　×=出勤不可　－=未回答</div>'
+  el.innerHTML = '<div style="font-size:12px;color:#b91c1c;font-weight:600;margin-bottom:8px;">※ 出勤できない日時のみ × を選択してください。空欄＝出勤可とみなします。</div>'
     +'<table style="border-collapse:collapse;background:#fff;font-family:var(--mono);">'+thead+tbody+'</table>';
 }
 
@@ -1656,11 +1658,11 @@ function onSurveyChange(sel){
   const slot=sel.getAttribute('data-slot');
   surveyAnswers[date+'|'+slot] = sel.value;
   // 選択に応じて背景色を変更
-  sel.style.background = sel.value==='○'?'#dcfce7':sel.value==='×'?'#fee2e2':'#fff';
+  sel.style.background = sel.value==='×'?'#fee2e2':'#fff';
 }
 
 async function submitSurveyAnswer(){
-  if(!currentSurvey||!currentUser){ alert('エラー'); return; }
+  if(!currentSurvey||!currentUser){ toast('⚠️ 講師としてログインしてください'); return; }
   const btn=document.getElementById('survey-submit-btn');
   btn.innerHTML='<span class="loading"></span>送信中...';btn.disabled=true;
   try{
