@@ -540,8 +540,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
     <div class="modal-title">👤 生徒別授業予定</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:1rem;align-items:end;">
       <div class="field" style="margin:0;">
-        <label>生徒名</label>
-        <select id="ss-student" onchange="renderStudentSchedule()"></select>
+        <label>生徒名（複数選択可・Ctrl+クリック）</label>
+        <select id="ss-student" multiple onchange="renderStudentSchedule()" style="height:80px;"></select>
       </div>
       <div class="field" style="margin:0;">
         <label>期間（開始）</label>
@@ -554,7 +554,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
       <button onclick="printStudentSchedule()" style="padding:9px 14px;background:var(--navy);color:#fff;border:none;border-radius:var(--r);font-size:13px;cursor:pointer;white-space:nowrap;">🖨️ 印刷</button>
     </div>
     <div id="ss-content"></div>
-    <button class="modal-cancel" onclick="closeModal('student-schedule-modal')" style="width:100%;margin-top:1rem;">閉じる</button>
+    <button class="modal-cancel" onclick="closeSsMod()" style="width:100%;margin-top:1rem;">閉じる</button>
   </div>
 </div>
 
@@ -1733,6 +1733,9 @@ document.addEventListener('click', function(e){
 });
 
 // ── 生徒別スケジュール ──
+function closeSsMod(){
+  document.getElementById('student-schedule-modal').style.display='none';
+}
 function openStudentSchedule(){
   const masterNames=(master.students||[]).map(function(s){return s.name||s;});
   const shiftNameSet=new Set();
@@ -1760,14 +1763,17 @@ function openStudentSchedule(){
 }
 
 function renderStudentSchedule(){
-  const student=document.getElementById('ss-student').value;
+  const selEl=document.getElementById('ss-student');
+  const selectedStudents=[...selEl.selectedOptions].map(function(o){return o.value;}).filter(Boolean);
+  const student=selectedStudents.length?selectedStudents[0]:''; // 表示タイトル用
   const startDate=document.getElementById('ss-start').value;
   const endDate=document.getElementById('ss-end').value;
   const el=document.getElementById('ss-content');
-  if(!student){el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--hint);">生徒を選択してください</div>';return;}
+  if(!selectedStudents.length){el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--hint);">生徒を選択してください</div>';return;}
   if(!startDate||!endDate){el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--hint);">期間を指定してください</div>';return;}
   const filtered=shifts.filter(function(s){
-    return s.date>=startDate&&s.date<=endDate&&s.students&&s.students.indexOf(student)>=0;
+    if(s.date<startDate||s.date>endDate||!s.students) return false;
+    return selectedStudents.some(function(name){ return s.students.indexOf(name)>=0; });
   }).sort(function(a,b){return a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime);});
   if(!filtered.length){el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--hint);">この期間に授業予定がありません</div>';return;}
   const dowNames=['日','月','火','水','木','金','土'];
@@ -1786,7 +1792,9 @@ function renderStudentSchedule(){
 }
 
 function printStudentSchedule(){
-  const student=document.getElementById('ss-student').value;
+  const selEl=document.getElementById('ss-student');
+  const selectedStudents=[...selEl.selectedOptions].map(function(o){return o.value;}).filter(Boolean);
+  const student=selectedStudents.length?selectedStudents[0]:''; // 表示タイトル用
   const startDate=document.getElementById('ss-start').value;
   const endDate=document.getElementById('ss-end').value;
   const content=document.getElementById('ss-content').innerHTML;
