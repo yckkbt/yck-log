@@ -215,6 +215,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
   </select>
   <div class="tsep"></div>
   <button class="tb-btn tb-btn-outline" onclick="goTodayWithPopup()">今日の予定</button>
+      <button class="tb-btn tb-btn-outline" onclick="openStudentSchedule()" style="background:var(--purple-l);border-color:#c4b5fd;color:var(--purple);">👤 生徒別</button>
   <button class="tb-btn tb-btn-outline" id="view-month-btn" onclick="setView('month')">📅月</button>
   <button class="tb-btn tb-btn-outline" id="view-week-btn" onclick="setView('week')">📋週</button>
   <button class="tb-btn tb-btn-outline" id="view-absence-btn" onclick="setView('absence')">🔄振替</button>
@@ -530,6 +531,31 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
   </div>
   <div id="day-popup-content"></div>
   <button class="day-popup-add" onclick="closeDayPopup();openShiftModal()">＋ この日にシフトを登録</button>
+</div>
+
+<!-- 生徒別スケジュールモーダル -->
+<div class="modal-bg" id="student-schedule-modal" style="display:none;align-items:flex-start;overflow-y:auto;">
+  <div class="modal" style="margin:1rem auto;max-width:900px;max-height:none;width:95%;">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👤 生徒別授業予定</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:1rem;align-items:end;">
+      <div class="field" style="margin:0;">
+        <label>生徒名</label>
+        <select id="ss-student" onchange="renderStudentSchedule()"></select>
+      </div>
+      <div class="field" style="margin:0;">
+        <label>期間（開始）</label>
+        <input type="date" id="ss-start" onchange="renderStudentSchedule()">
+      </div>
+      <div class="field" style="margin:0;">
+        <label>期間（終了）</label>
+        <input type="date" id="ss-end" onchange="renderStudentSchedule()">
+      </div>
+      <button onclick="printStudentSchedule()" style="padding:9px 14px;background:var(--navy);color:#fff;border:none;border-radius:var(--r);font-size:13px;cursor:pointer;white-space:nowrap;">🖨️ 印刷</button>
+    </div>
+    <div id="ss-content"></div>
+    <button class="modal-cancel" onclick="closeModal('student-schedule-modal')" style="width:100%;margin-top:1rem;">閉じる</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1692,7 +1718,7 @@ document.addEventListener('click', function(e){
 });
 
 // モーダル外クリック（背景）で閉じる
-['shift-modal','event-modal','bulk-modal','absence-modal','edit-modal'].forEach(id=>{
+['shift-modal','event-modal','bulk-modal','absence-modal','edit-modal','student-schedule-modal'].forEach(id=>{
   const bg=document.getElementById(id);
   // 背景クリックで閉じる
   bg.addEventListener('click',e=>{
