@@ -215,7 +215,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
   </select>
   <div class="tsep"></div>
   <button class="tb-btn tb-btn-outline" onclick="goTodayWithPopup()">今日の予定</button>
-      <button class="tb-btn tb-btn-outline" onclick="openStudentSchedule()" style="background:var(--purple-l);border-color:#c4b5fd;color:var(--purple);">👤 生徒別</button>
+      <button class="tb-btn" onclick="openStudentSchedule()" style="background:var(--purple-l);border:1.5px solid #c4b5fd;color:var(--purple);cursor:pointer;">👤 生徒別</button>
   <button class="tb-btn tb-btn-outline" id="view-month-btn" onclick="setView('month')">📅月</button>
   <button class="tb-btn tb-btn-outline" id="view-week-btn" onclick="setView('week')">📋週</button>
   <button class="tb-btn tb-btn-outline" id="view-absence-btn" onclick="setView('absence')">🔄振替</button>
@@ -1731,6 +1731,70 @@ document.addEventListener('click', function(e){
   const modal=bg.querySelector('.modal');
   if(modal) modal.addEventListener('click',e=>e.stopPropagation());
 });
+
+// ── 生徒別スケジュール ──
+function openStudentSchedule(){
+  const masterNames=(master.students||[]).map(function(s){return s.name||s;});
+  const shiftNameSet=new Set();
+  shifts.forEach(function(s){
+    if(s.students){
+      s.students.replace(/[、,　 ]+/g,'、').split('、').forEach(function(n){
+        const t=n.trim();if(t) shiftNameSet.add(t);
+      });
+    }
+  });
+  const allNames=[...new Set([...masterNames,...shiftNameSet])].filter(Boolean).sort();
+  const sel=document.getElementById('ss-student');
+  sel.innerHTML='<option value="">生徒を選択</option>';
+  allNames.forEach(function(name){
+    const o=document.createElement('option');o.value=o.textContent=name;sel.appendChild(o);
+  });
+  const now=new Date();
+  const y=now.getFullYear();
+  const m=String(now.getMonth()+1).padStart(2,'0');
+  const lastDay=new Date(y,now.getMonth()+1,0).getDate();
+  document.getElementById('ss-start').value=y+'-'+m+'-01';
+  document.getElementById('ss-end').value=y+'-'+m+'-'+String(lastDay).padStart(2,'0');
+  document.getElementById('ss-content').innerHTML='<div style="text-align:center;padding:2rem;color:var(--hint);">生徒を選択してください</div>';
+  document.getElementById('student-schedule-modal').style.display='flex';
+}
+
+function renderStudentSchedule(){
+  const student=document.getElementById('ss-student').value;
+  const startDate=document.getElementById('ss-start').value;
+  const endDate=document.getElementById('ss-end').value;
+  const el=document.getElementById('ss-content');
+  if(!student){el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--hint);">生徒を選択してください</div>';return;}
+  if(!startDate||!endDate){el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--hint);">期間を指定してください</div>';return;}
+  const filtered=shifts.filter(function(s){
+    return s.date>=startDate&&s.date<=endDate&&s.students&&s.students.indexOf(student)>=0;
+  }).sort(function(a,b){return a.date.localeCompare(b.date)||a.startTime.localeCompare(b.startTime);});
+  if(!filtered.length){el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--hint);">この期間に授業予定がありません</div>';return;}
+  const dowNames=['日','月','火','水','木','金','土'];
+  const thSt='padding:9px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);border-bottom:2px solid var(--border);background:#f8f9ff;white-space:nowrap;';
+  const tdSt='padding:9px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top;';
+  let thead='<thead><tr><th style="'+thSt+'">日付</th><th style="'+thSt+'">曜日</th><th style="'+thSt+'">教室</th><th style="'+thSt+'">担当講師</th><th style="'+thSt+'">開始時間</th><th style="'+thSt+'">コマ数</th><th style="'+thSt+'">授業形式</th><th style="'+thSt+'">備考</th></tr></thead>';
+  let tbody='<tbody>';
+  filtered.forEach(function(s){
+    const d=new Date(s.date+'T00:00:00');const dow=d.getDay();
+    const dc=dow===0?'color:var(--red)':dow===6?'color:var(--blue)':'';
+    const rb=dow===0?'background:#fff5f5':dow===6?'background:#eff6ff':'';
+    tbody+='<tr style="'+rb+'"><td style="'+tdSt+dc+';font-weight:600;font-family:var(--mono);">'+s.date.slice(5).replace('-','/')+'</td><td style="'+tdSt+dc+'">'+dowNames[dow]+'</td><td style="'+tdSt+'">'+s.campus+'</td><td style="'+tdSt+'">'+s.teacher+'</td><td style="'+tdSt+';font-family:var(--mono);">'+s.startTime.split('（')[0]+'</td><td style="'+tdSt+'">'+s.slots+'コマ</td><td style="'+tdSt+'">'+(s.format||'')+'</td><td style="'+tdSt+';color:var(--muted);">'+(s.note||'')+'</td></tr>';
+  });
+  tbody+='</tbody>';
+  el.innerHTML='<div style="margin-bottom:.5rem;font-size:13px;color:var(--muted);">'+filtered.length+'件</div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;background:#fff;border-radius:var(--rl);overflow:hidden;box-shadow:0 1px 4px rgba(26,42,108,.06);border:1px solid var(--border);">'+thead+tbody+'</table></div>';
+}
+
+function printStudentSchedule(){
+  const student=document.getElementById('ss-student').value;
+  const startDate=document.getElementById('ss-start').value;
+  const endDate=document.getElementById('ss-end').value;
+  const content=document.getElementById('ss-content').innerHTML;
+  if(!student){toast('生徒を選択してください');return;}
+  const w=window.open('','_blank');
+  w.document.write('<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>授業予定 '+student+'</title><style>body{font-family:sans-serif;font-size:12px;padding:1.5rem;}h2{font-size:16px;margin-bottom:.25rem;}.period{font-size:12px;color:#6b7280;margin-bottom:1rem;}table{width:100%;border-collapse:collapse;}th{padding:7px 10px;background:#f3f4f6;font-size:10px;font-weight:700;color:#6b7280;text-align:left;border-bottom:2px solid #e5e7eb;}td{padding:7px 10px;border-bottom:1px solid #e5e7eb;font-size:12px;}@media print{.no-print{display:none;}}</style></head><body><h2>授業予定表　'+student+'</h2><div class="period">期間：'+startDate+' 〜 '+endDate+'</div>'+content+'<div class="no-print" style="margin-top:1rem;"><button onclick="window.print()" style="padding:8px 20px;background:#1a2a6c;color:#fff;border:none;border-radius:6px;cursor:pointer;">印刷する</button></div></body></html>');
+  w.document.close();
+}
 
 init();
 </script>
