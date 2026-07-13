@@ -969,12 +969,23 @@ function closeDayPopup(){
 // ── モーダル開閉 ──
 function openShiftModal(){document.getElementById('shift-modal').classList.add('open');}
 function closeShiftModal(){document.getElementById('shift-modal').classList.remove('open');}
-function openEventModal(){document.getElementById('event-modal').classList.add('open');}
+function openEventModal(){
+  document.getElementById('event-modal').classList.add('open');
+  // ボタン・フォームをリセット
+  const btn=document.getElementById('event-save-btn');
+  if(btn){btn.textContent='行事を保存';btn.disabled=false;btn.onclick=saveEvent;}
+  // フォームの内容をリセット
+  const today=toDateStr(new Date());
+  const es=document.getElementById('e-start');if(es)es.value=today;
+  const ee=document.getElementById('e-end');if(ee)ee.value=today;
+  const ec=document.getElementById('e-content');if(ec)ec.value='';
+  const esc=document.getElementById('e-school');if(esc)esc.value='';
+}
 function closeEventModal(){
   document.getElementById('event-modal').classList.remove('open');
   // 保存ボタンを登録モードに戻す
   const btn=document.getElementById('event-save-btn');
-  if(btn){btn.textContent='行事を保存';btn.onclick=saveEvent;}
+  if(btn){btn.textContent='行事を保存';btn.disabled=false;btn.onclick=saveEvent;}
 }
 function openBulkModal(){
   const first=`${curYear}-${String(curMonth+1).padStart(2,'0')}-01`;
@@ -1081,6 +1092,7 @@ async function saveEvent(){
     if(res.ok){
       events.push(ev);
       toast('✅ 行事を保存しました');
+      btn.innerHTML='行事を保存';btn.disabled=false;
       closeEventModal();
       renderAll();
     }else{
