@@ -216,6 +216,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
   <div class="tsep"></div>
   <button class="tb-btn tb-btn-outline" onclick="goTodayWithPopup()">今日の予定</button>
       <button class="tb-btn" onclick="openStudentSchedule()" style="background:var(--purple-l);border:1.5px solid #c4b5fd;color:var(--purple);cursor:pointer;">👤 生徒別</button>
+      <button class="tb-btn" onclick="openMonthlyPrint()" style="background:var(--teal-l);border:1.5px solid #5eead4;color:var(--teal);cursor:pointer;">🖨️ 月別印刷</button>
   <button class="tb-btn tb-btn-outline" id="view-month-btn" onclick="setView('month')">📅月</button>
   <button class="tb-btn tb-btn-outline" id="view-week-btn" onclick="setView('week')">📋週</button>
   <button class="tb-btn tb-btn-outline" id="view-absence-btn" onclick="setView('absence')">🔄振替</button>
@@ -555,6 +556,24 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
     </div>
     <div id="ss-content"></div>
     <button class="modal-cancel" onclick="closeSsMod()" style="width:100%;margin-top:1rem;">閉じる</button>
+  </div>
+</div>
+
+<!-- 月別印刷モーダル -->
+<div class="modal-bg" id="monthly-print-modal" style="display:none;align-items:flex-start;overflow-y:auto;">
+  <div class="modal" style="margin:1rem auto;max-width:500px;width:95%;">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🖨️ 月別授業スケジュール印刷</div>
+    <div class="field">
+      <label>講師</label>
+      <select id="mp-teacher"></select>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>年</label><select id="mp-year"></select></div>
+      <div class="field"><label>月</label><select id="mp-month"></select></div>
+    </div>
+    <button onclick="execMonthlyPrint()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--teal),var(--green));color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;margin-top:.5rem;">🖨️ 印刷プレビューを開く</button>
+    <button class="modal-cancel" onclick="document.getElementById('monthly-print-modal').style.display='none'" style="width:100%;margin-top:8px;">閉じる</button>
   </div>
 </div>
 
@@ -1745,6 +1764,167 @@ document.addEventListener('click', function(e){
 });
 
 // ── 生徒別スケジュール ──
+// ── 月別印刷 ──
+function openMonthlyPrint(){
+  // 講師プルダウン
+  const sel=document.getElementById('mp-teacher');
+  sel.innerHTML='';
+  teachers.forEach(function(t){
+    const o=document.createElement('option');o.value=o.textContent=t;sel.appendChild(o);
+  });
+  // 年月プルダウン
+  const now=new Date();
+  const ySel=document.getElementById('mp-year');
+  ySel.innerHTML='';
+  for(let y=now.getFullYear()-1;y<=now.getFullYear()+1;y++){
+    const o=document.createElement('option');o.value=y;o.textContent=y+'年';
+    if(y===now.getFullYear()) o.selected=true;
+    ySel.appendChild(o);
+  }
+  const mSel=document.getElementById('mp-month');
+  mSel.innerHTML='';
+  for(let m=1;m<=12;m++){
+    const o=document.createElement('option');o.value=m;o.textContent=m+'月';
+    if(m===now.getMonth()+1) o.selected=true;
+    mSel.appendChild(o);
+  }
+  document.getElementById('monthly-print-modal').style.display='flex';
+}
+
+function execMonthlyPrint(){
+  const teacher=document.getElementById('mp-teacher').value;
+  const year=parseInt(document.getElementById('mp-year').value);
+  const month=parseInt(document.getElementById('mp-month').value);
+  if(!teacher){toast('⚠️ 講師を選択してください');return;}
+
+  const dowNames=['日','月','火','水','木','金','土'];
+  const dowColors=['#dc2626','#374151','#374151','#374151','#374151','#374151','#2563eb'];
+
+  // 対象月の日付一覧
+  const dates=[];
+  const firstDay=new Date(year,month-1,1);
+  const lastDay=new Date(year,month,0).getDate();
+  for(let d=1;d<=lastDay;d++){
+    const dt=new Date(year,month-1,d);
+    const ds=year+'-'+String(month).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    dates.push({date:ds,day:d,dow:dt.getDay()});
+  }
+
+  // 対象講師のシフトを取得
+  const monthStr=year+'-'+String(month).padStart(2,'0');
+  const myShifts=shifts.filter(function(s){
+    return s.teacher===teacher && s.date.startsWith(monthStr);
+  });
+
+  // コマ一覧（startTimesから）
+  const slots=startTimes;
+
+  // 本校・南校のデータ作成
+  // ansMap[campus][date][slot] = {students}
+  const buildMap=function(campus){
+    const map={};
+    myShifts.filter(function(s){return (s.campus||'本校')===campus;}).forEach(function(s){
+      if(!map[s.date]) map[s.date]={};
+      map[s.date][s.startTime]={students:s.students||'',slots:s.slots,format:s.format};
+    });
+    return map;
+  };
+  const honkoMap=buildMap('本校');
+  const nankoMap=buildMap('南校');
+
+  // テーブルHTML生成
+  const makeTable=function(campusLabel,map,bgColor){
+    // ヘッダー行
+    let th='<tr><th style="'+thBase+'min-width:70px;background:'+bgColor+';color:#fff;font-size:12px;">コマ</th>';
+    dates.forEach(function(d){
+      const hasSh=map[d.date]&&Object.keys(map[d.date]).length>0;
+      const bg=hasSh?'#f0fff4':d.dow===0?'#fff5f5':d.dow===6?'#eff6ff':'#f9fafb';
+      th+='<th style="'+thBase+'background:'+bg+';color:'+dowColors[d.dow]+';min-width:48px;font-size:10px;">'
+        +d.day+'<br>'+dowNames[d.dow]+'</th>';
+    });
+    th+='</tr>';
+
+    // コマ行
+    let rows='';
+    slots.forEach(function(slot){
+      const slotShort=slot.split('（')[0];
+      const m=slot.match(/（(.+)）/);
+      const komaLabel=m?m[1]:'';
+      // このコマに1件でもデータがあるか確認
+      const hasAny=dates.some(function(d){ return map[d.date]&&map[d.date][slot]; });
+      
+      rows+='<tr>';
+      rows+='<td style="'+tdBase+'background:#f8f9ff;font-size:10px;font-weight:700;white-space:nowrap;padding:3px 6px;">'
+        +slotShort+'<br><span style="color:#9ca3af;font-weight:400;font-size:9px;">'+komaLabel+'</span></td>';
+      dates.forEach(function(d){
+        const cell=map[d.date]&&map[d.date][slot];
+        const isSun=d.dow===0,isSat=d.dow===6;
+        const bg=cell?'#f0fdf4':isSun?'#fff5f5':isSat?'#eff6ff':'#fff';
+        if(cell){
+          rows+='<td style="'+tdBase+'background:'+bg+';padding:3px;vertical-align:top;">'
+            +'<div style="font-size:10px;font-weight:700;color:#065f46;line-height:1.3;">'+teacher.split('　').join(' ')+'</div>'
+            +(cell.students?'<div style="font-size:9px;color:#374151;margin-top:1px;">'+cell.students+'</div>':'')
+            +'</td>';
+        } else {
+          rows+='<td style="'+tdBase+'background:'+bg+';"></td>';
+        }
+      });
+      rows+='</tr>';
+    });
+    return '<div style="margin-bottom:1rem;">'
+      +'<div style="background:'+bgColor+';color:#fff;font-size:12px;font-weight:700;padding:6px 10px;border-radius:4px 4px 0 0;">'+campusLabel+'</div>'
+      +'<div style="overflow-x:auto;"><table style="border-collapse:collapse;width:100%;font-family:sans-serif;">'
+      +'<thead>'+th+'</thead><tbody>'+rows+'</tbody></table></div></div>';
+  };
+
+  const thBase='border:1px solid #e5e7eb;padding:4px 3px;text-align:center;';
+  const tdBase='border:1px solid #e5e7eb;text-align:center;min-width:48px;';
+
+  const honkoHtml=makeTable('🏫 山口本校','#1e40af',honkoMap);
+  const nankoHtml=makeTable('🏫 山口南校','#0f766e',nankoMap);
+
+  // 行事も表示
+  const evHtml=function(){
+    const monthEvents=events.filter(function(e){
+      return e.startDate&&e.startDate.startsWith(monthStr);
+    });
+    if(!monthEvents.length) return '';
+    let rows='<div style="margin-bottom:1rem;"><div style="background:#92400e;color:#fff;font-size:12px;font-weight:700;padding:6px 10px;border-radius:4px 4px 0 0;">📅 行事・テスト</div>'
+      +'<table style="border-collapse:collapse;width:100%;font-size:11px;font-family:sans-serif;">'
+      +'<thead><tr><th style="border:1px solid #e5e7eb;padding:4px 8px;background:#fef3c7;text-align:left;">日程</th>'
+      +'<th style="border:1px solid #e5e7eb;padding:4px 8px;background:#fef3c7;text-align:left;">内容</th>'
+      +'<th style="border:1px solid #e5e7eb;padding:4px 8px;background:#fef3c7;text-align:left;">対象校</th></tr></thead><tbody>';
+    monthEvents.forEach(function(e){
+      const period=e.startDate.slice(5).replace('-','/')+(e.endDate&&e.endDate!==e.startDate?'〜'+e.endDate.slice(5).replace('-','/'):'');
+      rows+='<tr><td style="border:1px solid #e5e7eb;padding:4px 8px;">'+period+'</td>'
+        +'<td style="border:1px solid #e5e7eb;padding:4px 8px;font-weight:600;">'+e.content+'</td>'
+        +'<td style="border:1px solid #e5e7eb;padding:4px 8px;color:#6b7280;">'+(e.school||'')+'</td></tr>';
+    });
+    rows+='</tbody></table></div>';
+    return rows;
+  }();
+
+  const pageHTML='<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">'
+    +'<title>'+year+'年'+month+'月 月次スケジュール '+teacher+'</title>'
+    +'<style>*{box-sizing:border-box;}body{font-family:"Noto Sans JP",sans-serif;font-size:11px;color:#1a1c2e;padding:1cm;margin:0;}'
+    +'h2{font-size:16px;margin:0 0 4px;}h3{font-size:12px;margin:0 0 12px;color:#6b7280;font-weight:400;}'
+    +'@media print{@page{size:A4 landscape;margin:1cm;}button{display:none!important;}}'
+    +'</style></head><body>'
+    +'<h2>'+year+'年'+month+'月 月次授業スケジュール</h2>'
+    +'<h3>担当講師：'+teacher+'　　印刷日：'+toDateStr(new Date())+'</h3>'
+    +evHtml
+    +honkoHtml
+    +nankoHtml
+    +'<div style="margin-top:1rem;text-align:right;">'
+    +'<button onclick="window.print()" style="padding:8px 20px;background:#1a2a6c;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;">🖨️ 印刷（A4横）</button>'
+    +'</div></body></html>';
+
+  document.getElementById('monthly-print-modal').style.display='none';
+  const w=window.open('','_blank');
+  w.document.write(pageHTML);
+  w.document.close();
+}
+
 function closeSsMod(){
   document.getElementById('student-schedule-modal').style.display='none';
 }
