@@ -324,6 +324,14 @@ textarea{resize:vertical;min-height:60px;}
           <label>回答締め切り日</label>
           <input type="date" id="sv-deadline">
         </div>
+        <div class="field">
+          <label>送信対象講師（選択なし＝全講師）</label>
+          <div id="sv-teachers-check" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;"></div>
+          <div style="margin-top:6px;display:flex;gap:8px;">
+            <button onclick="selectAllTeachers(true)" style="padding:3px 10px;border:1px solid var(--border-s);border-radius:4px;font-size:11px;cursor:pointer;color:var(--muted);background:#fff;">全選択</button>
+            <button onclick="selectAllTeachers(false)" style="padding:3px 10px;border:1px solid var(--border-s);border-radius:4px;font-size:11px;cursor:pointer;color:var(--muted);background:#fff;">全解除</button>
+          </div>
+        </div>
         <button class="add-btn" onclick="createSurvey()">＋ アンケートを作成・送信</button>
       </div>
 
@@ -694,10 +702,27 @@ let currentSurveyId = null;
 
 async function loadSurveys(){
   try{
-    const res = await api('getSurveys');
-    surveys = res.surveys || [];
+    const [svRes, mRes] = await Promise.all([api('getSurveys'), api('getMaster')]);
+    surveys = svRes.surveys || [];
+    // 講師チェックボックスを構築
+    const teachers = (mRes&&mRes.master&&mRes.master.teachers)||[];
+    buildTeacherChecks(teachers);
     renderSurveyList();
   }catch(e){ console.log('survey load error', e); }
+}
+
+function buildTeacherChecks(teachers){
+  const el = document.getElementById('sv-teachers-check');
+  if(!el) return;
+  el.innerHTML = teachers.map(t=>`
+    <label style="display:flex;align-items:center;gap:4px;padding:4px 10px;border:1.5px solid var(--border-s);border-radius:6px;cursor:pointer;font-size:12px;background:#fff;">
+      <input type="checkbox" value="${t}" checked style="accent-color:var(--blue);">
+      ${t}
+    </label>`).join('');
+}
+
+function selectAllTeachers(val){
+  document.querySelectorAll('#sv-teachers-check input[type=checkbox]').forEach(cb=>cb.checked=val);
 }
 
 function renderSurveyList(){
@@ -731,9 +756,11 @@ async function createSurvey(){
   const deadline = document.getElementById('sv-deadline').value;
   if(!title||!startDate||!endDate||!deadline){ toast('⚠️ 全項目を入力してください'); return; }
   if(startDate>endDate){ toast('⚠️ 期間の開始・終了日を確認してください'); return; }
+  const checkedTeachers = [...document.querySelectorAll('#sv-teachers-check input:checked')].map(cb=>cb.value);
   const survey = {
     id:'sv'+Date.now(),
-    title, startDate, endDate, deadline, status:'active'
+    title, startDate, endDate, deadline, status:'active',
+    targetTeachers: checkedTeachers.join(',')
   };
   try{
     const res = await api('addSurvey',{survey});
@@ -817,6 +844,17 @@ function renderSurveyResult(sv, answers, slots){
 
   // データ行
   let tbody = '<tbody>';
+  // 連絡事項を取得
+  const notes = answers.filter(a=>a.date==='__note__');
+  if(notes.length){
+    let noteHtml='<div style="margin-bottom:1rem;"><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;font-family:var(--mono);">📝 講師からの連絡事項</div>';
+    notes.forEach(n=>{
+      if(n.answer) noteHtml+='<div style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;background:#f8f9ff;"><span style="font-weight:700;font-size:13px;">'+n.teacher+'</span><p style="margin:4px 0 0;font-size:13px;color:var(--muted);">'+n.answer+'</p></div>';
+    });
+    noteHtml+='</div>';
+    el.innerHTML = noteHtml + el.innerHTML;
+  }
+
   if(!teachers.length){
     tbody+='<tr><td colspan="'+(dates.length+2)+'" style="padding:2rem;text-align:center;color:var(--hint);">まだ回答がありません</td></tr>';
   } else {

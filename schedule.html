@@ -240,7 +240,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
     <div class="modal-title" id="survey-modal-title">出勤希望アンケート</div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:1rem;" id="survey-modal-desc"></p>
     <div style="overflow-x:auto;" id="survey-answer-table"></div>
-    <div style="margin-top:1rem;font-size:12px;color:var(--muted);">※ 変更した場合は再度「送信」を押してください</div>
+    <div style="margin-top:.75rem;padding:8px 12px;background:var(--red-l);border-radius:var(--r);font-size:12px;color:#b91c1c;font-weight:600;">※ 出勤できない日時のみ × を選択してください。空欄＝出勤可とみなします。</div>
+    <div class="field" style="margin-top:.75rem;">
+      <label style="font-size:12px;font-weight:700;color:var(--muted);">塾長への連絡事項（任意）</label>
+      <textarea id="survey-note" rows="3" placeholder="例：7/25は午前のみ可能です。" style="width:100%;padding:8px;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:13px;font-family:var(--sans);resize:vertical;margin-top:4px;"></textarea>
+    </div>
     <button class="modal-save" id="survey-submit-btn" onclick="submitSurveyAnswer()" style="width:100%;margin-top:1rem;">回答を送信する</button>
     <button class="modal-cancel" onclick="closeSurveyModal()" style="width:100%;margin-top:8px;">閉じる</button>
   </div>
@@ -1725,8 +1729,12 @@ async function submitSurveyAnswer(){
   const btn=document.getElementById('survey-submit-btn');
   btn.innerHTML='<span class="loading"></span>送信中...';btn.disabled=true;
   try{
+    const note = (document.getElementById('survey-note')&&document.getElementById('survey-note').value.trim())||'';
     const entries=Object.entries(surveyAnswers).filter(function(e){ return e[1]!==''; });
-    await Promise.all(entries.map(function(e){
+    // 連絡事項を特別なキーで保存
+    const allEntries = [...entries];
+    if(note) allEntries.push(['__note__|__note__', note]);
+    await Promise.all(allEntries.map(function(e){
       const parts=e[0].split('|');
       return api('saveSurveyAnswer',{answer:{surveyId:currentSurvey.id,teacher:currentUser,date:parts[0],slot:parts[1],answer:e[1]}});
     }));
