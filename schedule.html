@@ -1658,62 +1658,72 @@ function renderSurveyAnswerTable(sv, slots){
   const dowColors=['var(--red)','var(--text)','var(--text)','var(--text)','var(--text)','var(--text)','var(--blue)'];
 
   // 日付一覧生成
-  const dates = [];
-  let d = new Date(sv.startDate+'T00:00:00');
-  const end = new Date(sv.endDate+'T00:00:00');
+  const dates=[];
+  let d=new Date(sv.startDate+'T00:00:00');
+  const end=new Date(sv.endDate+'T00:00:00');
   while(d<=end){
-    dates.push({
-      date: toDateStr(d),
-      month: d.getMonth()+1,
-      day: d.getDate(),
-      dow: d.getDay()
-    });
+    dates.push({date:toDateStr(d),month:d.getMonth()+1,day:d.getDate(),dow:d.getDay()});
     d.setDate(d.getDate()+1);
   }
 
-  // スタイル定数
-  const thBase = 'border:1px solid #ccc;padding:6px 4px;text-align:center;font-size:11px;white-space:nowrap;';
-  const tdBase = 'border:1px solid #ccc;padding:0;text-align:center;';
+  // 期間中の自分のシフトをマップ化 {date|slot: shift}
+  const myShiftMap={};
+  if(currentUser){
+    shifts.forEach(function(s){
+      if(s.teacher===currentUser && s.date>=sv.startDate && s.date<=sv.endDate){
+        myShiftMap[s.date+'|'+s.startTime]=s;
+      }
+    });
+  }
 
-  // ヘッダー行1（月/日）
-  let thead = '<thead>';
-  thead += '<tr><th style="'+thBase+'background:#f0f4ff;min-width:60px;">コマ</th>';
+  const thSt='padding:5px 3px;font-size:10px;border-bottom:2px solid var(--border);border-right:1px solid var(--border);background:#f8f9ff;text-align:center;min-width:54px;';
+  const tdSt='padding:2px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);vertical-align:top;';
+
+  let thead='<thead><tr><th style="'+thSt+'position:sticky;left:0;z-index:3;min-width:80px;background:#f0f4ff;">コマ</th>';
   dates.forEach(function(d){
-    const bg = d.dow===0?'#fff0f0':d.dow===6?'#f0f0ff':'#f8f9ff';
-    const color = dowColors[d.dow];
-    thead += '<th style="'+thBase+'background:'+bg+';color:'+color+';min-width:52px;">'
-      +d.month+'/'+d.day+'<br><span style="font-size:10px;">（'+dowNames[d.dow]+'）</span></th>';
+    const bg=d.dow===0?'#fff0f0':d.dow===6?'#f0f0ff':'#f8f9ff';
+    thead+='<th style="'+thSt+'background:'+bg+';color:'+dowColors[d.dow]+';">'+d.month+'/'+d.day+'<br>('+dowNames[d.dow]+')</th>';
   });
-  thead += '</tr></thead>';
+  thead+='</tr></thead>';
 
-  // データ行（コマごと）
-  let tbody = '<tbody>';
+  let tbody='<tbody>';
   (slots||[]).forEach(function(slot){
-    const slotShort = slot.split('（')[0];
-    const m = slot.match(/（(.+)）/);
-    const komaLabel = m?m[1]:'';
-    tbody += '<tr>';
-    tbody += '<td style="'+tdBase+'background:#f8f9ff;font-size:11px;font-weight:700;padding:4px 6px;">'
-      +slotShort+'<br><span style="color:var(--muted);font-weight:400;font-size:10px;">'+komaLabel+'</span></td>';
+    const slotShort=slot.split('（')[0];
+    const m=slot.match(/（(.+)）/);
+    const komaLabel=m?m[1]:'';
+    tbody+='<tr><td style="'+tdSt+'position:sticky;left:0;z-index:2;background:#f8f9ff;font-size:11px;font-weight:700;white-space:nowrap;padding:4px 8px;">'+slotShort+'<br><span style="color:var(--muted);font-weight:400;font-size:10px;">'+komaLabel+'</span></td>';
     dates.forEach(function(d){
-      const key = d.date+'|'+slot;
-      const cur = surveyAnswers[key]||'';
+      const key=d.date+'|'+slot;
+      const cur=surveyAnswers[key]||'';
+      const existShift=myShiftMap[key];
       const isSun=d.dow===0,isSat=d.dow===6;
-      const bg = isSun?'#fff5f5':isSat?'#eff6ff':'#fff';
-      const selColor = cur==='×'?'#fee2e2':'#fff';
-      tbody += '<td style="'+tdBase+'background:'+bg+';padding:2px;">'
-        +'<select data-date="'+d.date+'" data-slot="'+slot+'" onchange="onSurveyChange(this)"'
-        +' style="width:50px;height:32px;padding:2px;font-size:14px;border:1.5px solid #ddd;border-radius:4px;text-align:center;background:'+selColor+';cursor:pointer;">'
+      const baseBg=isSun?'#fff5f5':isSat?'#eff6ff':'#fff';
+      const selBg=cur==='×'?'#fee2e2':baseBg;
+      let inner='';
+      if(existShift){
+        inner+='<div style="background:#dbeafe;border:1px solid #93c5fd;border-radius:3px;padding:2px 3px;margin-bottom:2px;font-size:9px;color:#1e40af;line-height:1.3;text-align:left;">'
+          +'📌'+existShift.campus
+          +(existShift.students?'<br><span style="color:#374151;">'+existShift.students+'</span>':'')
+          +'</div>';
+      }
+      inner+='<select data-date="'+d.date+'" data-slot="'+slot+'" onchange="onSurveyChange(this)"'
+        +' style="width:100%;height:26px;font-size:13px;border:1.5px solid var(--border-s);border-radius:3px;text-align:center;background:'+selBg+';cursor:pointer;">'
         +'<option value=""'+(cur===''?' selected':'')+'>　</option>'
         +'<option value="×"'+(cur==='×'?' selected':'')+'>×</option>'
-        +'</select></td>';
+        +'</select>';
+      tbody+='<td style="'+tdSt+'background:'+baseBg+';padding:3px;">'+inner+'</td>';
     });
-    tbody += '</tr>';
+    tbody+='</tr>';
   });
-  tbody += '</tbody>';
+  tbody+='</tbody>';
 
-  el.innerHTML = '<div style="font-size:12px;color:#b91c1c;font-weight:600;margin-bottom:8px;">※ 出勤できない日時のみ × を選択してください。空欄＝出勤可とみなします。</div>'
-    +'<table style="border-collapse:collapse;background:#fff;font-family:var(--mono);">'+thead+tbody+'</table>';
+  el.innerHTML='<div style="font-size:11px;margin-bottom:6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">'
+    +'<span style="background:#dbeafe;border:1px solid #93c5fd;border-radius:3px;padding:2px 7px;font-size:10px;color:#1e40af;">📌 既登録シフト</span>'
+    +'<span style="color:var(--red);font-size:11px;font-weight:600;">出勤不可の日時のみ × を選択・空欄＝出勤可</span>'
+    +'</div>'
+    +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">'
+    +'<table style="border-collapse:separate;border-spacing:0;background:#fff;">'+thead+tbody+'</table>'
+    +'</div>';
 }
 
 function onSurveyChange(sel){
