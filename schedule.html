@@ -1832,56 +1832,69 @@ function execMonthlyPrint(){
   const honkoMap=buildMap('本校');
   const nankoMap=buildMap('南校');
 
-  // テーブルHTML生成
-  const makeTable=function(campusLabel,map,bgColor){
-    // ヘッダー行
-    let th='<tr><th style="'+thBase+'min-width:70px;background:'+bgColor+';color:#fff;font-size:12px;">コマ</th>';
-    dates.forEach(function(d){
-      const hasSh=map[d.date]&&Object.keys(map[d.date]).length>0;
-      const bg=hasSh?'#f0fff4':d.dow===0?'#fff5f5':d.dow===6?'#eff6ff':'#f9fafb';
-      th+='<th style="'+thBase+'background:'+bg+';color:'+dowColors[d.dow]+';min-width:48px;font-size:10px;">'
-        +d.day+'<br>'+dowNames[d.dow]+'</th>';
-    });
-    th+='</tr>';
-
-    // コマ行
-    let rows='';
-    slots.forEach(function(slot){
-      const slotShort=slot.split('（')[0];
-      const m=slot.match(/（(.+)）/);
-      const komaLabel=m?m[1]:'';
-      // このコマに1件でもデータがあるか確認
-      const hasAny=dates.some(function(d){ return map[d.date]&&map[d.date][slot]; });
-      
-      rows+='<tr>';
-      rows+='<td style="'+tdBase+'background:#f8f9ff;font-size:10px;font-weight:700;white-space:nowrap;padding:3px 6px;">'
-        +slotShort+'<br><span style="color:#9ca3af;font-weight:400;font-size:9px;">'+komaLabel+'</span></td>';
-      dates.forEach(function(d){
-        const cell=map[d.date]&&map[d.date][slot];
-        const isSun=d.dow===0,isSat=d.dow===6;
-        const bg=cell?'#f0fdf4':isSun?'#fff5f5':isSat?'#eff6ff':'#fff';
-        if(cell){
-          rows+='<td style="'+tdBase+'background:'+bg+';padding:3px;vertical-align:top;">'
-            +'<div style="font-size:10px;font-weight:700;color:#065f46;line-height:1.3;">'+teacher.split('　').join(' ')+'</div>'
-            +(cell.students?'<div style="font-size:9px;color:#374151;margin-top:1px;">'+cell.students+'</div>':'')
-            +'</td>';
-        } else {
-          rows+='<td style="'+tdBase+'background:'+bg+';"></td>';
-        }
-      });
-      rows+='</tr>';
-    });
-    return '<div style="margin-bottom:1rem;">'
-      +'<div style="background:'+bgColor+';color:#fff;font-size:12px;font-weight:700;padding:6px 10px;border-radius:4px 4px 0 0;">'+campusLabel+'</div>'
-      +'<div style="overflow-x:auto;"><table style="border-collapse:collapse;width:100%;font-family:sans-serif;">'
-      +'<thead>'+th+'</thead><tbody>'+rows+'</tbody></table></div></div>';
-  };
-
   const thBase='border:1px solid #e5e7eb;padding:4px 3px;text-align:center;';
-  const tdBase='border:1px solid #e5e7eb;text-align:center;min-width:48px;';
+  const tdBase='border:1px solid #e5e7eb;vertical-align:top;min-width:56px;';
 
-  const honkoHtml=makeTable('🏫 山口本校',honkoMap,'#1e40af');
-  const nankoHtml=makeTable('🏫 山口南校',nankoMap,'#0f766e');
+  // 1つのテーブルに本校・南校を縦に並べて表示
+  // ヘッダー行（日付）
+  let th='<tr>'
+    +'<th style="'+thBase+'min-width:65px;background:#1e3a5f;color:#fff;font-size:11px;">コマ</th>';
+  dates.forEach(function(d){
+    const hasH=honkoMap[d.date]&&Object.keys(honkoMap[d.date]).length>0;
+    const hasN=nankoMap[d.date]&&Object.keys(nankoMap[d.date]).length>0;
+    const hasSh=hasH||hasN;
+    const bg=hasSh?'#f0f9ff':d.dow===0?'#fff5f5':d.dow===6?'#eff6ff':'#f9fafb';
+    th+='<th style="'+thBase+'background:'+bg+';color:'+dowColors[d.dow]+';font-size:10px;font-weight:700;">'
+      +d.day+'<br>'+dowNames[d.dow]+'</th>';
+  });
+  th+='</tr>';
+
+  // コマ行（各コマに本校・南校を並べる）
+  let rows='';
+  slots.forEach(function(slot){
+    const slotShort=slot.split('（')[0];
+    const mm=slot.match(/（(.+)）/);
+    const komaLabel=mm?mm[1]:'';
+    // このコマにデータがあるか
+    const hasAny=dates.some(function(d){
+      return (honkoMap[d.date]&&honkoMap[d.date][slot])||(nankoMap[d.date]&&nankoMap[d.date][slot]);
+    });
+    if(!hasAny) return; // データのないコマはスキップ
+
+    rows+='<tr>';
+    rows+='<td style="'+tdBase+'background:#f0f4ff;font-size:10px;font-weight:700;white-space:nowrap;padding:4px 6px;text-align:center;">'
+      +slotShort+'<br><span style="color:#6b7280;font-weight:400;font-size:9px;">'+komaLabel+'</span></td>';
+
+    dates.forEach(function(d){
+      const hCell=honkoMap[d.date]&&honkoMap[d.date][slot];
+      const nCell=nankoMap[d.date]&&nankoMap[d.date][slot];
+      const isSun=d.dow===0,isSat=d.dow===6;
+      const baseBg=isSun?'#fff5f5':isSat?'#eff6ff':'#fff';
+
+      let cellHtml='<td style="'+tdBase+'background:'+baseBg+';padding:2px;">';
+      if(hCell){
+        cellHtml+='<div style="background:#dbeafe;border-left:3px solid #2563eb;padding:2px 4px;margin-bottom:2px;border-radius:0 3px 3px 0;">'
+          +'<div style="font-size:9px;color:#1e40af;font-weight:700;">🔵本校</div>'
+          +'<div style="font-size:9px;font-weight:600;color:#1e3a5f;">'+teacher.replace(/　/g,' ')+'</div>'
+          +(hCell.students?'<div style="font-size:8px;color:#374151;">'+hCell.students+'</div>':'')
+          +'</div>';
+      }
+      if(nCell){
+        cellHtml+='<div style="background:#ccfbf1;border-left:3px solid #0d9488;padding:2px 4px;border-radius:0 3px 3px 0;">'
+          +'<div style="font-size:9px;color:#0f766e;font-weight:700;">🟢南校</div>'
+          +'<div style="font-size:9px;font-weight:600;color:#134e4a;">'+teacher.replace(/　/g,' ')+'</div>'
+          +(nCell.students?'<div style="font-size:8px;color:#374151;">'+nCell.students+'</div>':'')
+          +'</div>';
+      }
+      cellHtml+='</td>';
+      rows+=cellHtml;
+    });
+    rows+='</tr>';
+  });
+
+  const tableHtml='<div style="overflow-x:auto;margin-bottom:1rem;">'
+    +'<table style="border-collapse:collapse;width:100%;font-family:sans-serif;">'
+    +'<thead>'+th+'</thead><tbody>'+rows+'</tbody></table></div>';
 
   // 行事も表示
   const evHtml=function(){
@@ -1913,8 +1926,7 @@ function execMonthlyPrint(){
     +'<h2>'+year+'年'+month+'月 月次授業スケジュール</h2>'
     +'<h3>担当講師：'+teacher+'　　印刷日：'+toDateStr(new Date())+'</h3>'
     +evHtml
-    +honkoHtml
-    +nankoHtml
+    +tableHtml
     +'<div style="margin-top:1rem;text-align:right;">'
     +'<button onclick="window.print()" style="padding:8px 20px;background:#1a2a6c;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;">🖨️ 印刷（A4横）</button>'
     +'</div></body></html>';
