@@ -1665,22 +1665,20 @@ async function openSurveyAnswer(){
 function renderSurveyAnswerTable(sv, slots){
   const el = document.getElementById('survey-answer-table');
   const dowNames=['日','月','火','水','木','金','土'];
-  const dowColors=['var(--red)','var(--text)','var(--text)','var(--text)','var(--text)','var(--text)','var(--blue)'];
+  const dowColors=['#dc2626','#374151','#374151','#374151','#374151','#374151','#2563eb'];
 
-  // 日付一覧生成
   const dates=[];
   let d=new Date(sv.startDate+'T00:00:00');
-  const end=new Date(sv.endDate+'T00:00:00');
-  while(d<=end){
+  const endD=new Date(sv.endDate+'T00:00:00');
+  while(d<=endD){
     dates.push({date:toDateStr(d),month:d.getMonth()+1,day:d.getDate(),dow:d.getDay()});
     d.setDate(d.getDate()+1);
   }
 
-  // 期間中のシフトをマップ化（講師ログイン=自分のみ、塾長=全員）
+  // 期間中のシフトをマップ化
   const myShiftMap={};
   shifts.forEach(function(s){
     if(s.date>=sv.startDate && s.date<=sv.endDate){
-      // 講師ログイン時は自分のシフトのみ、塾長は全シフト
       if(!currentUser || s.teacher===currentUser){
         const key=s.date+'|'+s.startTime;
         if(!myShiftMap[key]) myShiftMap[key]=[];
@@ -1704,38 +1702,49 @@ function renderSurveyAnswerTable(sv, slots){
     const slotShort=slot.split('（')[0];
     const m=slot.match(/（(.+)）/);
     const komaLabel=m?m[1]:'';
-    tbody+='<tr><td style="'+tdSt+'position:sticky;left:0;z-index:2;background:#f8f9ff;font-size:11px;font-weight:700;white-space:nowrap;padding:4px 8px;">'+slotShort+'<br><span style="color:var(--muted);font-weight:400;font-size:10px;">'+komaLabel+'</span></td>';
+    tbody+='<tr><td style="'+tdSt+'position:sticky;left:0;z-index:2;background:#f8f9ff;font-size:11px;font-weight:700;white-space:nowrap;padding:4px 8px;text-align:center;">'+slotShort+'<br><span style="color:var(--muted);font-weight:400;font-size:10px;">'+komaLabel+'</span></td>';
     dates.forEach(function(d){
       const key=d.date+'|'+slot;
       const cur=surveyAnswers[key]||'';
       const existShifts=myShiftMap[key]||[];
-      const isSun=d.dow===0,isSat=d.dow===6;
-      const baseBg=isSun?'#fff5f5':isSat?'#eff6ff':'#fff';
       const hasShift=existShifts.length>0;
-      // シフトがある場合はセル背景をグレーに
-      const cellBg=hasShift?'#e8f0fe':(isSun?'#fff5f5':isSat?'#eff6ff':'#fff');
-      const selBg=cur==='×'?'#fee2e2':cellBg;
+      const isSun=d.dow===0,isSat=d.dow===6;
+
       let inner='';
-      existShifts.forEach(function(es){
-        inner+='<div style="background:#c7d2fe;border:1px solid #818cf8;border-radius:3px;padding:2px 3px;margin-bottom:2px;font-size:9px;color:#3730a3;line-height:1.3;text-align:left;font-weight:600;">'
-          +'📌'+es.campus
-          +(es.students?'<br><span style="color:#374151;font-weight:400;">'+es.students+'</span>':'')
-          +'</div>';
-      });
-      inner+='<select data-date="'+d.date+'" data-slot="'+slot+'" onchange="onSurveyChange(this)"'
-        +' style="width:100%;height:26px;font-size:13px;border:1.5px solid var(--border-s);border-radius:3px;text-align:center;background:'+selBg+';cursor:pointer;">'
-        +'<option value=""'+(cur===''?' selected':'')+'>　</option>'
-        +'<option value="×"'+(cur==='×'?' selected':'')+'>×</option>'
-        +'</select>';
-      tbody+='<td style="'+tdSt+'background:'+cellBg+';padding:3px;">'+inner+'</td>';
+      if(hasShift){
+        // 既存シフトがある→色分け表示のみ（プルダウンなし）
+        existShifts.forEach(function(es){
+          const isHonko=(es.campus||'本校')==='本校';
+          const bg=isHonko?'#dbeafe':'#d1fae5';
+          const border=isHonko?'#3b82f6':'#10b981';
+          const color=isHonko?'#1e40af':'#065f46';
+          const label=isHonko?'🔵本校':'🟢南校';
+          inner+='<div style="background:'+bg+';border:1.5px solid '+border+';border-radius:4px;padding:3px 5px;font-size:9px;color:'+color+';line-height:1.4;font-weight:700;text-align:left;">'
+            +label+'<br>'
+            +(es.students?'<span style="color:#374151;font-weight:400;">'+es.students+'</span>':'')
+            +'</div>';
+        });
+        tbody+='<td style="'+tdSt+'background:#f0fdf4;padding:3px;">'+inner+'</td>';
+      } else {
+        // シフトなし→プルダウン表示
+        const cellBg=isSun?'#fff5f5':isSat?'#eff6ff':'#fff';
+        const selBg=cur==='×'?'#fee2e2':cellBg;
+        inner='<select data-date="'+d.date+'" data-slot="'+slot+'" onchange="onSurveyChange(this)"'
+          +' style="width:100%;height:28px;font-size:13px;border:1.5px solid var(--border-s);border-radius:3px;text-align:center;background:'+selBg+';cursor:pointer;">'
+          +'<option value=""'+(cur===''?' selected':'')+'>　</option>'
+          +'<option value="×"'+(cur==='×'?' selected':'')+'>×</option>'
+          +'</select>';
+        tbody+='<td style="'+tdSt+'background:'+cellBg+';padding:3px;">'+inner+'</td>';
+      }
     });
     tbody+='</tr>';
   });
   tbody+='</tbody>';
 
-  el.innerHTML='<div style="font-size:11px;margin-bottom:6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">'
-    +'<span style="background:#dbeafe;border:1px solid #93c5fd;border-radius:3px;padding:2px 7px;font-size:10px;color:#1e40af;">📌 既登録シフト</span>'
-    +'<span style="color:var(--red);font-size:11px;font-weight:600;">出勤不可の日時のみ × を選択・空欄＝出勤可</span>'
+  el.innerHTML='<div style="font-size:11px;margin-bottom:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">'
+    +'<span style="background:#dbeafe;border:1.5px solid #3b82f6;border-radius:4px;padding:2px 7px;font-size:10px;color:#1e40af;font-weight:700;">🔵 本校</span>'
+    +'<span style="background:#d1fae5;border:1.5px solid #10b981;border-radius:4px;padding:2px 7px;font-size:10px;color:#065f46;font-weight:700;">🟢 南校</span>'
+    +'<span style="color:var(--red);font-size:11px;font-weight:600;">空欄の日時に × で出勤不可を入力</span>'
     +'</div>'
     +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">'
     +'<table style="border-collapse:separate;border-spacing:0;background:#fff;">'+thead+tbody+'</table>'

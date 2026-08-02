@@ -1164,15 +1164,17 @@ async function openSurveyMobile(){
 function renderSurveyTableMobile(sv, slots){
   const el = document.getElementById('survey-table-m');
   const dowNames=['日','月','火','水','木','金','土'];
+  const dowColors=['#dc2626','#374151','#374151','#374151','#374151','#374151','#2563eb'];
+
   const dates=[];
   let d=new Date(sv.startDate+'T00:00:00');
-  const end=new Date(sv.endDate+'T00:00:00');
-  while(d<=end){
+  const endD=new Date(sv.endDate+'T00:00:00');
+  while(d<=endD){
     dates.push({date:toDateStr(d),m:d.getMonth()+1,day:d.getDate(),dow:d.getDay()});
     d.setDate(d.getDate()+1);
   }
 
-  // 期間中の自分のシフトをマップ化
+  // シフトマップ
   const myShiftMap={};
   if(currentUser){
     shifts.forEach(function(s){
@@ -1184,13 +1186,13 @@ function renderSurveyTableMobile(sv, slots){
     });
   }
 
-  const thSt='border:1px solid #ddd;padding:5px 3px;text-align:center;font-size:10px;white-space:nowrap;background:#f8f9ff;min-width:52px;';
+  const thSt='border:1px solid #ddd;padding:4px 2px;text-align:center;font-size:10px;white-space:nowrap;background:#f8f9ff;min-width:50px;';
   const tdSt='border:1px solid #ddd;padding:2px;vertical-align:top;';
-  let thead='<tr><th style="'+thSt+'min-width:60px;background:#f0f4ff;">コマ</th>';
+
+  let thead='<tr><th style="'+thSt+'min-width:58px;background:#f0f4ff;">コマ</th>';
   dates.forEach(function(d){
     const bg=d.dow===0?'#fff0f0':d.dow===6?'#f0f0ff':'#f8f9ff';
-    const c=d.dow===0?'color:#dc2626':d.dow===6?'color:#2563eb':'';
-    thead+='<th style="'+thSt+'background:'+bg+';'+c+'">'+d.m+'/'+d.day+'<br>'+dowNames[d.dow]+'</th>';
+    thead+='<th style="'+thSt+'background:'+bg+';color:'+dowColors[d.dow]+';">'+d.m+'/'+d.day+'<br>'+dowNames[d.dow]+'</th>';
   });
   thead+='</tr>';
 
@@ -1199,35 +1201,46 @@ function renderSurveyTableMobile(sv, slots){
     const sh=slot.split('（')[0];
     const m=slot.match(/（(.+)）/);
     const kl=m?m[1]:'';
-    tbody+='<tr><td style="'+tdSt+'background:#f8f9ff;font-size:10px;font-weight:700;padding:3px 5px;white-space:nowrap;text-align:center;">'+sh+'<br><span style="color:#6b7280;font-weight:400;">'+kl+'</span></td>';
+    tbody+='<tr><td style="'+tdSt+'background:#f8f9ff;font-size:10px;font-weight:700;padding:3px 4px;white-space:nowrap;text-align:center;">'+sh+'<br><span style="color:#6b7280;font-weight:400;">'+kl+'</span></td>';
     dates.forEach(function(d){
       const key=d.date+'|'+slot;
       const cur=_surveyAnswers[key]||'';
       const existShifts=myShiftMap[key]||[];
       const hasShift=existShifts.length>0;
       const isSun=d.dow===0,isSat=d.dow===6;
-      const baseBg=hasShift?'#e0e7ff':(isSun?'#fff5f5':isSat?'#eff6ff':'#fff');
-      const selBg=cur==='×'?'#fee2e2':baseBg;
+
       let inner='';
-      existShifts.forEach(function(es){
-        inner+='<div style="background:#c7d2fe;border:1px solid #818cf8;border-radius:3px;padding:2px 3px;margin-bottom:2px;font-size:8px;color:#3730a3;line-height:1.3;font-weight:600;text-align:left;">'
-          +'📌'+es.campus
-          +(es.students?'<br><span style="color:#374151;font-weight:400;">'+es.students+'</span>':'')
-          +'</div>';
-      });
-      inner+='<select data-date="'+d.date+'" data-slot="'+slot+'" onchange="onSurveyChangeMobile(this)"'
-        +' style="width:100%;height:28px;font-size:13px;border:1px solid #ddd;border-radius:3px;background:'+selBg+';text-align:center;">'
-        +'<option value=""'+(cur===''?' selected':'')+'>　</option>'
-        +'<option value="×"'+(cur==='×'?' selected':'')+'>×</option>'
-        +'</select>';
-      tbody+='<td style="'+tdSt+'background:'+baseBg+';padding:3px;">'+inner+'</td>';
+      if(hasShift){
+        existShifts.forEach(function(es){
+          const isHonko=(es.campus||'本校')==='本校';
+          const bg=isHonko?'#dbeafe':'#d1fae5';
+          const border=isHonko?'#3b82f6':'#10b981';
+          const color=isHonko?'#1e40af':'#065f46';
+          const label=isHonko?'🔵本':'🟢南';
+          inner+='<div style="background:'+bg+';border:1.5px solid '+border+';border-radius:3px;padding:2px 3px;font-size:8px;color:'+color+';line-height:1.3;font-weight:700;text-align:left;">'
+            +label+'<br>'
+            +(es.students?'<span style="color:#374151;font-weight:400;">'+es.students+'</span>':'')
+            +'</div>';
+        });
+        tbody+='<td style="'+tdSt+'background:#f0fdf4;padding:2px;">'+inner+'</td>';
+      } else {
+        const cellBg=isSun?'#fff5f5':isSat?'#eff6ff':'#fff';
+        const selBg=cur==='×'?'#fee2e2':cellBg;
+        inner='<select data-date="'+d.date+'" data-slot="'+slot+'" onchange="onSurveyChangeMobile(this)"'
+          +' style="width:100%;height:26px;font-size:12px;border:1px solid #ddd;border-radius:3px;background:'+selBg+';text-align:center;">'
+          +'<option value=""'+(cur===''?' selected':'')+'>　</option>'
+          +'<option value="×"'+(cur==='×'?' selected':'')+'>×</option>'
+          +'</select>';
+        tbody+='<td style="'+tdSt+'background:'+cellBg+';padding:2px;">'+inner+'</td>';
+      }
     });
     tbody+='</tr>';
   });
 
-  el.innerHTML='<div style="font-size:10px;margin-bottom:5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'
-    +'<span style="background:#c7d2fe;border:1px solid #818cf8;border-radius:3px;padding:2px 6px;font-size:9px;color:#3730a3;">📌 既登録シフト</span>'
-    +'<span style="color:#dc2626;font-size:10px;font-weight:600;">出勤不可のみ×・空欄=出勤可</span>'
+  el.innerHTML='<div style="font-size:10px;margin-bottom:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'
+    +'<span style="background:#dbeafe;border:1.5px solid #3b82f6;border-radius:3px;padding:2px 6px;font-size:9px;color:#1e40af;font-weight:700;">🔵 本校</span>'
+    +'<span style="background:#d1fae5;border:1.5px solid #10b981;border-radius:3px;padding:2px 6px;font-size:9px;color:#065f46;font-weight:700;">🟢 南校</span>'
+    +'<span style="color:#dc2626;font-size:10px;font-weight:600;">空欄に×で出勤不可を入力</span>'
     +'</div>'
     +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">'
     +'<table style="border-collapse:collapse;font-family:monospace;">'+thead+tbody+'</table>'
