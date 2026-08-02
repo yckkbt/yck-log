@@ -192,7 +192,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
     </div>
     <div style="margin-top:.75rem;">
       <label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:4px;">📝 塾長への連絡事項（任意）</label>
-      <textarea id="survey-note-m" rows="3" placeholder="例：7/25は午前のみ可能です。" style="width:100%;padding:10px;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:13px;resize:vertical;"></textarea>
+      <textarea id="survey-note-m" rows="3" placeholder="例：〇月〇日の通常授業は入れません。" style="width:100%;padding:10px;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:13px;resize:vertical;"></textarea>
     </div>
     <button class="save-btn" id="survey-submit-m" onclick="submitSurveyMobile()" style="margin-top:1rem;">回答を送信する</button>
     <button class="cancel-btn" onclick="closeSurveyMobile()">閉じる</button>
@@ -1161,7 +1161,12 @@ async function openSurveyMobile(){
     const res = await api('getSurveyAnswers',{surveyId:_currentSurvey.id});
     const myAns = (res.answers||[]).filter(function(a){ return a.teacher===currentUser; });
     myAns.forEach(function(a){ _surveyAnswers[a.date+'|'+a.slot]=a.answer; });
-    renderSurveyTableMobile(_currentSurvey, startTimes);
+    let surveySlotsM=startTimes;
+    if(_currentSurvey.targetSlots&&_currentSurvey.targetSlots.trim()){
+      const tsM=_currentSurvey.targetSlots.split('|').map(function(s){return s.trim();}).filter(Boolean);
+      if(tsM.length) surveySlotsM=startTimes.filter(function(s){return tsM.indexOf(s)>=0;});
+    }
+    renderSurveyTableMobile(_currentSurvey, surveySlotsM);
   }catch(e){ alert('エラー：'+e.message); }
 }
 

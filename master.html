@@ -332,6 +332,15 @@ textarea{resize:vertical;min-height:60px;}
             <button onclick="selectAllTeachers(false)" style="padding:3px 10px;border:1px solid var(--border-s);border-radius:4px;font-size:11px;cursor:pointer;color:var(--muted);background:#fff;">全解除</button>
           </div>
         </div>
+        <div class="field">
+          <label>回答対象コマ（チェックなし＝全コマ）</label>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">講習会期間中に授業設定のないコマのチェックを外してください</div>
+          <div id="sv-slots-check" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;"></div>
+          <div style="margin-top:6px;display:flex;gap:8px;">
+            <button onclick="selectAllSlots(true)" style="padding:3px 10px;border:1px solid var(--border-s);border-radius:4px;font-size:11px;cursor:pointer;color:var(--muted);background:#fff;">全選択</button>
+            <button onclick="selectAllSlots(false)" style="padding:3px 10px;border:1px solid var(--border-s);border-radius:4px;font-size:11px;cursor:pointer;color:var(--muted);background:#fff;">全解除</button>
+          </div>
+        </div>
         <button class="add-btn" onclick="createSurvey()">＋ アンケートを作成・送信</button>
       </div>
 
@@ -702,11 +711,11 @@ let currentSurveyId = null;
 
 async function loadSurveys(){
   try{
-    const [svRes, mRes] = await Promise.all([api('getSurveys'), api('getMaster')]);
+    const [svRes, mRes, stRes] = await Promise.all([api('getSurveys'), api('getMaster'), api('getStartTimes')]);
     surveys = svRes.surveys || [];
-    // 講師チェックボックスを構築
     const teachers = (mRes&&mRes.master&&mRes.master.teachers)||[];
     buildTeacherChecks(teachers);
+    buildSlotChecks(stRes&&stRes.startTimes);
     renderSurveyList();
   }catch(e){ console.log('survey load error', e); }
 }
@@ -723,6 +732,20 @@ function buildTeacherChecks(teachers){
 
 function selectAllTeachers(val){
   document.querySelectorAll('#sv-teachers-check input[type=checkbox]').forEach(cb=>cb.checked=val);
+}
+
+function buildSlotChecks(slots){
+  const el=document.getElementById('sv-slots-check');
+  if(!el||!slots) return;
+  el.innerHTML=slots.map(s=>`
+    <label style="display:flex;align-items:center;gap:4px;padding:4px 10px;border:1.5px solid var(--border-s);border-radius:6px;cursor:pointer;font-size:12px;background:#fff;">
+      <input type="checkbox" value="${s}" checked style="accent-color:var(--blue);">
+      ${s.split('（')[0]}<span style="color:var(--muted);font-size:10px;"> ${(s.match(/（(.+)）/)||['',''])[1]}</span>
+    </label>`).join('');
+}
+
+function selectAllSlots(val){
+  document.querySelectorAll('#sv-slots-check input[type=checkbox]').forEach(cb=>cb.checked=val);
 }
 
 function renderSurveyList(){
@@ -756,11 +779,13 @@ async function createSurvey(){
   const deadline = document.getElementById('sv-deadline').value;
   if(!title||!startDate||!endDate||!deadline){ toast('⚠️ 全項目を入力してください'); return; }
   if(startDate>endDate){ toast('⚠️ 期間の開始・終了日を確認してください'); return; }
-  const checkedTeachers = [...document.querySelectorAll('#sv-teachers-check input:checked')].map(cb=>cb.value);
-  const survey = {
+  const checkedTeachers=[...document.querySelectorAll('#sv-teachers-check input:checked')].map(cb=>cb.value);
+  const checkedSlots=[...document.querySelectorAll('#sv-slots-check input:checked')].map(cb=>cb.value);
+  const survey={
     id:'sv'+Date.now(),
     title, startDate, endDate, deadline, status:'active',
-    targetTeachers: checkedTeachers.join(',')
+    targetTeachers: checkedTeachers.join(','),
+    targetSlots: checkedSlots.join('|')
   };
   try{
     const res = await api('addSurvey',{survey});

@@ -253,7 +253,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
     <div style="overflow-x:auto;" id="survey-answer-table"></div>
     <div class="field" style="margin-top:.75rem;">
       <label style="font-size:13px;font-weight:700;color:var(--text);">📝 塾長への連絡事項（任意）</label>
-      <textarea id="survey-note" rows="3" placeholder="例：7/25は午前のみ可能です。8月上旬は家族の予定があります。" style="width:100%;padding:10px;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:13px;font-family:var(--sans);resize:vertical;margin-top:6px;"></textarea>
+      <textarea id="survey-note" rows="3" placeholder="例：〇月〇日の通常授業は入れません。" style="width:100%;padding:10px;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:13px;font-family:var(--sans);resize:vertical;margin-top:6px;"></textarea>
     </div>
     <button class="modal-save" id="survey-submit-btn" onclick="submitSurveyAnswer()" style="width:100%;margin-top:1rem;">回答を送信する</button>
     <button class="modal-cancel" onclick="closeSurveyModal()" style="width:100%;margin-top:8px;">閉じる</button>
@@ -1658,7 +1658,13 @@ async function openSurveyAnswer(){
     const answersRes = await api('getSurveyAnswers',{surveyId:currentSurvey.id});
     const myAnswers = (answersRes.answers||[]).filter(function(a){ return a.teacher===currentUser; });
     myAnswers.forEach(function(a){ surveyAnswers[a.date+'|'+a.slot]=a.answer; });
-    renderSurveyAnswerTable(currentSurvey, startTimes);
+    // targetSlotsが設定されていればフィルタリング
+    let surveySlots=startTimes;
+    if(currentSurvey.targetSlots&&currentSurvey.targetSlots.trim()){
+      const ts=currentSurvey.targetSlots.split('|').map(function(s){return s.trim();}).filter(Boolean);
+      if(ts.length) surveySlots=startTimes.filter(function(s){return ts.indexOf(s)>=0;});
+    }
+    renderSurveyAnswerTable(currentSurvey, surveySlots);
   }catch(e){ alert('エラー：'+e.message); }
 }
 
