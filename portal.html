@@ -160,7 +160,8 @@ async function portalLogin(){
   try{
     const res=await api('auth',{password:pw});
     if(res.ok){
-      const user=document.getElementById('portal-user').value||'';
+      // 塾長パスワードの場合はユーザーを空（塾長）に強制
+      let user = res.isAdmin ? '' : (document.getElementById('portal-user').value||'');
       sessionStorage.setItem('yck_auth','1');
       sessionStorage.setItem('yck_pw',pw);
       sessionStorage.setItem('yck_user',user);

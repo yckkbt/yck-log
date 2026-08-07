@@ -235,10 +235,22 @@ textarea{resize:vertical;min-height:60px;}
     <!-- パスワード変更 -->
     <div class="card" style="max-width:400px;">
       <div class="card-head"><div class="card-icon" style="background:var(--amber-l);">🔑</div><span class="card-label">パスワード変更</span></div>
-      <div class="field" style="margin-bottom:10px;"><label>現在のパスワード</label><input type="password" id="pw-old"></div>
-      <div class="field" style="margin-bottom:10px;"><label>新しいパスワード</label><input type="password" id="pw-new"></div>
-      <div class="field" style="margin-bottom:10px;"><label>確認</label><input type="password" id="pw-conf"></div>
-      <button class="add-btn" style="width:100%;padding:10px;" onclick="changePw()">変更する</button>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:.75rem;">講師用・塾長用の2種類のパスワードを設定できます</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div>
+          <div style="font-size:12px;font-weight:700;margin-bottom:.5rem;color:var(--blue);">👤 講師用パスワード</div>
+          <div class="field" style="margin-bottom:8px;"><label>現在のパスワード</label><input type="password" id="pw-old"></div>
+          <div class="field" style="margin-bottom:8px;"><label>新しいパスワード</label><input type="password" id="pw-new"></div>
+          <div class="field" style="margin-bottom:8px;"><label>確認</label><input type="password" id="pw-conf"></div>
+          <button class="add-btn" style="width:100%;padding:10px;" onclick="changePw()">講師用を変更</button>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;margin-bottom:.5rem;color:var(--purple);">👑 塾長用パスワード（管理者）</div>
+          <div class="field" style="margin-bottom:8px;"><label>新しいパスワード</label><input type="password" id="new-admin-pw"></div>
+          <div class="field" style="margin-bottom:8px;"><label>確認</label><input type="password" id="new-admin-pw2"></div>
+          <button class="add-btn" style="width:100%;padding:10px;background:linear-gradient(135deg,var(--purple),var(--blue));" onclick="changeAdminPw()">塾長用を変更</button>
+        </div>
+      </div>
       <div class="pw-msg" id="pw-msg"></div>
     </div>
     </div><!-- /msection-master -->
@@ -1033,3 +1045,19 @@ if(sessionStorage.getItem('yck_admin')==='1'){
 </script>
 </body>
 </html>
+async function changeAdminPw(){
+  const p1=document.getElementById('new-admin-pw').value;
+  const p2=document.getElementById('new-admin-pw2').value;
+  if(!p1){toast('⚠️ パスワードを入力してください');return;}
+  if(p1!==p2){toast('⚠️ パスワードが一致しません');return;}
+  try{
+    const res=await api('setAdminPassword',{password:p1});
+    if(res.ok){
+      toast('✅ 塾長用パスワードを変更しました');
+      document.getElementById('new-admin-pw').value='';
+      document.getElementById('new-admin-pw2').value='';
+    }else alert('変更に失敗しました');
+  }catch(e){alert('通信エラー：'+e.message);}
+}
+
+
