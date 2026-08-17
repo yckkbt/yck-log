@@ -901,15 +901,18 @@ function renderSurveyResult(sv, answers, slots, periodShifts){
 
   // データ行
   let tbody = '<tbody>';
-  // 連絡事項を取得
+  // 連絡事項は後で表の上に追加（変数に保存）
   const notes = answers.filter(a=>a.date==='__note__');
+  let noteHtml = '';
   if(notes.length){
-    let noteHtml='<div style="margin-bottom:1rem;"><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;font-family:var(--mono);">📝 講師からの連絡事項</div>';
+    noteHtml='<div style="margin-bottom:1.5rem;background:#fffbeb;border:2px solid #f59e0b;border-radius:var(--r);padding:1rem;">'
+      +'<div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:10px;">📝 講師からの連絡事項</div>';
     notes.forEach(n=>{
-      if(n.answer) noteHtml+='<div style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;background:#f8f9ff;"><span style="font-weight:700;font-size:13px;">'+n.teacher+'</span><p style="margin:4px 0 0;font-size:13px;color:var(--muted);">'+n.answer+'</p></div>';
+      if(n.answer) noteHtml+='<div style="padding:8px 12px;border:1px solid #fcd34d;border-radius:var(--r);margin-bottom:6px;background:#fff;">'
+        +'<span style="font-weight:700;font-size:13px;color:var(--text);">'+n.teacher+'</span>'
+        +'<p style="margin:4px 0 0;font-size:13px;color:#374151;">'+n.answer+'</p></div>';
     });
     noteHtml+='</div>';
-    el.innerHTML = noteHtml + el.innerHTML;
   }
 
   if(!teachers.length){
@@ -958,8 +961,8 @@ function renderSurveyResult(sv, answers, slots, periodShifts){
   }
   tbody+='</tbody>';
 
-  el.innerHTML='<div style="overflow-x:auto;margin-bottom:1rem;"><table style="border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;min-width:500px;">'+thead+tbody+'</table></div>'
-    +(window._surveyNoteHtml||'');
+  el.innerHTML=noteHtml
+    +'<div style="overflow-x:auto;margin-bottom:1rem;"><table style="border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;min-width:500px;">'+thead+tbody+'</table></div>';
   document.getElementById('survey-result-card').scrollIntoView({behavior:'smooth'});
 }
 
