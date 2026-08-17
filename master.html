@@ -370,7 +370,13 @@ textarea{resize:vertical;min-height:60px;}
           <div class="card-icon" style="background:var(--green-l);">📅</div>
           <span class="card-label" id="survey-result-title">回答集計</span>
         </div>
-        <div style="margin-bottom:.75rem;display:flex;gap:8px;">
+        <div style="margin-bottom:.75rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <label style="font-size:12px;font-weight:600;color:var(--muted);">表示講師：</label>
+            <select id="survey-teacher-filter" onchange="filterSurveyResult()" style="padding:6px 10px;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:13px;">
+              <option value="">全員</option>
+            </select>
+          </div>
           <button onclick="printSurveyResult()" style="padding:7px 16px;background:#fff;border:1.5px solid var(--border-s);border-radius:var(--r);font-size:13px;cursor:pointer;">🖨️ 印刷</button>
         </div>
         <div id="survey-result-area" style="overflow-x:auto;"></div>
@@ -833,20 +839,38 @@ async function viewSurveyResult(surveyId){
   document.getElementById('survey-result-area').innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);">読み込み中...</div>';
 
   try{
-    const [answersRes, timesRes, shiftsRes] = await Promise.all([
+    const [answersRes, timesRes, shiftsRes, eventsRes] = await Promise.all([
       api('getSurveyAnswers',{surveyId}),
       api('getStartTimes'),
-      api('getShifts')
+      api('getShifts'),
+      api('getEvents')
     ]);
     const answers = answersRes.answers || [];
     const slots = timesRes.startTimes || [];
     const allShifts = shiftsRes.shifts || [];
     const periodShifts = allShifts.filter(s=>s.date>=sv.startDate&&s.date<=sv.endDate);
+    window._masterEvents = eventsRes.events || [];
     renderSurveyResult(sv, answers, slots, periodShifts);
   }catch(e){ alert('取得エラー：'+e.message); }
 }
 
+let _svData = null;
+
 function renderSurveyResult(sv, answers, slots, periodShifts){
+  _svData = {sv, answers, slots:[...slots], periodShifts};
+  const teacherSet = new Set([
+    ...answers.filter(a=>a.date!=='__note__').map(a=>a.teacher),
+    ...(periodShifts||[]).map(s=>s.teacher)
+  ]);
+  const filterSel = document.getElementById('survey-teacher-filter');
+  if(filterSel){
+    const cur=filterSel.value;
+    filterSel.innerHTML='<option value="">全員</option>';
+    [...teacherSet].sort().forEach(t=>{
+      const o=document.createElement('option');o.value=o.textContent=t;filterSel.appendChild(o);
+    });
+    filterSel.value=cur;
+  }
   const el = document.getElementById('survey-result-area');
 
   // 日付一覧生成
@@ -893,11 +917,12 @@ function renderSurveyResult(sv, answers, slots, periodShifts){
     +'<th style="position:sticky;left:80px;z-index:3;background:#f8f9ff;padding:8px 10px;border-bottom:2px solid var(--border);border-right:2px solid var(--border);font-size:11px;min-width:80px;">コマ</th>';
   dates.forEach(d=>{
     const isSun=d.dow===0,isSat=d.dow===6;
-    const bg=isSun?'#fff5f5':isSat?'#eff6ff':'#f8f9ff';
-    const color=isSun?'var(--red)':isSat?'var(--blue)':'var(--text)';
-    thead+='<th style="background:'+bg+';padding:6px 4px;border-bottom:2px solid var(--border);border-right:1px solid var(--border);font-size:10px;color:'+color+';white-space:nowrap;min-width:50px;">'+d.label+'</th>';
+    const isHol=(window._masterEvents||[]).some(function(e){return e.type==='holiday'&&e.startDate<=d.date&&d.date<=(e.endDate||e.startDate);});
+    const bg=isHol?'#f3f4f6':isSun?'#fff0f0':isSat?'#f0f0ff':'#f8f9ff';
+    const color=isHol?'#9ca3af':isSun?'var(--red)':isSat?'var(--blue)':'var(--text)';
+    const holLabel=isHol?'<br><span style="font-size:8px;">休塾</span>':'';
+    thead+='<th style="background:'+bg+';padding:6px 4px;border-bottom:2px solid var(--border);border-right:1px solid var(--border);font-size:10px;color:'+color+';white-space:nowrap;min-width:50px;">'+d.label+holLabel+'</th>';
   });
-  thead+='</tr></thead>';
 
   // データ行
   let tbody = '<tbody>';
@@ -1084,6 +1109,15 @@ if(sessionStorage.getItem('yck_admin')==='1'){
 }
 
 
+
+function filterSurveyResult(){
+  if(!_svData) return;
+  const filter=document.getElementById('survey-teacher-filter').value;
+  const {sv,answers,slots,periodShifts}=_svData;
+  const filtAnswers=filter?answers.filter(a=>a.teacher===filter||a.date==='__note__'):answers;
+  const filtShifts=filter?(periodShifts||[]).filter(s=>s.teacher===filter):periodShifts;
+  renderSurveyResult(sv,filtAnswers,slots,filtShifts);
+}
 
 async function changeAdminPw(){
   const p1=document.getElementById('new-admin-pw').value;
