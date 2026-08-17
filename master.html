@@ -881,6 +881,12 @@ function renderSurveyResult(sv, answers, slots, periodShifts){
   // 回答者＋シフト登録者を合わせた講師一覧
   const shiftTeachers = [...new Set((periodShifts||[]).map(s=>s.teacher))];
 
+  // targetSlotsでフィルタリング
+  if(sv.targetSlots && sv.targetSlots.trim()){
+    const ts = sv.targetSlots.split('|').map(s=>s.trim()).filter(Boolean);
+    if(ts.length) slots = slots.filter(s=>ts.indexOf(s)>=0);
+  }
+
   // ヘッダー行
   let thead = '<thead><tr>'
     +'<th style="position:sticky;left:0;z-index:3;background:#f8f9ff;padding:8px 10px;border-bottom:2px solid var(--border);border-right:2px solid var(--border);font-size:11px;min-width:80px;">講師</th>'
@@ -935,9 +941,14 @@ function renderSurveyResult(sv, answers, slots, periodShifts){
           });
 
           // ×回答表示
-          if(ans==='×'){
+          // answerの正規化（×の全角・半角対応）
+          const isNG = ans==='×'||ans==='x'||ans==='X'||ans==='✕'||ans==='✗';
+          if(isNG){
             bg='#fee2e2';
             content+='<div style="text-align:center;font-size:15px;color:var(--red);font-weight:700;">×</div>';
+          } else if(ans && ans!=='' && !isNG){
+            // 想定外の値はそのまま表示（デバッグ用）
+            content+='<div style="text-align:center;font-size:10px;color:#888;">'+ans+'</div>';
           }
           tbody+='<td style="background:'+bg+';border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:3px;vertical-align:top;">'+content+'</td>';
         });
@@ -947,7 +958,8 @@ function renderSurveyResult(sv, answers, slots, periodShifts){
   }
   tbody+='</tbody>';
 
-  el.innerHTML='<table style="border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;min-width:500px;">'+thead+tbody+'</table>';
+  el.innerHTML='<div style="overflow-x:auto;margin-bottom:1rem;"><table style="border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;min-width:500px;">'+thead+tbody+'</table></div>'
+    +(window._surveyNoteHtml||'');
   document.getElementById('survey-result-card').scrollIntoView({behavior:'smooth'});
 }
 
