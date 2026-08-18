@@ -1770,15 +1770,14 @@ async function submitSurveyAnswer(){
   const btn=document.getElementById('survey-submit-btn');
   btn.innerHTML='<span class="loading"></span>送信中...';btn.disabled=true;
   try{
-    const note = (document.getElementById('survey-note')&&document.getElementById('survey-note').value.trim())||'';
+    const note=(document.getElementById('survey-note')&&document.getElementById('survey-note').value.trim())||'';
     const entries=Object.entries(surveyAnswers).filter(function(e){ return e[1]!==''; });
-    // 連絡事項を特別なキーで保存
-    const allEntries = [...entries];
-    if(note) allEntries.push(['__note__|__note__', note]);
-    await Promise.all(allEntries.map(function(e){
+    const allAnswers=entries.map(function(e){
       const parts=e[0].split('|');
-      return api('saveSurveyAnswer',{answer:{surveyId:currentSurvey.id,teacher:currentUser,date:parts[0],slot:parts[1],answer:e[1]}});
-    }));
+      return {surveyId:currentSurvey.id,teacher:currentUser,date:parts[0],slot:parts[1],answer:e[1]};
+    });
+    if(note) allAnswers.push({surveyId:currentSurvey.id,teacher:currentUser,date:'__note__',slot:'__note__',answer:note});
+    if(allAnswers.length) await api('bulkSaveSurveyAnswers',{answers:allAnswers});
     toast('✅ 回答を送信しました');
     closeSurveyModal();
   }catch(e){ alert('送信エラー：'+e.message); }

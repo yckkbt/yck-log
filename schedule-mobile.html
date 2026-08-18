@@ -1271,12 +1271,12 @@ async function submitSurveyMobile(){
   try{
     const noteM=(document.getElementById('survey-note-m')&&document.getElementById('survey-note-m').value.trim())||'';
     const entries=Object.entries(_surveyAnswers).filter(function(e){ return e[1]!==''; });
-    const allReqs=entries.map(function(e){
+    const allAnswers=entries.map(function(e){
       const parts=e[0].split('|');
-      return api('saveSurveyAnswer',{answer:{surveyId:_currentSurvey.id,teacher:currentUser,date:parts[0],slot:parts[1],answer:e[1]}});
+      return {surveyId:_currentSurvey.id,teacher:currentUser,date:parts[0],slot:parts[1],answer:e[1]};
     });
-    if(noteM) allReqs.push(api('saveSurveyAnswer',{answer:{surveyId:_currentSurvey.id,teacher:currentUser,date:'__note__',slot:'__note__',answer:noteM}}));
-    await Promise.all(allReqs);
+    if(noteM) allAnswers.push({surveyId:_currentSurvey.id,teacher:currentUser,date:'__note__',slot:'__note__',answer:noteM});
+    if(allAnswers.length) await api('bulkSaveSurveyAnswers',{answers:allAnswers});
     toast('✅ 回答を送信しました');
     closeSurveyMobile();
   }catch(e){ alert('送信エラー：'+e.message); }
