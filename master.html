@@ -854,22 +854,27 @@ async function viewSurveyResult(surveyId){
   }catch(e){ alert('取得エラー：'+e.message); }
 }
 
-let _svData = null;
+let _svData = null;      // 元データ（フィルター前）
+let _svDataFiltered = null; // 表示用データ
 
-function renderSurveyResult(sv, answers, slots, periodShifts){
-  _svData = {sv, answers, slots:[...slots], periodShifts};
-  const teacherSet = new Set([
-    ...answers.filter(a=>a.date!=='__note__').map(a=>a.teacher),
-    ...(periodShifts||[]).map(s=>s.teacher)
-  ]);
-  const filterSel = document.getElementById('survey-teacher-filter');
-  if(filterSel){
-    const cur=filterSel.value;
-    filterSel.innerHTML='<option value="">全員</option>';
-    [...teacherSet].sort().forEach(t=>{
-      const o=document.createElement('option');o.value=o.textContent=t;filterSel.appendChild(o);
-    });
-    filterSel.value=cur;
+function renderSurveyResult(sv, answers, slots, periodShifts, isFiltered){
+  // 元データの保存（フィルター呼び出し時は上書きしない）
+  if(!isFiltered){
+    _svData = {sv, answers:[...answers], slots:[...slots], periodShifts:[...(periodShifts||[])]};
+    // 講師プルダウンを更新
+    const teacherSet = new Set([
+      ..._svData.answers.filter(a=>a.date!=='__note__').map(a=>a.teacher),
+      ...(_svData.periodShifts||[]).map(s=>s.teacher)
+    ]);
+    const filterSel = document.getElementById('survey-teacher-filter');
+    if(filterSel){
+      const cur=filterSel.value;
+      filterSel.innerHTML='<option value="">全員</option>';
+      [...teacherSet].sort().forEach(t=>{
+        const o=document.createElement('option');o.value=o.textContent=t;filterSel.appendChild(o);
+      });
+      filterSel.value=cur;
+    }
   }
   const el = document.getElementById('survey-result-area');
 
@@ -1116,7 +1121,7 @@ function filterSurveyResult(){
   const {sv,answers,slots,periodShifts}=_svData;
   const filtAnswers=filter?answers.filter(a=>a.teacher===filter||a.date==='__note__'):answers;
   const filtShifts=filter?(periodShifts||[]).filter(s=>s.teacher===filter):periodShifts;
-  renderSurveyResult(sv,filtAnswers,slots,filtShifts);
+  renderSurveyResult(sv,filtAnswers,slots,filtShifts,true);
 }
 
 async function changeAdminPw(){
