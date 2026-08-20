@@ -217,6 +217,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
   <button class="tb-btn tb-btn-outline" onclick="goTodayWithPopup()">今日の予定</button>
       <button class="tb-btn" onclick="openStudentSchedule()" style="background:var(--purple-l);border:1.5px solid #c4b5fd;color:var(--purple);cursor:pointer;">👤 生徒別</button>
       <button class="tb-btn" onclick="openMonthlyPrint()" style="background:var(--teal-l);border:1.5px solid #5eead4;color:var(--teal);cursor:pointer;">🖨️ 月別印刷</button>
+      <button class="tb-btn" id="bulk-delete-btn" onclick="openBulkDelete()" style="background:#fff5f5;border:1.5px solid #fca5a5;color:var(--red);cursor:pointer;display:none;">🗑️ 一括削除</button>
   <button class="tb-btn tb-btn-outline" id="view-month-btn" onclick="setView('month')">📅月</button>
   <button class="tb-btn tb-btn-outline" id="view-week-btn" onclick="setView('week')">📋週</button>
   <button class="tb-btn tb-btn-outline" id="view-absence-btn" onclick="setView('absence')">🔄振替</button>
@@ -591,6 +592,63 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
   </div>
 </div>
 
+<!-- 一括削除モーダル -->
+<div class="modal-bg" id="bulk-delete-modal" style="display:none;align-items:center;">
+  <div class="modal" style="max-width:420px;width:95%;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="color:var(--red);">🗑️ シフトの一括削除</div>
+    <div style="background:#fff5f5;border:1.5px solid #fca5a5;border-radius:var(--r);padding:10px 14px;margin-bottom:1rem;font-size:12px;color:#b91c1c;font-weight:600;">
+      ⚠️ 削除したデータは元に戻せません。ご注意ください。
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">削除方法を選択してください</div>
+      
+      <!-- 日別削除 -->
+      <div style="border:1.5px solid var(--border);border-radius:var(--r);padding:12px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">📅 特定の日のシフトを全削除</div>
+        <div class="field" style="margin-bottom:8px;">
+          <label>日付</label>
+          <input type="date" id="bd-date" style="width:100%;">
+        </div>
+        <div class="field" style="margin-bottom:8px;">
+          <label>教室（空欄＝両校）</label>
+          <select id="bd-campus" style="width:100%;">
+            <option value="">本校・南校 両方</option>
+            <option value="本校">本校のみ</option>
+            <option value="南校">南校のみ</option>
+          </select>
+        </div>
+        <button onclick="execBulkDelete('day')" style="width:100%;padding:9px;background:#dc2626;color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;">この日のシフトを削除</button>
+      </div>
+
+      <!-- 月別削除 -->
+      <div style="border:1.5px solid var(--border);border-radius:var(--r);padding:12px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;">📅 特定の月のシフトを全削除</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div class="field">
+            <label>年</label>
+            <select id="bd-year" style="width:100%;"></select>
+          </div>
+          <div class="field">
+            <label>月</label>
+            <select id="bd-month" style="width:100%;"></select>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:8px;">
+          <label>教室（空欄＝両校）</label>
+          <select id="bd-month-campus" style="width:100%;">
+            <option value="">本校・南校 両方</option>
+            <option value="本校">本校のみ</option>
+            <option value="南校">南校のみ</option>
+          </select>
+        </div>
+        <button onclick="execBulkDelete('month')" style="width:100%;padding:9px;background:#dc2626;color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;">この月のシフトを削除</button>
+      </div>
+    </div>
+    <button class="modal-cancel" onclick="document.getElementById('bulk-delete-modal').style.display='none'" style="width:100%;margin-top:1rem;">キャンセル</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -665,6 +723,7 @@ async function init(){
     isAdmin=!teachers.includes(currentUser)||currentUser==='';
     document.getElementById('header-user').textContent=isAdmin?'👑 塾長':'👤 '+currentUser;
     if(!isAdmin) document.getElementById('event-btn').style.display='none';
+    if(isAdmin) document.getElementById('bulk-delete-btn').style.display='';
     teachers=[...new Set(teachers)];teachers.forEach((t,i)=>teacherColorMap[t]=TEACHER_COLORS[i%TEACHER_COLORS.length]);
     currentWeekStart=currentWeekStart||getWeekStart(new Date());
     rebuildSelects();
@@ -1983,6 +2042,78 @@ function execMonthlyPrint(){
   const w=window.open('','_blank');
   w.document.write(pageHTML);
   w.document.close();
+}
+
+// ── 一括削除 ──
+function openBulkDelete(){
+  if(!isAdmin){ toast('⚠️ 塾長のみ使用できます'); return; }
+  // 日付デフォルト（今日）
+  document.getElementById('bd-date').value = toDateStr(new Date());
+  // 年月プルダウン
+  const now = new Date();
+  const ySel = document.getElementById('bd-year');
+  ySel.innerHTML = '';
+  for(let y=now.getFullYear()-1; y<=now.getFullYear()+1; y++){
+    const o=document.createElement('option');
+    o.value=y; o.textContent=y+'年';
+    if(y===now.getFullYear()) o.selected=true;
+    ySel.appendChild(o);
+  }
+  const mSel = document.getElementById('bd-month');
+  mSel.innerHTML = '';
+  for(let m=1; m<=12; m++){
+    const o=document.createElement('option');
+    o.value=m; o.textContent=m+'月';
+    if(m===now.getMonth()+1) o.selected=true;
+    mSel.appendChild(o);
+  }
+  document.getElementById('bulk-delete-modal').style.display='flex';
+}
+
+async function execBulkDelete(mode){
+  if(!isAdmin){ toast('⚠️ 塾長のみ使用できます'); return; }
+
+  let targetShifts = [];
+  let confirmMsg = '';
+
+  if(mode==='day'){
+    const date = document.getElementById('bd-date').value;
+    const campus = document.getElementById('bd-campus').value;
+    if(!date){ toast('⚠️ 日付を選択してください'); return; }
+    targetShifts = shifts.filter(function(s){
+      return s.date===date && (!campus || s.campus===campus);
+    });
+    confirmMsg = date + (campus?'（'+campus+'）':'') + ' のシフト ' + targetShifts.length + '件を削除します。よろしいですか？';
+  } else {
+    const year = parseInt(document.getElementById('bd-year').value);
+    const month = parseInt(document.getElementById('bd-month').value);
+    const campus = document.getElementById('bd-month-campus').value;
+    const prefix = year+'-'+String(month).padStart(2,'0');
+    targetShifts = shifts.filter(function(s){
+      return s.date.startsWith(prefix) && (!campus || s.campus===campus);
+    });
+    confirmMsg = year+'年'+month+'月'+(campus?'（'+campus+'）':'') + ' のシフト ' + targetShifts.length + '件を削除します。よろしいですか？';
+  }
+
+  if(!targetShifts.length){ toast('⚠️ 削除対象のシフトがありません'); return; }
+  if(!confirm(confirmMsg)) return;
+
+  document.getElementById('bulk-delete-modal').style.display='none';
+  toast('削除中...');
+
+  try{
+    // 個別削除を並列実行
+    await Promise.all(targetShifts.map(function(s){
+      return api('deleteShift',{id:s.id});
+    }));
+    // ローカルデータから削除
+    const ids = new Set(targetShifts.map(function(s){return s.id;}));
+    shifts = shifts.filter(function(s){return !ids.has(s.id);});
+    toast('✅ '+targetShifts.length+'件のシフトを削除しました');
+    renderAll();
+  }catch(e){
+    alert('削除エラー：'+e.message);
+  }
 }
 
 function closeSsMod(){
