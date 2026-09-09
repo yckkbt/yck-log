@@ -579,7 +579,21 @@ function showMTab(name,btn){
 async function loadMaster(){
   const res=await api('getMaster');
   master=res.master||{students:[],teachers:[],subjects:[]};
+  window._lastSavedStudentCount = (master.students||[]).length;
   renderMaster();
+}
+
+async function safeSetMaster(){
+  const currentCount = (master.students||[]).length;
+  const savedCount = window._lastSavedStudentCount || 0;
+  if(savedCount > 5 && currentCount < savedCount * 0.7){
+    if(!confirm('⚠️ 警告：生徒数が' + savedCount + '名から' + currentCount + '名に減少しています。\n本当に保存しますか？')){
+      return false;
+    }
+  }
+  await api('setMaster',{master});
+  window._lastSavedStudentCount = currentCount;
+  return true;
 }
 
 // ── マスタ表示 ──
@@ -653,8 +667,7 @@ async function saveEdit(i){
   const subjects=[...document.querySelectorAll(`input[name="edit-s-${i}"]:checked`)].map(b=>b.value).slice(0,2);
   master.students[i].teachers=teachers;
   master.students[i].subjects=subjects;
-  await api('setMaster',{master});
-  renderMaster();toast('✅ 変更を保存しました');
+  if(await safeSetMaster()){renderMaster();toast('✅ 変更を保存しました');}
 }
 
 async function addStudent(){
@@ -665,7 +678,7 @@ async function addStudent(){
   master.students.push({name,teachers,subjects});
   document.getElementById('new-student').value='';
   document.querySelectorAll('input[name="assign-teacher"],input[name="assign-subject"]').forEach(b=>b.checked=false);
-  await api('setMaster',{master});renderMaster();toast('✅ 追加しました');
+  if(await safeSetMaster()){renderMaster();toast('✅ 追加しました');}
 }
 
 async function bulkImport(){
@@ -684,13 +697,13 @@ async function bulkImport(){
   });
   if(!count){toast('⚠️ 新しく追加できる生徒がいませんでした');return;}
   document.getElementById('bulk-input').value='';
-  await api('setMaster',{master});renderMaster();toast(`✅ ${count}名を一括登録しました`);
+  if(await safeSetMaster()){renderMaster();toast(`✅ ${count}名を一括登録しました`);}
 }
 
 async function delStudent(idx){
   if(!confirm('削除してよいですか？'))return;
   master.students.splice(idx,1);
-  await api('setMaster',{master});renderMaster();toast('削除しました');
+  if(await safeSetMaster()){renderMaster();toast('削除しました');}
 }
 
 async function addMaster(type){
@@ -698,14 +711,14 @@ async function addMaster(type){
   if(type==='teacher')master.teachers.push(val);
   if(type==='subject')master.subjects.push(val);
   document.getElementById(id).value='';
-  await api('setMaster',{master});renderMaster();toast('✅ 追加しました');
+  if(await safeSetMaster()){renderMaster();toast('✅ 追加しました');}
 }
 
 async function delMaster(type,idx){
   if(!confirm('削除してよいですか？'))return;
   if(type==='teacher')master.teachers.splice(idx,1);
   if(type==='subject')master.subjects.splice(idx,1);
-  await api('setMaster',{master});renderMaster();toast('削除しました');
+  if(await safeSetMaster()){renderMaster();toast('削除しました');}
 }
 
 async function dedupMaster(){
