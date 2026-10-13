@@ -74,6 +74,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 .chip-event{background:var(--amber-l);color:#92400e;border-color:var(--amber);}
 .chip-school{background:var(--red-l);color:#7f1d1d;border-color:var(--red);}
 .chip-holiday{background:#f3f4f6;color:var(--hint);border-color:#9ca3af;}
+.holiday-label{font-size:9px;color:#dc2626;font-weight:600;padding:0 2px 1px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .chip-shift{border-left:2px solid;}
 .campus-divider{font-size:8px;font-weight:700;padding:1px 2px;margin-top:3px;margin-bottom:1px;}
 .campus-divider-honko{color:#1e40af;}
@@ -654,7 +655,23 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 <script>
 const GAS_URL='https://script.google.com/macros/s/AKfycbz8k41UXf6w3mkSQ3ARc4ReQ_v2xO2t2-xKizYtQ3Y_s2k1iAHEwVNSUlI52V5Go4NsZg/exec';
 const TEACHER_COLORS=['tc0','tc1','tc2','tc3','tc4','tc5','tc6','tc7'];
-const HOLIDAYS={'2026-01-01':1,'2026-01-12':1,'2026-02-11':1,'2026-02-23':1,'2026-03-20':1,'2026-04-29':1,'2026-05-03':1,'2026-05-04':1,'2026-05-05':1,'2026-05-06':1,'2026-07-20':1,'2026-08-11':1,'2026-09-21':1,'2026-09-23':1,'2026-10-12':1,'2026-11-03':1,'2026-11-23':1};
+// 祝日マップ: 日付 → 祝日名
+const HOLIDAYS={
+  // 2026年
+  '2026-01-01':'元日','2026-01-12':'成人の日','2026-02-11':'建国記念の日',
+  '2026-02-23':'天皇誕生日','2026-03-20':'春分の日','2026-04-29':'昭和の日',
+  '2026-05-03':'憲法記念日','2026-05-04':'みどりの日','2026-05-05':'こどもの日',
+  '2026-05-06':'振替休日','2026-07-20':'海の日','2026-08-11':'山の日',
+  '2026-09-21':'敬老の日','2026-09-23':'秋分の日','2026-10-12':'スポーツの日',
+  '2026-11-03':'文化の日','2026-11-23':'勤労感謝の日',
+  // 2027年
+  '2027-01-01':'元日','2027-01-11':'成人の日','2027-02-11':'建国記念の日',
+  '2027-02-23':'天皇誕生日','2027-03-21':'春分の日','2027-04-29':'昭和の日',
+  '2027-05-03':'憲法記念日','2027-05-04':'みどりの日','2027-05-05':'こどもの日',
+  '2027-07-19':'海の日','2027-08-11':'山の日','2027-09-20':'敬老の日',
+  '2027-09-23':'秋分の日','2027-10-11':'スポーツの日','2027-11-03':'文化の日',
+  '2027-11-23':'勤労感謝の日'
+};
 
 let curYear=new Date().getFullYear(), curMonth=new Date().getMonth();
 let shifts=[], events=[], teachers=[], master={}, teacherColorMap={};
@@ -951,7 +968,9 @@ function renderCalUnified(){
     const honkoSection='<div class="campus-divider campus-divider-honko">🔵本校</div><div class="campus-section">'+makeChips(honkoShifts)+'</div>';
     const nankoSection='<div class="campus-divider campus-divider-nanko">🟢南校</div><div class="campus-section">'+makeChips(nankoShifts)+'</div>';
     const dateStr=c.date||'';
-    return '<div class="'+cc+'" onclick="onCellClick(\''+dateStr+'\')"><div class="'+dc+'">'+c.day+'</div>'+evChips+honkoSection+nankoSection+'</div>';
+    const holName=c.date&&HOLIDAYS[c.date]?HOLIDAYS[c.date]:'';
+    const holLabel=holName?'<div class="holiday-label">'+holName+'</div>':'';
+    return '<div class="'+cc+'" onclick="onCellClick(\''+dateStr+'\')"><div class="'+dc+'">'+c.day+'</div>'+holLabel+evChips+honkoSection+nankoSection+'</div>';
   }).join('');
 }
 
@@ -980,6 +999,8 @@ function renderCal(campus,gridId){
     const dayEvents=c.date?events.filter(e=>c.date>=e.startDate&&c.date<=e.endDate):[];
     const dayShifts=c.date?shifts.filter(s=>s.date===c.date&&(s.campus||'本校')===campus&&(!filter||s.teacher===filter)):[];
     const evChips=dayEvents.map(e=>`<span class="chip ${e.type==='school'?'chip-school':e.type==='holiday'?'chip-holiday':'chip-event'}">${e.content}</span>`).join('');
+    const holName2=c.date&&HOLIDAYS[c.date]?HOLIDAYS[c.date]:'';
+    const holLabel2=holName2?`<div class="holiday-label">${holName2}</div>`:'';
     const shiftChips=dayShifts.map(s=>{
       const tc=teacherColorMap[s.teacher]||'tc0';
       const canEdit=isAdmin||s.teacher===currentUser;
@@ -988,7 +1009,7 @@ function renderCal(campus,gridId){
       const lbl=s.teacher+' '+s.startTime.split('（')[0];
       return '<span class="chip chip-shift '+tc+mine+'"'+editAttr+'>'+lbl+'</span>';
     }).join('');
-    return `<div class="${cc}" onclick="onCellClick('${c.date||''}')"><div class="${dc}">${c.day}</div>${evChips}${shiftChips}</div>`;
+    return `<div class="${cc}" onclick="onCellClick('${c.date||''}')"><div class="${dc}">${c.day}</div>${holLabel2}${evChips}${shiftChips}</div>`;
   }).join('');
 }
 
@@ -1651,7 +1672,8 @@ function renderWeek(){
   thead.innerHTML='<tr><th style="min-width:50px;">時間</th>'+days.map(function(d,i){
     const ds=toDateStr(d);const isToday=ds===today;const isHol=HOLIDAYS[ds];
     const cls=isToday?'today-col':isHol||i===0?'sun-col':i===6?'sat-col':'';
-    return '<th class="'+cls+'">'+(d.getMonth()+1)+'/'+d.getDate()+'<br>'+dowNames[i]+'</th>';
+    const holTxt=isHol?'<br><span style="font-size:9px;color:#dc2626;font-weight:600;">'+isHol+'</span>':'';
+    return '<th class="'+cls+'">'+(d.getMonth()+1)+'/'+d.getDate()+'<br>'+dowNames[i]+holTxt+'</th>';
   }).join('')+'</tr>';
   const tbody=document.getElementById('week-tbody');
   const wFilter=document.getElementById('teacher-filter').value;
@@ -1950,9 +1972,13 @@ function execMonthlyPrint(){
     const hasH=honkoMap[d.date]&&Object.keys(honkoMap[d.date]).length>0;
     const hasN=nankoMap[d.date]&&Object.keys(nankoMap[d.date]).length>0;
     const hasSh=hasH||hasN;
-    const bg=hasSh?'#f0f9ff':d.dow===0?'#fff5f5':d.dow===6?'#eff6ff':'#f9fafb';
-    th+='<th style="'+thBase+'background:'+bg+';color:'+dowColors[d.dow]+';font-size:10px;font-weight:700;">'
-      +d.day+'<br>'+dowNames[d.dow]+'</th>';
+    const isHol=HOLIDAYS[d.date];
+    const isSunOrHol=d.dow===0||isHol;
+    const bg=hasSh?'#f0f9ff':isSunOrHol?'#fff5f5':d.dow===6?'#eff6ff':'#f9fafb';
+    const dayColor=isSunOrHol?'#dc2626':d.dow===6?'#2563eb':'#374151';
+    const holRow=isHol?'<br><span style="font-size:8px;font-weight:400;color:#dc2626;">'+isHol+'</span>':'';
+    th+='<th style="'+thBase+'background:'+bg+';color:'+dayColor+';font-size:10px;font-weight:700;">'
+      +d.day+'<br>'+dowNames[d.dow]+holRow+'</th>';
   });
   th+='</tr>';
 
@@ -1975,8 +2001,8 @@ function execMonthlyPrint(){
     dates.forEach(function(d){
       const hCell=honkoMap[d.date]&&honkoMap[d.date][slot];
       const nCell=nankoMap[d.date]&&nankoMap[d.date][slot];
-      const isSun=d.dow===0,isSat=d.dow===6;
-      const baseBg=isSun?'#fff5f5':isSat?'#eff6ff':'#fff';
+      const isSun=d.dow===0,isSat=d.dow===6,isHolCell=!!HOLIDAYS[d.date];
+      const baseBg=(isSun||isHolCell)?'#fff5f5':isSat?'#eff6ff':'#fff';
 
       let cellHtml='<td style="'+tdBase+'background:'+baseBg+';padding:2px;">';
       if(hCell){

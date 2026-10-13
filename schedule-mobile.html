@@ -313,7 +313,20 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 <script>
 const GAS_URL='https://script.google.com/macros/s/AKfycbz8k41UXf6w3mkSQ3ARc4ReQ_v2xO2t2-xKizYtQ3Y_s2k1iAHEwVNSUlI52V5Go4NsZg/exec';
 const DOW=['日','月','火','水','木','金','土'];
-const HOLIDAYS={'2026-01-01':1,'2026-01-12':1,'2026-02-11':1,'2026-02-23':1,'2026-03-20':1,'2026-04-29':1,'2026-05-03':1,'2026-05-04':1,'2026-05-05':1,'2026-05-06':1,'2026-07-20':1,'2026-08-11':1,'2026-09-21':1,'2026-09-23':1,'2026-10-12':1,'2026-11-03':1,'2026-11-23':1};
+const HOLIDAYS={
+  '2026-01-01':'元日','2026-01-12':'成人の日','2026-02-11':'建国記念の日',
+  '2026-02-23':'天皇誕生日','2026-03-20':'春分の日','2026-04-29':'昭和の日',
+  '2026-05-03':'憲法記念日','2026-05-04':'みどりの日','2026-05-05':'こどもの日',
+  '2026-05-06':'振替休日','2026-07-20':'海の日','2026-08-11':'山の日',
+  '2026-09-21':'敬老の日','2026-09-23':'秋分の日','2026-10-12':'スポーツの日',
+  '2026-11-03':'文化の日','2026-11-23':'勤労感謝の日',
+  '2027-01-01':'元日','2027-01-11':'成人の日','2027-02-11':'建国記念の日',
+  '2027-02-23':'天皇誕生日','2027-03-21':'春分の日','2027-04-29':'昭和の日',
+  '2027-05-03':'憲法記念日','2027-05-04':'みどりの日','2027-05-05':'こどもの日',
+  '2027-07-19':'海の日','2027-08-11':'山の日','2027-09-20':'敬老の日',
+  '2027-09-23':'秋分の日','2027-10-11':'スポーツの日','2027-11-03':'文化の日',
+  '2027-11-23':'勤労感謝の日'
+};
 
 let shifts=[],events=[],teachers=[],master={},absences=[],startTimes=[];
 let currentUser='',isAdmin=false;
@@ -622,6 +635,7 @@ function renderTeacherCal(el){
     html+='<div style="min-height:70px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:2px;'+bg+'">';
     const dateStyle='font-size:9px;font-weight:700;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);margin-bottom:2px;border-radius:50%;'+(isToday?'background:var(--blue);color:#fff;':dateColor);
     html+='<div style="'+dateStyle+'">'+c.day+'</div>';
+    if(isHoliday&&!c.other) html+='<div style="font-size:7px;color:#dc2626;font-weight:600;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+isHoliday+'</div>';
 
     dayEvents.forEach(e=>{
       html+='<div style="font-size:7px;border-radius:2px;padding:1px 2px;background:var(--amber-l);color:#92400e;border-left:2px solid var(--amber);margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+e.content+'</div>';
@@ -771,6 +785,7 @@ function renderDayCards(ws,we,filteredShifts,showAll){
     html+='<div class="day-header">';
     html+='<div class="day-dow '+dowClass+todayClass+'">'+DOW[dow]+'</div>';
     html+='<div class="day-date">'+ds.slice(5).replace('-','/')+'</div>';
+    if(isHoliday) html+='<div style="font-size:10px;color:#dc2626;font-weight:600;margin-left:4px;">🎌'+isHoliday+'</div>';
     if(dayEvents.length) html+='<div class="day-event">'+dayEvents[0].content+'</div>';
     html+='</div>';
 
