@@ -352,11 +352,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
     <div class="fr">
       <div class="ff"><label>日付</label><input type="date" id="s-date"></div>
       <div class="ff"><label>開始時間</label>
-        <select id="s-start">
-          <option>10:30（午前）</option><option>14:00（午後）</option>
-          <option>16:00（0コマ）</option><option>16:25（0コマ）</option>
-          <option>17:30（1コマ）</option><option>19:15（2コマ）</option><option>20:45（3コマ）</option>
-        </select>
+        <select id="s-start"></select>
       </div>
     </div>
     <div class="fr">
@@ -431,11 +427,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
       </div>
       <div class="fr">
         <div class="ff"><label>開始時間</label>
-          <select id="bw-start">
-            <option>10:30（午前）</option><option>14:00（午後）</option>
-            <option>16:00（0コマ）</option><option>16:25（0コマ）</option>
-            <option>17:30（1コマ）</option><option>19:15（2コマ）</option><option>20:45（3コマ）</option>
-          </select>
+          <select id="bw-start"></select>
         </div>
         <div class="ff"><label>コマ数</label>
           <select id="bw-slots"><option value="1">1コマ</option><option value="2">2コマ</option><option value="3">3コマ</option></select>
@@ -481,11 +473,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
     <div class="fr">
       <div class="ff"><label>欠席日</label><input type="date" id="ab-absent"></div>
       <div class="ff"><label>欠席コマ</label>
-        <select id="ab-slot">
-          <option>10:30（午前）</option><option>14:00（午後）</option>
-          <option>16:00（0コマ）</option><option>16:25（0コマ）</option>
-          <option>17:30（1コマ）</option><option>19:15（2コマ）</option><option>20:45（3コマ）</option>
-        </select>
+        <select id="ab-slot"></select>
       </div>
     </div>
     <div class="ff"><label>欠席理由</label>
@@ -497,12 +485,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
     <div class="fr">
       <div class="ff"><label>振替日</label><input type="date" id="ab-makeup"></div>
       <div class="ff"><label>振替コマ</label>
-        <select id="ab-makeup-slot">
-          <option value="">未定</option>
-          <option>10:30（午前）</option><option>14:00（午後）</option>
-          <option>16:00（0コマ）</option><option>16:25（0コマ）</option>
-          <option>17:30（1コマ）</option><option>19:15（2コマ）</option><option>20:45（3コマ）</option>
-        </select>
+        <select id="ab-makeup-slot"><option value="">未定</option></select>
       </div>
     </div>
     <div class="ff"><label>備考</label><input type="text" id="ab-note" placeholder="連絡内容など"></div>
@@ -721,7 +704,7 @@ async function init(){
     shifts=(sRes&&sRes.shifts)||[];
     events=(eRes&&eRes.events)||[];
     absences=(aRes&&aRes.absences)||[];
-    startTimes=(stRes&&stRes.startTimes)||['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:15（2コマ）','20:45（3コマ）'];
+    startTimes=(stRes&&stRes.startTimes)||['10:30（午前）','14:00（午後）','16:00（0コマ）','16:25（0コマ）','17:30（1コマ）','19:00（2コマ）','20:30（3コマ）'];
     // アンケートをバックグラウンドで取得
     api('getSurveys').then(function(svRes){
       const today=toDateStr(new Date());
@@ -804,6 +787,19 @@ function rebuildAbsenceSelects(){
   const popReq=(id,arr)=>{const el=document.getElementById(id);if(!el)return;el.innerHTML='<option value="">選択</option>';arr.forEach(v=>{const o=document.createElement('option');o.value=o.textContent=v;el.appendChild(o);});};
   popReq('ab-student',sNames);popReq('ab-teacher',teachers);
   popAll('ab-filter-student',sNames);
+  // 欠席コマ・振替コマをstartTimesから動的生成
+  const abSlot=document.getElementById('ab-slot');
+  if(abSlot){
+    const cur=abSlot.value;
+    abSlot.innerHTML=startTimes.map(t=>'<option value="'+t+'">'+t+'</option>').join('');
+    if(startTimes.includes(cur)) abSlot.value=cur;
+  }
+  const abMakeup=document.getElementById('ab-makeup-slot');
+  if(abMakeup){
+    const cur=abMakeup.value;
+    abMakeup.innerHTML='<option value="">未定</option>'+startTimes.map(t=>'<option value="'+t+'">'+t+'</option>').join('');
+    if(startTimes.includes(cur)) abMakeup.value=cur;
+  }
 }
 
 function renderAll(){
@@ -1665,8 +1661,8 @@ function renderWeek(){
   }):[
     {key:'10:30（午前）',label:'午前'},{key:'14:00（午後）',label:'午後'},
     {key:'16:00（0コマ）',label:'0コマ'},{key:'16:25（0コマ）',label:'0コマ'},
-    {key:'17:30（1コマ）',label:'1コマ'},{key:'19:15（2コマ）',label:'2コマ'},
-    {key:'20:45（3コマ）',label:'3コマ'}
+    {key:'17:30（1コマ）',label:'1コマ'},{key:'19:00（2コマ）',label:'2コマ'},
+    {key:'20:30（3コマ）',label:'3コマ'}
   ];
   const thead=document.getElementById('week-thead');
   thead.innerHTML='<tr><th style="min-width:50px;">時間</th>'+days.map(function(d,i){
